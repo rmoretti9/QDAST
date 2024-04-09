@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<klayout-macro>
+ <autorun-early>true</autorun-early>
+ <show-in-menu>false</show-in-menu>
+ <interpreter>python</interpreter>
+ <text>
+
+from qdast import defaults
+
+ </text>
+</klayout-macro>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<klayout-macro>
+ <description>Replace SQUID(s) below the top cell by different one(s)</description>
+ <category>pymacros</category>
+ <interpreter>python</interpreter>
+ <text>
+
+""""Macro for replacing a SQUID with a new one specified here
+
+Replaces individual SQUID(s) selected by qubit/testarray name(s). In the end it may delete unnecessary
+layers for the user's convenience.
+
+Usage:
+    1. Specify qubit/testarray name and the new SQUID's type and parameters.
+    2. Optionally enable deleting all layers but 15, 17 and 18.
+    3. Run this macro to replace SQUIDs
+"""
+
+from kqcircuits.util.replace_junctions import replace_squid, convert_cells_to_static
+from kqcircuits.klayout_view import KLayoutView
+from kqcircuits.defaults import chip_export_layer_clusters
+
+
+top_cell = KLayoutView(current=True).active_cell
+
+# 1) Edit/add lines as you need them!
+replace_squid(top_cell, "testarray_w", "Manhattan", squid_index=1, junction_width=0.2)
+replace_squid(top_cell, "testarray_w", "M320.oas", squid_index=3)
+replace_squid(top_cell, "QB2", "Manhattan", mirror=True, loop_area=30, junction_width=0.05)
+replace_squid(top_cell, "QB_no_such_id", "Manhattan")
+
+
+# 2) Enable if needed. Static cells in 'SIS b/t' layers only.
+if 0:
+    layout = top_cell.layout()
+    sis_layers = chip_export_layer_clusters["SIS b"].all_layers() + chip_export_layer_clusters["SIS t"].all_layers()
+
+    for ind, info in zip(layout.layer_indexes(), layout.layer_infos()):
+        if info.name not in sis_layers:
+            layout.delete_layer(ind)
+
+    layout.cleanup([top_cell.cell_index()])
+    convert_cells_to_static(layout)
+ </text>
+</klayout-macro>
