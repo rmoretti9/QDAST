@@ -139,7 +139,7 @@ dmypy.json
 
 # Sphinx docs
 docs/_build
-docs/api
+docs/api 
 docs/pcell_images
 
 # Temporary files
