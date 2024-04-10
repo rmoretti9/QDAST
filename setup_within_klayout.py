@@ -45,11 +45,11 @@ qdast_root_path = os.path.dirname(os.path.abspath(__file__))
 
 # create symlink between KLayout python folder and qdast folder
 link_map = (
-    ("qdast", "python/qdast"),
+    ("src/qdast", "python/qdast"),
     ("scripts", "python/qdast_scripts"),
     ("drc", "drc/qdast"),
 )
-
+ 
 setup_symlinks(qdast_root_path, configdir, link_map, args.unlink)
 
 # TODO install required packages: kqcircuits

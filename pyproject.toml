@@ -1,0 +1,18 @@
+[project]
+name = "qdast"
+version = "0.0.1"
+authors = [
+  { name="Roberto Moretti", email="r.moretti9@campus.unimib.it" },
+]
+description = "Quantum Design And Simulation Tool"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/rmoretti9/QDAST.git"
+Issues = "https://github.com/rmoretti9/QDAST/issues"

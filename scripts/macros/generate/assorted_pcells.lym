@@ -24,13 +24,13 @@ from kqcircuits.klayout_view import KLayoutView
 from kqcircuits.elements.finger_capacitor_square import FingerCapacitorSquare
 from kqcircuits.elements.finger_capacitor_taper import FingerCapacitorTaper
 from kqcircuits.elements.airbridges.airbridge_rectangular import AirbridgeRectangular
-from qdast.elements.airbridges.airbridge_bowtie import AirbridgeBowtie
-from qdast.junctions.frogmon import Frogmon
 from kqcircuits.junctions.sim import Sim
 from kqcircuits.test_structures.stripes_test import StripesTest
 from kqcircuits.elements.waveguide_composite import WaveguideComposite
-from qdast.elements.fluxlines.fluxline_cutground import FluxlineCutground
 from kqcircuits.elements.fluxlines.fluxline_straight import FluxlineStraight
+from kqcircuits.elements.fluxlines.fluxline_standard import FluxlineStandard
+
+from kqcircuits.qubits.double_pads import DoublePads
 
 view = KLayoutView()
 
@@ -42,17 +42,15 @@ place(FingerCapacitorSquare, -20, 900, finger_number=3)
 place(FingerCapacitorTaper, 120, 900)
 
 place(AirbridgeRectangular, 0, 800)
-place(AirbridgeBowtie, 100, 800)
 
-place(Frogmon, 0, 700)
+place(DoublePads, 0, 700)
 place(Sim, 100, 700)
 
 place(WaveguideComposite, -50, 600)
 
 place(StripesTest, 50, 400)
 
-place(FluxlineCutground, 0, 350)
-place(FluxlineStraight, 100, 350)
+place(FluxlineStandard, 0, 350)
 
 view.focus()
 </text>
