@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<klayout-macro>
+ <description>Airbridges in Composite Waveguide</description>
+ <version/>
+ <category>pymacros</category>
+ <prolog/>
+ <epilog/>
+ <doc/>
+ <autorun>false</autorun>
+ <autorun-early>false</autorun-early>
+ <shortcut/>
+ <show-in-menu>false</show-in-menu>
+ <group-name/>
+ <menu-path/>
+ <interpreter>python</interpreter>
+ <dsl-interpreter-name/>
+ <text>
+
+# This code is part of KQCircuits
+# Copyright (C) 2021 IQM Finland Oy
+#
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program. If not, see
+# https://www.gnu.org/licenses/gpl-3.0.html.
+#
+# The software distribution should follow IQM trademark policy for open-source software
+# (meetiqm.com/developers/osstmpolicy). IQM welcomes contributions to the code. Please see our contribution agreements
+# for individuals (meetiqm.com/developers/clas/individual) and organizations (meetiqm.com/developers/clas/organization).
+
+from kqcircuits.klayout_view import KLayoutView
+from kqcircuits.elements.waveguide_composite import Node, WaveguideComposite
+from kqcircuits.elements.airbridges.airbridge import Airbridge
+
+
+view = KLayoutView()
+
+def show(nodes, a, b):
+    view.insert_cell(WaveguideComposite, nodes=nodes, a=a, b=b, term1=5, term2=10)
+
+# Simple airbridge is easy.
+show([
+    Node((100, 500)),
+    Node((300, 500), Airbridge),
+    Node((500, 500)),
+], 10, 6)
+
+# Airbridge node can change the waveguide.
+show([
+    Node((100, 400)),
+    Node((300, 400), Airbridge, a=10, b=6),
+    Node((500, 400)),
+], 20, 10)
+
+# Starting/ending Airbridge works as expected.
+show([
+    Node((100, 300), Airbridge, a=3, b=10),
+    Node((300, 300)),
+    Node((500, 300), Airbridge, a=10, b=3),
+], 10, 3)
+
+# Airbrige gap width is constant (12), but it can be changed if needed.
+show([
+    Node((100, 200)),
+    Node((300, 200), Airbridge, bridge_gap_width=20),
+    Node((500, 200)),
+], 6, 3)
+
+# Show all hierarchy levels and zoom to fit window
+view.focus()
+</text>
+</klayout-macro>
