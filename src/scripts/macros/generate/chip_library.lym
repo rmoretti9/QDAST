@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<klayout-macro>
+ <description>All chips in the library</description>
+ <version/>
+ <category>pymacros</category>
+ <prolog/>
+ <epilog/>
+ <doc/>
+ <autorun>false</autorun>
+ <autorun-early>false</autorun-early>
+ <priority>0</priority>
+ <shortcut/>
+ <show-in-menu>true</show-in-menu>
+ <group-name/>
+ <menu-path>kqcircuits_menu.#4</menu-path>
+ <interpreter>python</interpreter>
+ <dsl-interpreter-name/>
+ <text># This code is part of KQCircuits
+# Copyright (C) 2021 IQM Finland Oy
+#
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program. If not, see
+# https://www.gnu.org/licenses/gpl-3.0.html.
+#
+# The software distribution should follow IQM trademark policy for open-source software
+# (meetiqm.com/developers/osstmpolicy). IQM welcomes contributions to the code. Please see our contribution agreements
+# for individuals (meetiqm.com/developers/clas/individual) and organizations (meetiqm.com/developers/clas/organization).
+
+import pya
+from tqdm import tqdm
+
+from kqcircuits.klayout_view import KLayoutView
+from kqcircuits.chips.chip import Chip
+from kqcircuits.defaults import default_bar_format
+
+libname = Chip.LIBRARY_NAME
+library = pya.Library.library_by_name(libname)
+
+view = KLayoutView()
+
+columns = 5
+chip_step_x = pya.DVector(2.5e3, 0)
+chip_step_y = pya.DVector(0, -2.5e3)
+
+x, y, y0 = 0, 0, 0
+for i, pcell_name in tqdm(enumerate(library.layout().pcell_names()), desc='Generating chips',
+                          bar_format=default_bar_format):
+    cell = view.layout.create_cell(pcell_name, libname, {"name_chip": pcell_name})
+
+    chip_frame = [i.cell for i in cell.each_inst() if 'Chip Frame' in i.cell.name]
+    chip_frame = chip_frame[0] if chip_frame else cell
+    height, width = chip_frame.bbox().height() * view.layout.dbu, chip_frame.bbox().width() * view.layout.dbu
+
+    base = pya.DVector(x, -(height + y0))
+    view.insert_cell(cell, pya.DTrans((i % columns) * chip_step_x + int(i / columns) * chip_step_y + base))
+
+    y = max(y, height + y0)
+    if (i + 1) % columns == 0:
+        x = 0
+        y0 = y
+    else:
+        x += width
+    
+view.focus()</text>
+</klayout-macro>

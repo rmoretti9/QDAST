@@ -21,4 +21,3 @@ defaults.ANSYS_SCRIPT_PATHS += [defaults.SCRIPTS_PATH.joinpath("simulations").jo
 defaults.ELMER_SCRIPT_PATHS += [defaults.SCRIPTS_PATH.joinpath("simulations").joinpath("elmer")]
 defaults.VERSION_PATHS["QDAST"] = defaults.ROOT_PATH
 defaults.default_drc_runset = "qdast_drc.lydrc"
- 

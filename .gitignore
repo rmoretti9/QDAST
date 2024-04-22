@@ -144,6 +144,7 @@ docs/pcell_images
 
 # Temporary files
 /tmp
+src/tmp/
 
 # Sonnet files
 *.son
