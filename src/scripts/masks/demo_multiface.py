@@ -63,7 +63,10 @@ wafer_1 = mask_set.add_multi_face_mask_layout(
         "1b1": {
             "mirror_labels": True,  # Mask label and chip copy labels are mirrored on the bottom side of the wafer
             "layers_to_mask": {"base_metal_gap": "1", "through_silicon_via": "2"},
-            "mask_export_layers": ["^base_metal_gap", "^through_silicon_via"],  # Mirror individual output files
+            "mask_export_layers": [
+                "^base_metal_gap",
+                "^through_silicon_via",
+            ],  # Mirror individual output files
         },
     },
 )
@@ -98,7 +101,12 @@ rectangular_parametes = {
     "box": pya.DBox(0, 0, 20000, 10000),
 }
 
-mask_set.add_chip([(Chip, "CH1", multi_face_parameters), (SampleHolderTest, "ST1", rectangular_parametes)])
+mask_set.add_chip(
+    [
+        (Chip, "CH1", multi_face_parameters),
+        (SampleHolderTest, "ST1", rectangular_parametes),
+    ]
+)
 
 mask_set.build()
 mask_set.export()

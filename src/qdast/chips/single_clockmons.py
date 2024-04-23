@@ -1,28 +1,12 @@
-# This code is part of KQCircuits
-# Copyright (C) 2021 IQM Finland Oy
-#
-# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
-# License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
-# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along with this program. If not, see
-# https://www.gnu.org/licenses/gpl-3.0.html.
-#
-# The software distribution should follow IQM trademark policy for open-source software
-# (meetiqm.com/developers/osstmpolicy). IQM welcomes contributions to the code. Please see our contribution agreements
-# for individuals (meetiqm.com/developers/clas/individual) and organizations (meetiqm.com/developers/clas/organization).
-
-
 from math import pi
-
-from kqcircuits.chips.chip import Chip
+from qdast.chips.qdast_chip import QDASTChip
 from kqcircuits.elements.meander import Meander
 from qdast.qubits.clockmon import Clockmon
 from kqcircuits.elements.waveguide_coplanar import WaveguideCoplanar
-from kqcircuits.elements.waveguide_coplanar_splitter import WaveguideCoplanarSplitter, t_cross_parameters
+from kqcircuits.elements.waveguide_coplanar_splitter import (
+    WaveguideCoplanarSplitter,
+    t_cross_parameters,
+)
 from kqcircuits.pya_resolver import pya
 from kqcircuits.util.coupler_lib import cap_params
 from kqcircuits.util.parameters import Param, pdt, add_parameters_from
@@ -32,34 +16,54 @@ from kqcircuits.junctions.junction import Junction
 def _get_num_meanders(meander_length, turn_radius, meander_min_width):
     """Get the required number of meanders to create a meander element with the given parameters."""
 
-    return int((meander_length - turn_radius * (pi - 2)) / (meander_min_width + turn_radius * (pi - 2)))
+    return int(
+        (meander_length - turn_radius * (pi - 2))
+        / (meander_min_width + turn_radius * (pi - 2))
+    )
 
 
+@add_parameters_from(
+    QDASTChip,
+    produce_labels=True,
+    with_grid=False,
+    marker_types="",
+    name_mask="",
+    name_chip="",
+    name_brand="",
+    name_copy="",
+)
 @add_parameters_from(Junction, "junction_type")
-class SingleClockmons(Chip):
+class SingleClockmons(QDASTChip):
     """The PCell declaration for a SingleClockmons chip.
 
-    The SingleXmons chip has 6 qubits, which are coupled by readout resonators to the same feedline. The feedline
+    The SingleClockmons chip has 4 qubits, which are coupled by lambda/2 readout resonators to the same feedline. The feedline
     crosses the center of the chip horizontally.  Half of the qubits are above the feedline and half are below it.
-    For each qubit, there is a chargeline connected to a launcher, but no fluxline. There can optionally be four test
-    resonators between the qubits.
 
     Attributes:
         launchers: A dictionary where the keys are names of the launchers and values are tuples whose first elements
             are positions of the launchers.
 
         qubits_refpoints: A tuple where each element contains the refpoints for one of the qubits. The qubits are
-            ordered such that 0,1,2 are the upper qubits (from left to right), while 3,4,5 are the lower qubits (from
+            ordered such that 1,3 are the upper qubits (from left to right), while 0,2 are the lower qubits (from
             left to right).
 
     """
 
     readout_res_lengths = Param(
-        pdt.TypeList, "Readout resonator lengths (four resonators)", [7000, 7100, 7200, 7300]
+        pdt.TypeList,
+        "Readout resonator lengths (four resonators)",
+        [7000, 7100, 7200, 7300],
     )
-    use_test_resonators = Param(pdt.TypeBoolean, "Use test resonators", True)
-    n_fingers = Param(pdt.TypeList, "Number of fingers for readout resonator couplers", [1.2, 1.3, 1.4, 1.5])
-    l_fingers = Param(pdt.TypeList, "Length of fingers for readout resonator couplers", [30, 30, 30, 30])
+    n_fingers = Param(
+        pdt.TypeList,
+        "Number of fingers for readout resonator couplers",
+        [1.2, 1.3, 1.4, 1.5],
+    )
+    l_fingers = Param(
+        pdt.TypeList,
+        "Length of fingers for readout resonator couplers",
+        [30, 30, 30, 30],
+    )
     type_coupler = Param(
         pdt.TypeList,
         "Coupler type for test resonator couplers",
@@ -69,17 +73,13 @@ class SingleClockmons(Chip):
     def build(self):
         """Produces a Clockmons PCell."""
 
-        # self.produce_junction_tests(self.junction_type)
-        self.launchers = self.produce_launchers("SMA8", launcher_assignments = {8: "FL-IN", 4: "FL-OUT"})
+        self.launchers = self.produce_launchers(
+            "SquareNSWE_5x5", launcher_assignments={4: "FL-IN", 2: "FL-OUT"}
+        )
         self.qubits_refpoints = self._produce_qubits()
-
-        feedline_x_distance = 1200
-        # if self.use_test_resonators:
-        #     self._produce_feedline_and_test_resonators(feedline_x_distance)
-        # else:
+        feedline_x_distance = 200
         self._produce_feedline(feedline_x_distance)
         self._produce_readout_resonators()
-        # self._produce_chargelines()
 
     def _produce_waveguide(self, path, term2=0, turn_radius=None):
         """Produces a coplanar waveguide that follows the given path.
@@ -119,7 +119,9 @@ class SingleClockmons(Chip):
 
         """
         qubit_trans = pya.DTrans(rotation, False, center_x, center_y)
-        _, refpoints_abs = self.insert_cell(qubit_cell, qubit_trans, name, rec_levels=None)
+        _, refpoints_abs = self.insert_cell(
+            qubit_cell, qubit_trans, name, rec_levels=None
+        )
         return refpoints_abs
 
     def _produce_qubits(self):
@@ -137,34 +139,48 @@ class SingleClockmons(Chip):
         """
         qubit = self.add_element(
             Clockmon,
-            ground_gap= [650, 450],
-            a= 10,
-            b= 6,
-            island_extent= [550, 130],
-            coupler_extent= [150, 20],
-            island_to_island_distance= 20,
-            coupler_offset= 160,
-            clock_diameter= 60,
-            bending_angle= 0,
-            junction_type = "Manhattan Single Junction Centered"
+            ground_gap=[650, 450],
+            a=10,
+            b=6,
+            island_extent=[550, 130],
+            coupler_extent=[150, 20],
+            island_to_island_distance=20,
+            coupler_offset=160,
+            clock_diameter=60,
+            bending_angle=0,
+            junction_type="Manhattan Single Junction Centered",
         )
-        qubit_spacing_x = 1100  # shortest x-distance between qubit centers on different sides of the feedline
-        qubit_spacing_y = 2600  # shortest y-distance between qubit centers on different sides of the feedline
-        qubits_center_x = 5e3 + 400  # the x-coordinate around which qubits are centered
+        qubit_spacing_x = 800  # shortest x-distance between qubit centers on different sides of the feedline
+        qubit_spacing_y = 1500  # shortest y-distance between qubit centers on different sides of the feedline
+        qubits_center_x = 2.5e3  # the x-coordinate around which qubits are centered
         # qubits above the feedline, from left to right
-        y_a = 6e3 + qubit_spacing_y / 2
-        y_b = 4e3 - qubit_spacing_y / 2
-        qb0_refpoints = self._produce_qubit(qubit, qubits_center_x - qubit_spacing_x * (5 / 2), y_b, 0, "qb_0")
-        qb1_refpoints = self._produce_qubit(qubit, qubits_center_x - qubit_spacing_x * (3 / 2), y_a, 2, "qb_1")
+        y_a = 3.5e3 + qubit_spacing_y / 2
+        y_b = 1.5e3 - qubit_spacing_y / 2
+        qb0_refpoints = self._produce_qubit(
+            qubit, qubits_center_x - qubit_spacing_x * (3 / 2), y_b, 0, "qb_0"
+        )
+        qb1_refpoints = self._produce_qubit(
+            qubit, qubits_center_x - qubit_spacing_x * (1 / 2), y_a, 2, "qb_1"
+        )
         # qubits below the feedline, from left to right
-        qb2_refpoints = self._produce_qubit(qubit, qubits_center_x + qubit_spacing_x * (1 / 2), y_b, 0, "qb_2")
-        qb3_refpoints = self._produce_qubit(qubit, qubits_center_x + qubit_spacing_x * (3 / 2), y_a, 2, "qb_3")
-        self._qubit_x_coords = [qubits_center_x - qubit_spacing_x * (5 / 2),
-                                qubits_center_x - qubit_spacing_x * (3 / 2),
-                                qubits_center_x + qubit_spacing_x * (1 / 2),
-                                qubits_center_x + qubit_spacing_x * (3 / 2)
-                                ]
-        self._qubit_refpoints = [qb0_refpoints, qb1_refpoints, qb2_refpoints, qb3_refpoints]
+        qb2_refpoints = self._produce_qubit(
+            qubit, qubits_center_x + qubit_spacing_x * (1 / 2), y_b, 0, "qb_2"
+        )
+        qb3_refpoints = self._produce_qubit(
+            qubit, qubits_center_x + qubit_spacing_x * (3 / 2), y_a, 2, "qb_3"
+        )
+        self._qubit_x_coords = [
+            qubits_center_x - qubit_spacing_x * (5 / 2),
+            qubits_center_x - qubit_spacing_x * (3 / 2),
+            qubits_center_x + qubit_spacing_x * (1 / 2),
+            qubits_center_x + qubit_spacing_x * (3 / 2),
+        ]
+        self._qubit_refpoints = [
+            qb0_refpoints,
+            qb1_refpoints,
+            qb2_refpoints,
+            qb3_refpoints,
+        ]
         return qb0_refpoints, qb1_refpoints, qb2_refpoints, qb3_refpoints
 
     def _produce_readout_resonator(self, capacitor, capacitor_dtrans, res_idx):
@@ -177,7 +193,7 @@ class SingleClockmons(Chip):
         meander_end = self._qubit_refpoints[res_idx]["port_0"]
 
         # meandering part of the resonator
-        w = 450
+        w = 600
         num_meanders = _get_num_meanders(total_length, turn_radius, w)
         self.insert_cell(
             Meander,
@@ -200,23 +216,29 @@ class SingleClockmons(Chip):
                 clear from the junction test pads.
 
         """
-        
+
         cell_cross = self.add_element(
             WaveguideCoplanarSplitter,
-            **t_cross_parameters(a=self.a, b=self.b, a2=self.a, b2=self.b, length_extra_side=2 * self.a),
+            **t_cross_parameters(
+                a=self.a, b=self.b, a2=self.a, b2=self.b, length_extra_side=2 * self.a
+            ),
         )
         tee_refpoints = []
         tee_rotations = [0, 2, 0, 2]
         for i in range(4):
-            cross_trans = pya.DTrans(tee_rotations[i], False, self._qubit_refpoints[i]["port_0"].x, 5e3)
+            cross_trans = pya.DTrans(
+                tee_rotations[i], False, self._qubit_refpoints[i]["port_0"].x, 2.5e3
+            )
             inst_cross, _ = self.insert_cell(cell_cross, cross_trans)
             tee_refpoints.append(self.get_refpoints(cell_cross, inst_cross.dtrans))
         self._tee_refpoints = tee_refpoints
         self._produce_waveguide(
             [
                 self.launchers["FL-IN"][0],
-                pya.DPoint(self.launchers["FL-IN"][0].x + x_distance, self.launchers["FL-IN"][0].y),
-                pya.DPoint(self.launchers["FL-IN"][0].x + x_distance, 5e3),
+                pya.DPoint(
+                    self.launchers["FL-IN"][0].x + x_distance,
+                    self.launchers["FL-IN"][0].y,
+                ),
                 tee_refpoints[0]["port_left"],
             ]
         )
@@ -241,23 +263,33 @@ class SingleClockmons(Chip):
         self._produce_waveguide(
             [
                 tee_refpoints[3]["port_left"],
-                pya.DPoint(self.launchers["FL-OUT"][0].x - x_distance, 5e3),
-                pya.DPoint(self.launchers["FL-OUT"][0].x - x_distance, self.launchers["FL-OUT"][0].y),
-                self.launchers["FL-OUT"][0]
+                # pya.DPoint(self.launchers["FL-OUT"][0].x - x_distance, 2.5e3),
+                pya.DPoint(
+                    self.launchers["FL-OUT"][0].x - x_distance,
+                    self.launchers["FL-OUT"][0].y,
+                ),
+                self.launchers["FL-OUT"][0],
             ]
         )
-        
 
     def _produce_readout_resonators(self):
         # Coupler
         for i in range(4):
-            cplr_params = cap_params(float(self.n_fingers[i]), float(self.l_fingers[i]), self.type_coupler[i])
+            cplr_params = cap_params(
+                float(self.n_fingers[i]), float(self.l_fingers[i]), self.type_coupler[i]
+            )
             cplr = self.add_element(**cplr_params)
             cplr_refpoints_rel = self.get_refpoints(cplr)
             if i % 2 == 0:
-                cplr_pos = self._tee_refpoints[i]["port_bottom"] - pya.DTrans.R90 * cplr_refpoints_rel["port_b"]
+                cplr_pos = (
+                    self._tee_refpoints[i]["port_bottom"]
+                    - pya.DTrans.R90 * cplr_refpoints_rel["port_b"]
+                )
             else:
-                cplr_pos = self._tee_refpoints[i]["port_bottom"] + pya.DTrans.R90 * cplr_refpoints_rel["port_b"]
+                cplr_pos = (
+                    self._tee_refpoints[i]["port_bottom"]
+                    + pya.DTrans.R90 * cplr_refpoints_rel["port_b"]
+                )
             cplr_dtrans = pya.DTrans(2 * (i % 2) + 1, False, cplr_pos.x, cplr_pos.y)
             self.insert_cell(cplr, cplr_dtrans)
 

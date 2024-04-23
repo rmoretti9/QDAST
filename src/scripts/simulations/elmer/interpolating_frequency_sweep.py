@@ -63,7 +63,8 @@ def rational_fit(f, s_data, num_order, denom_order):
                 return _rational_fun(
                     args[0],
                     [*args[1 : (num_order_cl + 2)]],
-                    [*args[(num_order_cl + 2) : (num_order_cl + denom_order_cl + 2)]] + [1.0],
+                    [*args[(num_order_cl + 2) : (num_order_cl + denom_order_cl + 2)]]
+                    + [1.0],
                 )
 
             return fit_func
@@ -72,7 +73,9 @@ def rational_fit(f, s_data, num_order, denom_order):
         mesg = ""
         try:
             fit_func = _create_rational_fun_for_fit(num_order, denom_order)
-            popt, _, infodict, mesg, _ = curve_fit(fit_func, f, s_data, p0=initial_guess, full_output=True)
+            popt, _, infodict, mesg, _ = curve_fit(
+                fit_func, f, s_data, p0=initial_guess, full_output=True
+            )
             residual = np.linalg.norm(infodict["fvec"])
 
             def func(x):
@@ -92,7 +95,14 @@ def rational_fit(f, s_data, num_order, denom_order):
     return (residual, func)
 
 
-def sweep_orders_and_fit(f_all, s_all, min_num_order=0, max_num_order=10, min_denom_order=2, max_denom_order=20):
+def sweep_orders_and_fit(
+    f_all,
+    s_all,
+    min_num_order=0,
+    max_num_order=10,
+    min_denom_order=2,
+    max_denom_order=20,
+):
     """
     Args:
         f_all     (np.array): All frequencies calculated so far
@@ -122,7 +132,12 @@ def sweep_orders_and_fit(f_all, s_all, min_num_order=0, max_num_order=10, min_de
 
 
 def interpolating_frequency_sweep(
-    json_data, exec_path_override=None, fit_index=1, fit_magnitude=False, max_iter=20, plot_results=True
+    json_data,
+    exec_path_override=None,
+    fit_index=1,
+    fit_magnitude=False,
+    max_iter=20,
+    plot_results=True,
 ):
     """
     Run interpolated frequency sweep
@@ -147,7 +162,8 @@ def interpolating_frequency_sweep(
     """
     if not has_polyrat:
         logging.warning(
-            "Rational fit using scipy.curve_fit is extremely unreliable." " Consider installing polyrat library"
+            "Rational fit using scipy.curve_fit is extremely unreliable."
+            " Consider installing polyrat library"
         )
 
     if json_data["workflow"]["_parallelization_level"] == "elmer":
@@ -166,7 +182,9 @@ def interpolating_frequency_sweep(
     start_f = min(json_freqs)
     end_f = max(json_freqs)
     if start_f == end_f:
-        raise ValueError(f"Cannot do interpolating sweep as only a single frequency was given (f={json_freqs})")
+        raise ValueError(
+            f"Cannot do interpolating sweep as only a single frequency was given (f={json_freqs})"
+        )
 
     frequency_batch = json_data["frequency_batch"]
     max_delta_s = json_data["max_delta_s"]
@@ -175,7 +193,9 @@ def interpolating_frequency_sweep(
     def mag_from_components(re_arr, im_arr):
         return np.sqrt(np.power(re_arr, 2) + np.power(im_arr, 2))
 
-    def _sample_on_slope(func, f_sampled, s_sampled, batch_size, max_p_factor=5, nevals=10000):
+    def _sample_on_slope(
+        func, f_sampled, s_sampled, batch_size, max_p_factor=5, nevals=10000
+    ):
         """
         Args:
             func (float -> float): fitted magnitude of S-matrix component
@@ -227,7 +247,9 @@ def interpolating_frequency_sweep(
                 data_width = len(data)
                 peaks, _ = find_peaks(data)
                 prominences = peak_prominences(data, peaks)
-                widths = peak_widths(data, peaks, rel_height=0.1, prominence_data=prominences)[0]
+                widths = peak_widths(
+                    data, peaks, rel_height=0.1, prominence_data=prominences
+                )[0]
                 peaks = peaks[widths < data_width / 10]
                 prominences = prominences[0]
                 prominences = prominences[widths < data_width / 10]
@@ -239,7 +261,10 @@ def interpolating_frequency_sweep(
             peaks_all = np.concatenate((peaks_p, peaks_m))
             prominences_all = np.concatenate((prominences_p, prominences_m))
             sort_index = prominences_all.argsort()
-            peaks_all, prominences_all = peaks_all[sort_index], prominences_all[sort_index]
+            peaks_all, prominences_all = (
+                peaks_all[sort_index],
+                prominences_all[sort_index],
+            )
             return (peaks_all, prominences_all)
 
         fit_inds, _ = find_all_prominences(fx)
@@ -262,7 +287,9 @@ def interpolating_frequency_sweep(
             # normalize probabilities
             weights = weights / np.sum(weights)
             # sample n points(intervals)
-            random_choices = np.random.choice(x, size=(batch_size - sample_ind), replace=False, p=weights)
+            random_choices = np.random.choice(
+                x, size=(batch_size - sample_ind), replace=False, p=weights
+            )
             choices[sample_ind:] = random_choices
 
         # add some random noise to each sample to prevent choosing same points multiple times
@@ -279,7 +306,10 @@ def interpolating_frequency_sweep(
 
         for ind in range(batch_size):
             choices[ind] = separate_sample(
-                choices[ind], np.concatenate((f_sampled, np.delete(choices, ind))), separation, separation / 2
+                choices[ind],
+                np.concatenate((f_sampled, np.delete(choices, ind))),
+                separation,
+                separation / 2,
             )
 
         return choices
@@ -306,7 +336,9 @@ def interpolating_frequency_sweep(
                 def prev_func_mag(f):
                     return mag_from_components(prev_func_re(f), prev_func_im(f))
 
-            cur_freqs = _sample_on_slope(prev_func_mag, f_all, s_mag_fit, frequency_batch)
+            cur_freqs = _sample_on_slope(
+                prev_func_mag, f_all, s_mag_fit, frequency_batch
+            )
 
         # create sifs, needs correct frequencies and sif names in json data
         json_data_current_batch = copy.deepcopy(json_data)
@@ -330,7 +362,11 @@ def interpolating_frequency_sweep(
             smatrix_filaname = f'SMatrix_{simname}_f{str(f).replace(".", "_")}.dat'
             s_new.append(
                 np.array(
-                    read_result_smatrix(smatrix_filaname, path=exec_path_override.joinpath(simname), polar_form=False)
+                    read_result_smatrix(
+                        smatrix_filaname,
+                        path=exec_path_override.joinpath(simname),
+                        polar_form=False,
+                    )
                 )
             )
 
@@ -345,13 +381,19 @@ def interpolating_frequency_sweep(
         sort_index = f_all.argsort()
         f_all, s_all = f_all[sort_index], s_all[sort_index, :, :, :]
 
-        s_mag_fit = mag_from_components(s_all[:, 0, fit_index, 0], s_all[:, 0, fit_index, 1])
+        s_mag_fit = mag_from_components(
+            s_all[:, 0, fit_index, 0], s_all[:, 0, fit_index, 1]
+        )
 
         if fit_magnitude:
             min_func_re, orders_re = sweep_orders_and_fit(f_all, s_mag_fit)
         else:
-            min_func_re, orders_re = sweep_orders_and_fit(f_all, s_all[:, 0, fit_index, 0])
-            min_func_im, orders_im = sweep_orders_and_fit(f_all, s_all[:, 0, fit_index, 1])
+            min_func_re, orders_re = sweep_orders_and_fit(
+                f_all, s_all[:, 0, fit_index, 0]
+            )
+            min_func_im, orders_im = sweep_orders_and_fit(
+                f_all, s_all[:, 0, fit_index, 1]
+            )
 
         # error norm between the fitted function and previous fitted function on all frequencies
         if iteration_count > 1:
@@ -364,15 +406,21 @@ def interpolating_frequency_sweep(
                 old_s = prev_func_im(json_freqs)  # pylint: disable=E1102
                 s_error_im = np.mean(np.abs(new_s - old_s) / np.abs(new_s))
                 s_error = (s_error + s_error_im) / 2
-                print(f"iteration: {iteration_count}, delta_s_re/im: {s_error}, orders: re {orders_re} im {orders_im}")
+                print(
+                    f"iteration: {iteration_count}, delta_s_re/im: {s_error}, orders: re {orders_re} im {orders_im}"
+                )
             else:
-                print(f"iteration: {iteration_count}, delta_s_mag: {s_error}, orders: mag {orders_re}")
+                print(
+                    f"iteration: {iteration_count}, delta_s_mag: {s_error}, orders: mag {orders_re}"
+                )
 
         if fit_magnitude:
             s_mag_plot = min_func_re(json_freqs)
             plot_filename = f"it_{iteration_count}_mag_{orders_re}.png"
         else:
-            s_mag_plot = mag_from_components(min_func_re(json_freqs), min_func_im(json_freqs))
+            s_mag_plot = mag_from_components(
+                min_func_re(json_freqs), min_func_im(json_freqs)
+            )
             plot_filename = f"it_{iteration_count}_re_{orders_re}_im_{orders_im}.png"
 
         if plot_results:
@@ -406,7 +454,9 @@ def interpolating_frequency_sweep(
                 min_func, _ = sweep_orders_and_fit(f_all, s_all[:, i, j, part])
                 s_result[:, i, j, part] = min_func(json_freqs)
 
-            s_mag_interp = mag_from_components(s_result[:, i, j, 0], s_result[:, i, j, 1])
+            s_mag_interp = mag_from_components(
+                s_result[:, i, j, 0], s_result[:, i, j, 1]
+            )
             s_mag_data = mag_from_components(s_all[:, i, j, 0], s_all[:, i, j, 1])
 
             if plot_results:
@@ -419,7 +469,9 @@ def interpolating_frequency_sweep(
                 plt.close()
 
     for ind, f in enumerate(json_freqs):
-        smatrix_path = exec_path_override.joinpath(f'SMatrix_{simname}_f{str(f).replace(".", "_")}.dat')
+        smatrix_path = exec_path_override.joinpath(
+            f'SMatrix_{simname}_f{str(f).replace(".", "_")}.dat'
+        )
         cur_s_re = s_result[ind, :, :, 0]
         cur_s_im = s_result[ind, :, :, 1]
         cur_s_abs = mag_from_components(cur_s_re, cur_s_im)

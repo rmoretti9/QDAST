@@ -25,7 +25,9 @@ import sys
 import skrf
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "util"))
-from post_process_helpers import read_snp_network  # pylint: disable=wrong-import-position, no-name-in-module
+from post_process_helpers import (
+    read_snp_network,
+)  # pylint: disable=wrong-import-position, no-name-in-module
 
 # Find data files
 path = os.path.curdir
@@ -42,7 +44,10 @@ for result_file in result_files:
             if j != i:
                 resistor = skrf.Circuit.SeriesImpedance(freq, z0j, f"res{j}]")
                 gnd = skrf.Circuit.Ground(freq, f"gnd{j}")
-                connections += [[(snp_network, j), (resistor, 0)], [(resistor, 1), (gnd, 0)]]
+                connections += [
+                    [(snp_network, j), (resistor, 0)],
+                    [(resistor, 1), (gnd, 0)],
+                ]
         circ = skrf.Circuit(connections)
         q = [y[0][0].imag / y[0][0].real for y in circ.network.y]
         if any(v > 0 for v in q):  # ignore ports that gets invalid q values

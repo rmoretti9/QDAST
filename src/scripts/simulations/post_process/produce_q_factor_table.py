@@ -37,7 +37,11 @@ with open(sys.argv[1], "r") as fp:
 
 # Find data files
 path = os.path.curdir
-result_files = [f for f in os.listdir(path) if f.endswith("_project_energy.csv") or f.endswith("_project_results.json")]
+result_files = [
+    f
+    for f in os.listdir(path)
+    if f.endswith("_project_energy.csv") or f.endswith("_project_results.json")
+]
 if result_files:
     # Find parameters that are swept
     definition_files = [
@@ -71,10 +75,17 @@ if result_files:
             continue
 
         loss = {
-            loss_layer: sum([loss * v / total_energy for k, v in energy.items() if loss_layer in k])
+            loss_layer: sum(
+                [loss * v / total_energy for k, v in energy.items() if loss_layer in k]
+            )
             for loss_layer, loss in loss_tangents.items()
         }
         q[key] = {"Q_" + k: (1.0 / v if v else float("inf")) for k, v in loss.items()}
         q[key]["Q_total"] = 1.0 / sum(loss.values())
 
-    tabulate_into_csv(f"{os.path.basename(os.path.abspath(path))}_q_factors.csv", q, parameters, parameter_values)
+    tabulate_into_csv(
+        f"{os.path.basename(os.path.abspath(path))}_q_factors.csv",
+        q,
+        parameters,
+        parameter_values,
+    )

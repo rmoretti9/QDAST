@@ -21,7 +21,12 @@ import argparse
 from interpolating_frequency_sweep import interpolating_frequency_sweep
 from gmsh_helpers import produce_mesh
 from elmer_helpers import produce_sif_files, write_project_results_json
-from run_helpers import run_elmer_grid, run_elmer_solver, run_paraview, write_simulation_machine_versions_file
+from run_helpers import (
+    run_elmer_grid,
+    run_elmer_solver,
+    run_paraview,
+    write_simulation_machine_versions_file,
+)
 from cross_section_helpers import (
     produce_cross_section_mesh,
     produce_cross_section_sif_files,
@@ -32,22 +37,42 @@ from cross_section_helpers import (
 parser = argparse.ArgumentParser(description="Run script for Gmsh-Elmer workflow")
 parser.add_argument("json_filename", type=str, help="KQC simulation data")
 
-parser.add_argument("--skip-gmsh", action="store_true", help="Run everything else but Gmsh")
-parser.add_argument("--skip-elmergrid", action="store_true", help="Run everything else but Elmergrid")
-parser.add_argument("--skip-elmer-sifs", action="store_true", help="Run everything else but Elmer sif generation")
-parser.add_argument("--skip-elmer", action="store_true", help="Run everything else but Elmer")
-parser.add_argument("--skip-paraview", action="store_true", help="Run everything else but Paraview")
+parser.add_argument(
+    "--skip-gmsh", action="store_true", help="Run everything else but Gmsh"
+)
+parser.add_argument(
+    "--skip-elmergrid", action="store_true", help="Run everything else but Elmergrid"
+)
+parser.add_argument(
+    "--skip-elmer-sifs",
+    action="store_true",
+    help="Run everything else but Elmer sif generation",
+)
+parser.add_argument(
+    "--skip-elmer", action="store_true", help="Run everything else but Elmer"
+)
+parser.add_argument(
+    "--skip-paraview", action="store_true", help="Run everything else but Paraview"
+)
 
 parser.add_argument("--only-gmsh", action="store_true", help="Run only Gmsh")
 parser.add_argument("--only-elmergrid", action="store_true", help="Run only Elmergrid")
-parser.add_argument("--only-elmer-sifs", action="store_true", help="Only write the elmer sif simulation files")
+parser.add_argument(
+    "--only-elmer-sifs",
+    action="store_true",
+    help="Only write the elmer sif simulation files",
+)
 parser.add_argument("--only-elmer", action="store_true", help="Run only Elmer")
 parser.add_argument("--only-paraview", action="store_true", help="Run only Paraview")
 
-parser.add_argument("-q", action="store_true", help="Quiet operation: no GUIs are launched")
+parser.add_argument(
+    "-q", action="store_true", help="Quiet operation: no GUIs are launched"
+)
 
 parser.add_argument(
-    "--write-project-results", action="store_true", help="Write the results in KQC 'project.json' -format"
+    "--write-project-results",
+    action="store_true",
+    help="Write the results in KQC 'project.json' -format",
 )
 
 parser.add_argument(
@@ -149,8 +174,12 @@ if tool == "cross-section":
         run_paraview(name.joinpath("capacitance"), elmer_n_processes, path)
 
     if args.write_project_results:
-        res = get_cross_section_capacitance_and_inductance(json_data, path.joinpath(name))
-        if json_data.get("integrate_energies", False):  # Compute quality factors with energy participation ratio method
+        res = get_cross_section_capacitance_and_inductance(
+            json_data, path.joinpath(name)
+        )
+        if json_data.get(
+            "integrate_energies", False
+        ):  # Compute quality factors with energy participation ratio method
             res = {**res, **get_energy_integrals(path.joinpath(name))}
 
         with open(path.joinpath(f"{name}_project_results.json"), "w") as f:
@@ -171,7 +200,10 @@ else:
         produce_sif_files(json_data, path.joinpath(name))
 
     if workflow.get("run_elmer", True):
-        if tool == "wave_equation" and json_data.get("sweep_type", "explicit") == "interpolating":
+        if (
+            tool == "wave_equation"
+            and json_data.get("sweep_type", "explicit") == "interpolating"
+        ):
             interpolating_frequency_sweep(json_data, exec_path_override=path)
         else:
             run_elmer_solver(json_data, path)

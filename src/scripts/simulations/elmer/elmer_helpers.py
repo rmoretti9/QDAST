@@ -70,7 +70,13 @@ def sif_common_header(
     res += "INCLUDE {}/{}\n".format(folder_path, "mesh.names")
     if def_file:
         res += "INCLUDE {}/{}\n".format(folder_path, def_file)
-    res += sif_block("Header", ['Mesh DB "." "{}"'.format(folder_path), 'Results Directory "{}"'.format(folder_path)])
+    res += sif_block(
+        "Header",
+        [
+            'Mesh DB "." "{}"'.format(folder_path),
+            'Results Directory "{}"'.format(folder_path),
+        ],
+    )
 
     if json_data.get("maximum_passes", 1) > 1:
         reset_adaptive_remesh_str = ["Reset Adaptive Mesh = Logical True"]
@@ -97,10 +103,18 @@ def sif_common_header(
             'Simulation Type = "Steady State"',
             f'Steady State Max Iterations = {json_data.get("maximum_passes", 1)}',
             f'Steady State Min Iterations = {json_data.get("minimum_passes", 1)}',
-            ("" if angular_frequency is None else "Angular Frequency = {}".format(angular_frequency)),
+            (
+                ""
+                if angular_frequency is None
+                else "Angular Frequency = {}".format(angular_frequency)
+            ),
             "Coordinate Scaling = {}".format(coordinate_scaling(json_data)),
             f'Mesh Levels = {json_data.get("mesh_levels", 1)}',
-            "Discontinuous Boundary Full Angle = Logical True" if discontinuous_boundary else "",
+            (
+                "Discontinuous Boundary Full Angle = Logical True"
+                if discontinuous_boundary
+                else ""
+            ),
         ],
     )
     return res
@@ -140,7 +154,9 @@ def sif_matc_block(data: Sequence[str]) -> str:
     return res
 
 
-def sif_linsys(method="mg", p_element_order=3, steady_state_error=None) -> Sequence[str]:
+def sif_linsys(
+    method="mg", p_element_order=3, steady_state_error=None
+) -> Sequence[str]:
     """
     Returns a linear system definition in sif format.
 
@@ -220,7 +236,12 @@ def sif_adaptive_mesh(
 
 
 def get_port_solver(
-    ordinate, percent_error=0.005, max_error_scale=2, max_outlier_fraction=1e-3, maximum_passes=1, minimum_passes=1
+    ordinate,
+    percent_error=0.005,
+    max_error_scale=2,
+    max_outlier_fraction=1e-3,
+    maximum_passes=1,
+    minimum_passes=1,
 ) -> str:
     """
     Returns a port solver for wave equation in sif format.
@@ -261,7 +282,9 @@ def get_port_solver(
     return sif_block(f"Solver {ordinate}", solver_lines)
 
 
-def get_vector_helmholtz(ordinate, angular_frequency, result_file, solver_options) -> str:
+def get_vector_helmholtz(
+    ordinate, angular_frequency, result_file, solver_options
+) -> str:
     """
     Returns a vector Helmholtz equation solver in sif file format.
 
@@ -387,7 +410,9 @@ def get_vector_helmholtz(ordinate, angular_frequency, result_file, solver_option
     return sif_block(f"Solver {ordinate}", solver_lines)
 
 
-def get_vector_helmholtz_calc_fields(ordinate: Union[str, int], angular_frequency: Union[str, float]) -> str:
+def get_vector_helmholtz_calc_fields(
+    ordinate: Union[str, int], angular_frequency: Union[str, float]
+) -> str:
     solver_lines = [
         'Equation = "calcfields"',
         "Optimize Bandwidth = False",
@@ -457,7 +482,9 @@ def get_electrostatics_solver(
         "Nonlinear System Consistent Norm = True",
     ]
 
-    solver_lines += sif_linsys(method=method, p_element_order=p_element_order, steady_state_error=percent_error)
+    solver_lines += sif_linsys(
+        method=method, p_element_order=p_element_order, steady_state_error=percent_error
+    )
     if maximum_passes > 1:
         solver_lines += sif_adaptive_mesh(
             percent_error=percent_error,
@@ -473,7 +500,9 @@ def get_electrostatics_solver(
     return sif_block(f"Solver {ordinate}", solver_lines)
 
 
-def get_circuit_solver(ordinate: Union[str, int], p_element_order: int, exec_solver="Always"):
+def get_circuit_solver(
+    ordinate: Union[str, int], p_element_order: int, exec_solver="Always"
+):
     """
     Returns circuit solver in sif file format.
 
@@ -699,7 +728,9 @@ def get_equation(ordinate, solver_ids, keywords=None):
         (str): equation in sif file format
     """
     keywords = [] if keywords is None else keywords
-    equation_lines = [f'Active Solvers({len(solver_ids)}) = {" ".join([str(sid) for sid in solver_ids])}']
+    equation_lines = [
+        f'Active Solvers({len(solver_ids)}) = {" ".join([str(sid) for sid in solver_ids])}'
+    ]
     return sif_block(f"Equation {ordinate}", equation_lines + keywords)
 
 
@@ -784,12 +815,21 @@ def produce_sif_files(json_data: dict, path: Path) -> List[Path]:
     sif_names = json_data["sif_names"]
 
     if json_data["tool"] == "capacitance" and len(sif_names) != 1:
-        logging.warning(f"Capacitance tool only supports 1 sif name, given {len(sif_names)}")
+        logging.warning(
+            f"Capacitance tool only supports 1 sif name, given {len(sif_names)}"
+        )
 
     sif_filepaths = []
     for ind, sif in enumerate(sif_names):
         if json_data["tool"] == "capacitance":
-            content = sif_capacitance(json_data, path, vtu_name=path, angular_frequency=0, dim=3, with_zero=False)
+            content = sif_capacitance(
+                json_data,
+                path,
+                vtu_name=path,
+                angular_frequency=0,
+                dim=3,
+                with_zero=False,
+            )
         elif json_data["tool"] == "wave_equation":
             freqs = json_data["frequency"]
             if len(freqs) != len(sif_names):
@@ -823,9 +863,15 @@ def get_body_list(json_data, dim, mesh_names):
     """
     body_list = []
     if dim == 2:
-        body_list = [n for n in ["vacuum", *json_data["layers"].keys()] if n in mesh_names]
+        body_list = [
+            n for n in ["vacuum", *json_data["layers"].keys()] if n in mesh_names
+        ]
     elif dim == 3:
-        body_list = [n for n in ["vacuum", "pec", *json_data["material_dict"].keys()] if n in mesh_names]
+        body_list = [
+            n
+            for n in ["vacuum", "pec", *json_data["material_dict"].keys()]
+            if n in mesh_names
+        ]
 
     unique_bodies = set()
     return [n for n in body_list if not (n in unique_bodies or unique_bodies.add(n))]
@@ -861,11 +907,23 @@ def get_permittivities(json_data, with_zero, dim, mesh_names):
     bodies = get_body_list(json_data, dim, mesh_names)
     if dim == 2:
         return [
-            1.0 if with_zero else json_data.get(f"{s}_permittivity", _search_permittivity(json_data, s)) for s in bodies
+            (
+                1.0
+                if with_zero
+                else json_data.get(
+                    f"{s}_permittivity", _search_permittivity(json_data, s)
+                )
+            )
+            for s in bodies
         ]
     elif dim == 3:
         return [
-            1.0 if with_zero else json_data["material_dict"].get(n, dict()).get("permittivity", 1.0) for n in bodies
+            (
+                1.0
+                if with_zero
+                else json_data["material_dict"].get(n, dict()).get("permittivity", 1.0)
+            )
+            for n in bodies
         ]
     return []
 
@@ -883,7 +941,9 @@ def get_signals(json_data, dim, mesh_names):
         (list(str)): list of signals
     """
     if dim == 2:
-        return [n for n in json_data["layers"].keys() if "signal" in n and n in mesh_names]
+        return [
+            n for n in json_data["layers"].keys() if "signal" in n and n in mesh_names
+        ]
     elif dim == 3:
         port_numbers = sorted([port["number"] for port in json_data["ports"]])
         return [n for n in [f"signal_{i}" for i in port_numbers] if n in mesh_names]
@@ -904,14 +964,23 @@ def get_grounds(json_data, dim, mesh_names):
     """
     if dim == 2:
         signals = get_signals(json_data, dim, mesh_names)
-        return [n for n in json_data["layers"].keys() if "ground" in n and n not in signals and n in mesh_names]
+        return [
+            n
+            for n in json_data["layers"].keys()
+            if "ground" in n and n not in signals and n in mesh_names
+        ]
     elif dim == 3:
         return [n for n in mesh_names if n.startswith("ground")]
     return []
 
 
 def sif_capacitance(
-    json_data: dict, folder_path: Path, vtu_name: str, angular_frequency: float, dim: int, with_zero: bool = False
+    json_data: dict,
+    folder_path: Path,
+    vtu_name: str,
+    angular_frequency: float,
+    dim: int,
+    with_zero: bool = False,
 ):
     """
     Returns the capacitance solver sif. If `with_zero` is true then all the permittivities are set to 1.0.
@@ -931,7 +1000,9 @@ def sif_capacitance(
 
     name = "capacitance0" if with_zero else "capacitance"
 
-    header = sif_common_header(json_data, folder_path, angular_frequency=angular_frequency, dim=dim)
+    header = sif_common_header(
+        json_data, folder_path, angular_frequency=angular_frequency, dim=dim
+    )
     constants = sif_block("Constants", [f"Permittivity Of Vacuum = {epsilon_0}"])
 
     solvers = get_electrostatics_solver(
@@ -959,16 +1030,26 @@ def sif_capacitance(
 
     mesh_names = read_mesh_names(folder_path)
     body_list = get_body_list(json_data, dim=dim, mesh_names=mesh_names)
-    permittivity_list = get_permittivities(json_data, with_zero=with_zero, dim=dim, mesh_names=mesh_names)
+    permittivity_list = get_permittivities(
+        json_data, with_zero=with_zero, dim=dim, mesh_names=mesh_names
+    )
 
-    if json_data.get("integrate_energies", False) and not with_zero:  # no EPR for inductance
-        solvers += get_save_energy_solver(ordinate=4, energy_file="energy.dat", bodies=body_list)
+    if (
+        json_data.get("integrate_energies", False) and not with_zero
+    ):  # no EPR for inductance
+        solvers += get_save_energy_solver(
+            ordinate=4, energy_file="energy.dat", bodies=body_list
+        )
 
     bodies = ""
     materials = ""
     for i, (body, perm) in enumerate(zip(body_list, permittivity_list), 1):
         bodies += sif_body(
-            ordinate=i, target_bodies=[body], equation=1, material=i, keywords=[f"{body} = Logical True"]
+            ordinate=i,
+            target_bodies=[body],
+            equation=1,
+            material=i,
+            keywords=[f"{body} = Logical True"],
         )
 
         materials += sif_block(f"Material {i}", [f"Relative Permittivity = {perm}"])
@@ -980,7 +1061,9 @@ def sif_capacitance(
     n_boundaries = 0
     if len(ground_boundaries) > 0:
         boundary_conditions += sif_boundary_condition(
-            ordinate=1, target_boundaries=ground_boundaries, conditions=["Potential = 0.0"]
+            ordinate=1,
+            target_boundaries=ground_boundaries,
+            conditions=["Potential = 0.0"],
         )
         n_boundaries = 1
 
@@ -997,7 +1080,9 @@ def sif_capacitance(
 
     for i, s in enumerate(signals_boundaries, 1):
         boundary_conditions += sif_boundary_condition(
-            ordinate=i + n_boundaries, target_boundaries=[s], conditions=[f"Capacitance Body = {cbody_map[s]}"]
+            ordinate=i + n_boundaries,
+            target_boundaries=[s],
+            conditions=[f"Capacitance Body = {cbody_map[s]}"],
         )
     n_boundaries += len(cbody_map)
 
@@ -1010,12 +1095,18 @@ def sif_capacitance(
                 if "potential" in b:
                     conditions = [f"Potential = {b['potential']}"]
                     boundary_conditions += sif_boundary_condition(
-                        ordinate=1 + n_boundaries, target_boundaries=[bc_name], conditions=conditions
+                        ordinate=1 + n_boundaries,
+                        target_boundaries=[bc_name],
+                        conditions=conditions,
                     )
                     n_boundaries += 1
 
     # Add place-holder boundaries (if additional physical groups are given)
-    other_groups = [n for n in mesh_names if n not in body_list + grounds + signals and not n.startswith("port_")]
+    other_groups = [
+        n
+        for n in mesh_names
+        if n not in body_list + grounds + signals and not n.startswith("port_")
+    ]
     for i, s in enumerate(other_groups, 1):
         boundary_conditions += sif_boundary_condition(
             ordinate=i + n_boundaries,
@@ -1027,7 +1118,15 @@ def sif_capacitance(
         )
     n_boundaries += len(other_groups)
 
-    return header + constants + solvers + equations + materials + bodies + boundary_conditions
+    return (
+        header
+        + constants
+        + solvers
+        + equations
+        + materials
+        + bodies
+        + boundary_conditions
+    )
 
 
 def sif_inductance(json_data, folder_path, angular_frequency, circuit_definitions_file):
@@ -1047,10 +1146,14 @@ def sif_inductance(json_data, folder_path, angular_frequency, circuit_definition
     Returns:
         (str): elmer solver input file for inductance computation
     """
-    header = sif_common_header(json_data, folder_path, angular_frequency, circuit_definitions_file, dim=2)
+    header = sif_common_header(
+        json_data, folder_path, angular_frequency, circuit_definitions_file, dim=2
+    )
     equations = get_equation(ordinate=1, solver_ids=[1, 2, 3])
 
-    solvers = get_circuit_solver(ordinate=1, p_element_order=json_data["p_element_order"], exec_solver="Always")
+    solvers = get_circuit_solver(
+        ordinate=1, p_element_order=json_data["p_element_order"], exec_solver="Always"
+    )
 
     solvers += get_magneto_dynamics_2d_harmonic_solver(
         ordinate=2,
@@ -1061,7 +1164,9 @@ def sif_inductance(json_data, folder_path, angular_frequency, circuit_definition
         max_outlier_fraction=json_data["max_outlier_fraction"],
     )
 
-    solvers += get_magneto_dynamics_calc_fields(ordinate=3, p_element_order=json_data["p_element_order"])
+    solvers += get_magneto_dynamics_calc_fields(
+        ordinate=3, p_element_order=json_data["p_element_order"]
+    )
 
     solvers += get_result_output_solver(
         ordinate=4,
@@ -1083,7 +1188,9 @@ def sif_inductance(json_data, folder_path, angular_frequency, circuit_definition
     bodies += sif_body(ordinate=2, target_bodies=grounds, equation=1, material=2)
     bodies += sif_body(ordinate=3, target_bodies=signals, equation=1, material=2)
 
-    materials = sif_block("Material 1", ["Relative Permeability = 1", "Electric Conductivity = 1"])
+    materials = sif_block(
+        "Material 1", ["Relative Permeability = 1", "Electric Conductivity = 1"]
+    )
 
     london_penetration_depth = json_data.get("london_penetration_depth", 0.0)
     if london_penetration_depth > 0:
@@ -1098,13 +1205,20 @@ def sif_inductance(json_data, folder_path, angular_frequency, circuit_definition
 
     materials += sif_block("Material 2", ["Relative Permeability = 1", *opt_params])
 
-    london_param = ["London Equations = Logical True"] if london_penetration_depth > 0 else []
+    london_param = (
+        ["London Equations = Logical True"] if london_penetration_depth > 0 else []
+    )
 
-    components = sif_component(ordinate=1, master_bodies=[3], coil_type="Massive", keywords=london_param)
+    components = sif_component(
+        ordinate=1, master_bodies=[3], coil_type="Massive", keywords=london_param
+    )
 
     res = header + equations + solvers + materials + bodies + components
 
-    res += sif_block("Body Force 1", ['Name = "Circuit"', "testsource Re = Real 1.0", "testsource Im = Real 0.0"])
+    res += sif_block(
+        "Body Force 1",
+        ['Name = "Circuit"', "testsource Re = Real 1.0", "testsource Im = Real 0.0"],
+    )
 
     return res
 
@@ -1127,7 +1241,9 @@ def sif_circuit_definitions(json_data):
 
     res += f"\n$ C.1.variables = {n_equations}\n"
     for n in ["A", "B", "Mre", "Mim"]:
-        res += "$ C.1.{} = zeros({n_equations},{n_equations})\n".format(n, n_equations=n_equations)
+        res += "$ C.1.{} = zeros({n_equations},{n_equations})\n".format(
+            n, n_equations=n_equations
+        )
 
     # Define variables
     res += "\n"
@@ -1200,13 +1316,17 @@ def sif_wave_equation(
     metal_height = metal_height[0]
 
     dim = 3
-    header = sif_common_header(json_data, folder_path, discontinuous_boundary=(use_AV and metal_height == 0))
+    header = sif_common_header(
+        json_data, folder_path, discontinuous_boundary=(use_AV and metal_height == 0)
+    )
     constants = sif_block("Constants", [f"Permittivity Of Vacuum = {epsilon_0}"])
 
     # Bodies and materials
     mesh_names = read_mesh_names(folder_path)
     body_list = get_body_list(json_data, dim=dim, mesh_names=mesh_names)
-    permittivity_list = get_permittivities(json_data, with_zero=False, dim=dim, mesh_names=mesh_names)
+    permittivity_list = get_permittivities(
+        json_data, with_zero=False, dim=dim, mesh_names=mesh_names
+    )
 
     bodies = ""
     materials = ""
@@ -1215,7 +1335,9 @@ def sif_wave_equation(
     for i, (body, perm) in enumerate(zip(body_list, permittivity_list), 1):
         material_parameters = [f'Name = "{body}"']
         if body == "pec" and use_AV:
-            bodies += sif_block(f"Body {i}", [f"Target Bodies(1) = $ {body}", f"Material = {i}"])
+            bodies += sif_block(
+                f"Body {i}", [f"Target Bodies(1) = $ {body}", f"Material = {i}"]
+            )
         else:
             bodies += sif_body(ordinate=i, target_bodies=[body], equation=1, material=i)
             material_parameters += [f"Relative Permittivity = {perm}"]
@@ -1273,18 +1395,27 @@ def sif_wave_equation(
         solver_ordinate += 1
 
     solvers += get_vector_helmholtz(
-        ordinate=solver_ordinate, angular_frequency="$ w", result_file=result_file, solver_options=solver_options
+        ordinate=solver_ordinate,
+        angular_frequency="$ w",
+        result_file=result_file,
+        solver_options=solver_options,
     )
-    solvers += get_vector_helmholtz_calc_fields(ordinate=solver_ordinate + 1, angular_frequency="$ w")
+    solvers += get_vector_helmholtz_calc_fields(
+        ordinate=solver_ordinate + 1, angular_frequency="$ w"
+    )
 
     solvers += get_result_output_solver(
         ordinate=solver_ordinate + 2,
-        output_file_name=Path(str(folder_path) + "_f" + str(frequency).replace(".", "_")),
+        output_file_name=Path(
+            str(folder_path) + "_f" + str(frequency).replace(".", "_")
+        ),
         exec_solver="Always",
     )
 
     # Equations
-    equations = get_equation(ordinate=1, solver_ids=[solver_ordinate, solver_ordinate + 1])
+    equations = get_equation(
+        ordinate=1, solver_ids=[solver_ordinate, solver_ordinate + 1]
+    )
     if not use_AV:
         equations += get_equation(ordinate=2, solver_ids=[1])
 
@@ -1296,7 +1427,12 @@ def sif_wave_equation(
     sc_grounds = grounds[:-1]
 
     if use_AV:
-        pec_conditions = ["AV re {e} = 0", "AV im {e} = 0", "AV re = Real 0", "AV im = Real 0"]
+        pec_conditions = [
+            "AV re {e} = 0",
+            "AV im {e} = 0",
+            "AV re = Real 0",
+            "AV im = Real 0",
+        ]
         if lpd > 0:
             sc_metal_conditions = [
                 "Layer Thickness = $ lambda_l",
@@ -1312,15 +1448,25 @@ def sif_wave_equation(
             ]
         else:
             logging.warning("AV without cond or london penetration depth not supported")
-            sc_metal_conditions = ["AV re {e} = 0", "AV im {e} = 0", "AV re = Real 0", "AV im = Real 0"]
+            sc_metal_conditions = [
+                "AV re {e} = 0",
+                "AV im {e} = 0",
+                "AV re = Real 0",
+                "AV im = Real 0",
+            ]
     else:
         pec_conditions = ["Potential = 0", "E re {e} = 0", "E im {e} = 0"]
         if lpd > 0:
-            sc_metal_conditions = ["Layer Thickness = $ lambda_l", "Layer Electric Conductivity Im = $ sigma"]
+            sc_metal_conditions = [
+                "Layer Thickness = $ lambda_l",
+                "Layer Electric Conductivity Im = $ sigma",
+            ]
         else:
             sc_metal_conditions = ["E re {e} = 0", "E im {e} = 0"]
 
-    boundary_conditions += sif_boundary_condition(ordinate=1, target_boundaries=[pec_box], conditions=pec_conditions)
+    boundary_conditions += sif_boundary_condition(
+        ordinate=1, target_boundaries=[pec_box], conditions=pec_conditions
+    )
     n_boundaries = 1
 
     sc_ground_conditions = sc_metal_conditions + ([] if use_AV else ["Potential = 0"])
@@ -1336,7 +1482,9 @@ def sif_wave_equation(
     for i, s in enumerate(signals, 1):
         signal_bc_inds.append(i + n_boundaries)
         boundary_conditions += sif_boundary_condition(
-            ordinate=i + n_boundaries, target_boundaries=[s], conditions=sc_signal_conditions
+            ordinate=i + n_boundaries,
+            target_boundaries=[s],
+            conditions=sc_signal_conditions,
         )
     n_boundaries += len(signals)
 
@@ -1347,7 +1495,11 @@ def sif_wave_equation(
         port_name = f'port_{port["number"]}'
         if port["type"] == "EdgePort":
             # The edge port is split by dielectric materials
-            port_parts = [(n, n[len(port_name + "_") :]) for n in mesh_names if n.startswith(port_name + "_")]
+            port_parts = [
+                (n, n[len(port_name + "_") :])
+                for n in mesh_names
+                if n.startswith(port_name + "_")
+            ]
         else:
             # The material is assumed to be homogeneous throughout the internal port, so any material can be used.
             # We pick 'vacuum' by default if it exists.
@@ -1414,7 +1566,9 @@ def sif_wave_equation(
                 material_inds = [1, 3]
 
             for signal_ind in signal_port_bc_inds:
-                for signal_edge_bc_ind, material_ind in zip(signal_intersection_bc_inds, material_inds):
+                for signal_edge_bc_ind, material_ind in zip(
+                    signal_intersection_bc_inds, material_inds
+                ):
                     conditions = [
                         f"Constraint Mode = Integer {constraint_ind}",
                         f"Intersection BC(2) = {signal_ind} {signal_edge_bc_ind}",
@@ -1424,24 +1578,46 @@ def sif_wave_equation(
                         f"Material = Integer {material_ind}",
                     ]
                     n_boundaries += 1
-                    boundary_conditions += sif_block(f"Boundary Condition {n_boundaries}", conditions)
+                    boundary_conditions += sif_block(
+                        f"Boundary Condition {n_boundaries}", conditions
+                    )
 
             constraint_ind += 1
 
     # Add place-holder boundaries (if additional physical groups are given)
-    other_groups = [n for n in mesh_names if n not in body_list + grounds + signals and not n.startswith("port_")]
+    other_groups = [
+        n
+        for n in mesh_names
+        if n not in body_list + grounds + signals and not n.startswith("port_")
+    ]
     for i, s in enumerate(other_groups, 1):
         boundary_conditions += sif_boundary_condition(
             ordinate=i + n_boundaries,
             target_boundaries=[s],
-            conditions=["! Default boundary for full wave (PEC)", "E re {e} = 0", "E im {e} = 0", "Potential = 1"],
+            conditions=[
+                "! Default boundary for full wave (PEC)",
+                "E re {e} = 0",
+                "E im {e} = 0",
+                "Potential = 1",
+            ],
         )
     n_boundaries += len(other_groups)
 
-    return header + constants + matc_blocks + solvers + equations + materials + bodies + boundary_conditions
+    return (
+        header
+        + constants
+        + matc_blocks
+        + solvers
+        + equations
+        + materials
+        + bodies
+        + boundary_conditions
+    )
 
 
-def read_result_smatrix(s_matrix_filename: str, path: Path = None, polar_form: bool = True):
+def read_result_smatrix(
+    s_matrix_filename: str, path: Path = None, polar_form: bool = True
+):
     """
     Read Elmer Smatrix output and transform the entries to polar format
 
@@ -1458,12 +1634,20 @@ def read_result_smatrix(s_matrix_filename: str, path: Path = None, polar_form: b
         s_matrix_filename = path.joinpath(s_matrix_filename)
 
     with open(s_matrix_filename, "r") as file:
-        reader = csv.reader(file, delimiter=" ", skipinitialspace=True, quoting=csv.QUOTE_NONNUMERIC)
-        s_matrix_re = np.array([[x for x in row if isinstance(x, float)] for row in reader])
+        reader = csv.reader(
+            file, delimiter=" ", skipinitialspace=True, quoting=csv.QUOTE_NONNUMERIC
+        )
+        s_matrix_re = np.array(
+            [[x for x in row if isinstance(x, float)] for row in reader]
+        )
 
     with open(str(s_matrix_filename) + "_im", "r") as file:
-        reader = csv.reader(file, delimiter=" ", skipinitialspace=True, quoting=csv.QUOTE_NONNUMERIC)
-        s_matrix_im = np.array([[x for x in row if isinstance(x, float)] for row in reader])
+        reader = csv.reader(
+            file, delimiter=" ", skipinitialspace=True, quoting=csv.QUOTE_NONNUMERIC
+        )
+        s_matrix_im = np.array(
+            [[x for x in row if isinstance(x, float)] for row in reader]
+        )
 
     if polar_form:
         s_matrix_mag = np.hypot(s_matrix_re, s_matrix_im)
@@ -1479,7 +1663,9 @@ def read_result_smatrix(s_matrix_filename: str, path: Path = None, polar_form: b
     return smatrix_full
 
 
-def write_project_results_json(json_data: dict, path: Path, msh_filepath, polar_form: bool = True):
+def write_project_results_json(
+    json_data: dict, path: Path, msh_filepath, polar_form: bool = True
+):
     """
     Writes the solution data in '_project_results.json' format for one Elmer simulation.
 
@@ -1504,7 +1690,12 @@ def write_project_results_json(json_data: dict, path: Path, msh_filepath, polar_
         if c_matrix_filename.exists():
 
             with open(c_matrix_filename, "r") as file:
-                my_reader = csv.reader(file, delimiter=" ", skipinitialspace=True, quoting=csv.QUOTE_NONNUMERIC)
+                my_reader = csv.reader(
+                    file,
+                    delimiter=" ",
+                    skipinitialspace=True,
+                    quoting=csv.QUOTE_NONNUMERIC,
+                )
                 c_matrix = list(my_reader)
 
             c_data = {
@@ -1539,9 +1730,13 @@ def write_project_results_json(json_data: dict, path: Path, msh_filepath, polar_
 
         results = []
         for f in frequencies:
-            s_matrix_filename = main_sim_folder.joinpath(f'SMatrix_{simname}_f{str(f).replace(".", "_")}.dat')
+            s_matrix_filename = main_sim_folder.joinpath(
+                f'SMatrix_{simname}_f{str(f).replace(".", "_")}.dat'
+            )
             smatrix_full = read_result_smatrix(
-                s_matrix_filename, path=path.joinpath(msh_filepath.stem), polar_form=polar_form
+                s_matrix_filename,
+                path=path.joinpath(msh_filepath.stem),
+                polar_form=polar_form,
             )
             results.append(
                 {
@@ -1560,13 +1755,19 @@ def write_project_results_json(json_data: dict, path: Path, msh_filepath, polar_
         # write touchstone
         touchstone_filename = f"{sif_folder}.s{len(ports)}p"
         with open(touchstone_filename, "w") as touchstone_file:
-            touchstone_file.write("! Touchstone file exported from KQCircuits Elmer Simulation\n")
-            touchstone_file.write(f"! Generated: {time.strftime('%a, %d %b %Y %H:%M:%S', time.localtime())}\n")
+            touchstone_file.write(
+                "! Touchstone file exported from KQCircuits Elmer Simulation\n"
+            )
+            touchstone_file.write(
+                f"! Generated: {time.strftime('%a, %d %b %Y %H:%M:%S', time.localtime())}\n"
+            )
             touchstone_file.write(
                 "! Warning: Currently renormalization not implemented in Elmer "
                 "(R on the next line might not correspond to the real port impedance)\n"
             )
-            touchstone_file.write(f"# GHz S {'MA' if polar_form else 'IR'} R {renormalizations[0]} \n")
+            touchstone_file.write(
+                f"# GHz S {'MA' if polar_form else 'IR'} R {renormalizations[0]} \n"
+            )
             for p in ports:
                 touchstone_file.write(
                     f"! Port {p['number']}: {p['type']} R {p['resistance']} "
@@ -1580,7 +1781,9 @@ def write_project_results_json(json_data: dict, path: Path, msh_filepath, polar_
                     else:
                         touchstone_file.write("{:30s} ".format(" "))
                     for elem in row:
-                        touchstone_file.write("{:25s} {:35s}".format(str(elem[0]), str(elem[1])))
+                        touchstone_file.write(
+                            "{:25s} {:35s}".format(str(elem[0]), str(elem[1]))
+                        )
                     touchstone_file.write("\n")
 
         filter_resonant_vtus(results, sif_folder, simname)
@@ -1616,7 +1819,12 @@ def filter_resonant_vtus(results, sif_folder, simname):
         available_vtus = sif_folder.glob("*.vtu")
     extension_l = len("_t0001.pvtu") if vtu_partitioned else len("_t0001.vtu")
     available_f = np.array(
-        list({float(str(v.name)[len(simname) + 2 : -extension_l].replace("_", ".")) for v in available_vtus})
+        list(
+            {
+                float(str(v.name)[len(simname) + 2 : -extension_l].replace("_", "."))
+                for v in available_vtus
+            }
+        )
     )
     available_f = np.sort(available_f)
 

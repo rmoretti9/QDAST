@@ -33,7 +33,9 @@ path = os.path.curdir
 result_files = [f for f in os.listdir(path) if f.endswith("_project_results.json")]
 if result_files:
     # Find parameters that are swept
-    definition_files = [f.replace("_project_results.json", ".json") for f in result_files]
+    definition_files = [
+        f.replace("_project_results.json", ".json") for f in result_files
+    ]
     parameters, parameter_values = find_varied_parameters(definition_files)
 
     # Load result data
@@ -41,6 +43,15 @@ if result_files:
     for key, result_file in zip(parameter_values.keys(), result_files):
         with open(result_file, "r") as f:
             result = json.load(f)
-        cmatrix[key] = {f"C{i+1}{j+1}": c for i, l in enumerate(result["CMatrix"]) for j, c in enumerate(l)}
+        cmatrix[key] = {
+            f"C{i+1}{j+1}": c
+            for i, l in enumerate(result["CMatrix"])
+            for j, c in enumerate(l)
+        }
 
-    tabulate_into_csv(f"{os.path.basename(os.path.abspath(path))}_results.csv", cmatrix, parameters, parameter_values)
+    tabulate_into_csv(
+        f"{os.path.basename(os.path.abspath(path))}_results.csv",
+        cmatrix,
+        parameters,
+        parameter_values,
+    )

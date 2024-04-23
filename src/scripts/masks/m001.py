@@ -65,7 +65,14 @@ parameters_qd = {
 
 parameters_qs = {
     "res_lengths": [4649.6, 4908.9, 5208.5, 5516.8, 5848.9, 6217.4],
-    "type_coupler": ["interdigital", "interdigital", "interdigital", "gap", "gap", "gap"],
+    "type_coupler": [
+        "interdigital",
+        "interdigital",
+        "interdigital",
+        "gap",
+        "gap",
+        "gap",
+    ],
     "l_fingers": [19.9, 7.3, 15.2, 10.9, 18.5, 23.6],
     "n_fingers": [4, 4, 2, 4, 4, 4],
     "res_beg": ["galvanic"] * 6,
@@ -94,12 +101,36 @@ m001.add_chip(
     [
         (AirbridgeCrossings, "AB1", {"crossings": 1}),
         (AirbridgeCrossings, "AB2", {"crossings": 10}),
-        (QualityFactor, "QSG", {**parameters_qs, "n_ab": 6 * [0], "res_term": 6 * ["galvanic"]}),
-        (QualityFactor, "QSA", {**parameters_qs, "n_ab": 6 * [0], "res_term": 6 * ["airbridge"]}),
-        (QualityFactor, "QSC", {**parameters_qs, "n_ab": 6 * [5], "res_term": 6 * ["galvanic"]}),
-        (QualityFactor, "QDG", {**parameters_qd, "n_ab": 18 * [0], "res_term": 18 * ["galvanic"]}),
-        (QualityFactor, "QDA", {**parameters_qd, "n_ab": 18 * [0], "res_term": 18 * ["airbridge"]}),
-        (QualityFactor, "QDC", {**parameters_qd, "n_ab": 18 * [5], "res_term": 18 * ["galvanic"]}),
+        (
+            QualityFactor,
+            "QSG",
+            {**parameters_qs, "n_ab": 6 * [0], "res_term": 6 * ["galvanic"]},
+        ),
+        (
+            QualityFactor,
+            "QSA",
+            {**parameters_qs, "n_ab": 6 * [0], "res_term": 6 * ["airbridge"]},
+        ),
+        (
+            QualityFactor,
+            "QSC",
+            {**parameters_qs, "n_ab": 6 * [5], "res_term": 6 * ["galvanic"]},
+        ),
+        (
+            QualityFactor,
+            "QDG",
+            {**parameters_qd, "n_ab": 18 * [0], "res_term": 18 * ["galvanic"]},
+        ),
+        (
+            QualityFactor,
+            "QDA",
+            {**parameters_qd, "n_ab": 18 * [0], "res_term": 18 * ["airbridge"]},
+        ),
+        (
+            QualityFactor,
+            "QDC",
+            {**parameters_qd, "n_ab": 18 * [5], "res_term": 18 * ["galvanic"]},
+        ),
     ]
 )
 

@@ -33,7 +33,10 @@ import pyEPR as epr
 import qutip.fileio
 
 project_path = Path.cwd()
-project_name = str(Path(sys.argv[1]).stem if Path(sys.argv[1]).suffixes else Path(sys.argv[1])) + "_project"
+project_name = (
+    str(Path(sys.argv[1]).stem if Path(sys.argv[1]).suffixes else Path(sys.argv[1]))
+    + "_project"
+)
 
 with open(sys.argv[2], "r") as fp:
     pp_data = json.load(fp)
@@ -69,24 +72,35 @@ try:
     )
     oDesign = pinfo.design
 
-    junction_numbers = [int(e.split("Junction")[-1]) for e in pinfo.get_all_object_names() if "Junction" in e]
+    junction_numbers = [
+        int(e.split("Junction")[-1])
+        for e in pinfo.get_all_object_names()
+        if "Junction" in e
+    ]
 
     ## Set dissipative elements
     # Ansys solids
-    pinfo.dissipative["dielectrics_bulk"] = [e for e in pinfo.get_all_object_names() if e.startswith("Substrate")]
+    pinfo.dissipative["dielectrics_bulk"] = [
+        e for e in pinfo.get_all_object_names() if e.startswith("Substrate")
+    ]
     if pp_data.get("dielectric_surfaces", None) is None:
-        pinfo.dissipative["dielectric_surfaces"] = [  # Ansys sheets (exclude 3D volumes, ports, and junctions)
-            e
-            for e in pinfo.get_all_object_names()
-            if not (
-                e.startswith("Vacuum")
-                or e.startswith("Substrate")
-                or any(e in [f"Port{i}", f"Junction{i}"] for i in junction_numbers)
-            )
-        ]
+        pinfo.dissipative["dielectric_surfaces"] = (
+            [  # Ansys sheets (exclude 3D volumes, ports, and junctions)
+                e
+                for e in pinfo.get_all_object_names()
+                if not (
+                    e.startswith("Vacuum")
+                    or e.startswith("Substrate")
+                    or any(e in [f"Port{i}", f"Junction{i}"] for i in junction_numbers)
+                )
+            ]
+        )
     else:
         pinfo.dissipative["dielectric_surfaces"] = {
-            e: v for e in pinfo.get_all_object_names() for k, v in pp_data["dielectric_surfaces"].items() if k in e
+            e: v
+            for e in pinfo.get_all_object_names()
+            for k, v in pp_data["dielectric_surfaces"].items()
+            if k in e
         }
 
     oEditor = oDesign.modeler._modeler
@@ -94,7 +108,9 @@ try:
         pinfo.junctions[f"j{j}"] = {
             "Lj_variable": f"Lj_{j}",  # junction inductance Lj
             "rect": f"Port{j}",  # rectangle on which lumped boundary condition is specified
-            "line": (name := f"Junction{j}"),  # polyline spanning the length of the rectangle
+            "line": (
+                name := f"Junction{j}"
+            ),  # polyline spanning the length of the rectangle
             "Cj_variable": f"Cj_{j}",  # junction capacitance Cj (optional but needed for dissipation)
             "length": f"{oEditor.GetEdgeLength(oEditor.GetEdgeIDsFromObject(name)[0])}{oEditor.GetModelUnits()}",
         }
@@ -108,19 +124,26 @@ try:
     eprh.do_EPR_analysis()  # do field calculations
 
     epra = epr.QuantumAnalysis(eprh.data_filename)
-    epr_results = epra.analyze_all_variations()  # post-process field calculations to get results
+    epr_results = (
+        epra.analyze_all_variations()
+    )  # post-process field calculations to get results
 
     df = pd.DataFrame()
     for variation, data in epr_results.items():
 
-        f_ND, chi_ND, hamiltonian = epr.calcs.back_box_numeric.epr_numerical_diagonalization(
-            data["f_0"] / 1e3,  # in GHz
-            data["Ljs"],  # in H
-            data["ZPF"],  # in units of reduced flux quantum
-            return_H=True,
+        f_ND, chi_ND, hamiltonian = (
+            epr.calcs.back_box_numeric.epr_numerical_diagonalization(
+                data["f_0"] / 1e3,  # in GHz
+                data["Ljs"],  # in H
+                data["ZPF"],  # in units of reduced flux quantum
+                return_H=True,
+            )
         )
         # older versions of qutip require str path
-        qutip.fileio.qsave(hamiltonian, str(project_path / f"Hamiltonian_{project_name}_{variation}.qu"))
+        qutip.fileio.qsave(
+            hamiltonian,
+            str(project_path / f"Hamiltonian_{project_name}_{variation}.qu"),
+        )
 
         # fmt: off
         df = pd.concat([df, pd.DataFrame({
@@ -164,11 +187,15 @@ try:
         # fmt: on
 
         # Total quality factor (harmonic sum) after corrected values
-        df["Q_total"] = (1 / (1 / df.filter(regex="^Q(dielectric|surf).*")).sum(axis=1)).values.flatten()
+        df["Q_total"] = (
+            1 / (1 / df.filter(regex="^Q(dielectric|surf).*")).sum(axis=1)
+        ).values.flatten()
 
     # Convert to multi-index
     df.set_index(["variation", df.index], inplace=True)
-    df.to_csv(project_path / f"QData_{project_name}.csv", index_label=["variation", "mode"])
+    df.to_csv(
+        project_path / f"QData_{project_name}.csv", index_label=["variation", "mode"]
+    )
 
     # Save HFSS project file
     pinfo.project.save()

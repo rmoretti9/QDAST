@@ -69,7 +69,8 @@ def produce_mesh(json_data, msh_file):
         for simple_poly in reg.each():
             poly = separated_hull_and_holes(simple_poly)
             hull_point_coordinates = [
-                (point.x * layout.dbu, point.y * layout.dbu, 0) for point in poly.each_point_hull()
+                (point.x * layout.dbu, point.y * layout.dbu, 0)
+                for point in poly.each_point_hull()
             ]
             hull_plane_surface_id, hull_edge_ids = add_polygon(hull_point_coordinates)
             layer_edge_ids += hull_edge_ids
@@ -77,9 +78,12 @@ def produce_mesh(json_data, msh_file):
             hole_dim_tags = []
             for hole in range(poly.holes()):
                 hole_point_coordinates = [
-                    (point.x * layout.dbu, point.y * layout.dbu, 0) for point in poly.each_point_hole(hole)
+                    (point.x * layout.dbu, point.y * layout.dbu, 0)
+                    for point in poly.each_point_hole(hole)
                 ]
-                hole_plane_surface_id, hole_edge_ids = add_polygon(hole_point_coordinates)
+                hole_plane_surface_id, hole_edge_ids = add_polygon(
+                    hole_point_coordinates
+                )
                 layer_edge_ids += hole_edge_ids
                 hole_dim_tags.append((2, hole_plane_surface_id))
             if hole_dim_tags:
@@ -101,7 +105,9 @@ def produce_mesh(json_data, msh_file):
             # Create dim_tags instance for edge if edge material is given
             edge_material = data.get("edge_material", None)
             if edge_material is not None:
-                edge_extruded = gmsh.model.occ.extrude([(1, i) for i in layer_edge_ids], 0, 0, thickness)
+                edge_extruded = gmsh.model.occ.extrude(
+                    [(1, i) for i in layer_edge_ids], 0, 0, thickness
+                )
                 dim_tags["&" + name] = [(d, t) for d, t in edge_extruded if d == 2]
 
         # Store layer into dim_tags
@@ -120,7 +126,9 @@ def produce_mesh(json_data, msh_file):
         subtract = data.get("subtract", [])
         if subtract:
             tool_dim_tags = [t for n in subtract for t in dim_tags[n]]
-            dim_tags[name] = gmsh.model.occ.cut(dim_tags[name], tool_dim_tags, removeTool=False)[0]
+            dim_tags[name] = gmsh.model.occ.cut(
+                dim_tags[name], tool_dim_tags, removeTool=False
+            )[0]
             gmsh.model.occ.synchronize()
 
     # Call fragment and get updated dim_tags as new_tags. Then synchronize.
@@ -128,7 +136,8 @@ def produce_mesh(json_data, msh_file):
     _, dim_tags_map_imp = gmsh.model.occ.fragment(all_dim_tags, [], removeTool=False)
     dim_tags_map = dict(zip(all_dim_tags, dim_tags_map_imp))
     new_tags = {
-        name: [new_tag for old_tag in tags for new_tag in dim_tags_map[old_tag]] for name, tags in dim_tags.items()
+        name: [new_tag for old_tag in tags for new_tag in dim_tags_map[old_tag]]
+        for name, tags in dim_tags.items()
     }
     gmsh.model.occ.synchronize()
 
@@ -152,7 +161,9 @@ def produce_mesh(json_data, msh_file):
         for sname in name.split("&"):
             if sname in new_tags:
                 family = get_recursive_children(new_tags[sname]).union(new_tags[sname])
-                intersection = intersection.intersection(family) if intersection else family
+                intersection = (
+                    intersection.intersection(family) if intersection else family
+                )
 
         mesh_field_ids += set_mesh_size_field(
             list(intersection - get_recursive_children(intersection)),
@@ -162,27 +173,43 @@ def produce_mesh(json_data, msh_file):
 
     # Set meshing options
     workflow = json_data.get("workflow", dict())
-    n_threads_dict = workflow["sbatch_parameters"] if "sbatch_parameters" in workflow else workflow
+    n_threads_dict = (
+        workflow["sbatch_parameters"] if "sbatch_parameters" in workflow else workflow
+    )
     gmsh_n_threads = int(n_threads_dict.get("gmsh_n_threads", 1))
     set_meshing_options(mesh_field_ids, mesh_global_max_size, gmsh_n_threads)
 
     # Group dim tags by material
     accepted_thin_materials = ["pec"]
-    materials = list(set(accepted_thin_materials + list(json_data["material_dict"].keys()) + ["vacuum"]))
+    materials = list(
+        set(
+            accepted_thin_materials
+            + list(json_data["material_dict"].keys())
+            + ["vacuum"]
+        )
+    )
     material_dim_tags = {m: [] for m in materials}
     for name, data in layers.items():
         material = data.get("material", None)
         if material in accepted_thin_materials:
-            material_dim_tags[material] += [(d, t) for d, t in new_tags.get(name, []) if d in [2, 3]]
+            material_dim_tags[material] += [
+                (d, t) for d, t in new_tags.get(name, []) if d in [2, 3]
+            ]
         elif material in materials:
-            material_dim_tags[material] += [(d, t) for d, t in new_tags.get(name, []) if d == 3]
+            material_dim_tags[material] += [
+                (d, t) for d, t in new_tags.get(name, []) if d == 3
+            ]
 
         edge_material = data.get("edge_material", None)
         if edge_material in accepted_thin_materials:
-            material_dim_tags[edge_material] += [(d, t) for d, t in new_tags.get("&" + name, []) if d == 2]
+            material_dim_tags[edge_material] += [
+                (d, t) for d, t in new_tags.get("&" + name, []) if d == 2
+            ]
 
     # Sort boundaries of material_dim_tags['pec'] into pec_islands and leave the bodies into material_dim_tags['pec']
-    pec_with_boundaries = get_recursive_children(material_dim_tags["pec"]).union(material_dim_tags["pec"])
+    pec_with_boundaries = get_recursive_children(material_dim_tags["pec"]).union(
+        material_dim_tags["pec"]
+    )
     pec_islands = [[(d, t)] for d, t in pec_with_boundaries if d == 2]
     material_dim_tags["pec"] = [(d, t) for d, t in pec_with_boundaries if d == 3]
 
@@ -202,7 +229,9 @@ def produce_mesh(json_data, msh_file):
                 if gmsh.model.isInside(*dt, _location):
                     # isInside doesn't check if _location and entity are in same subspace, so we check it next
                     projection_point = gmsh.model.getClosestPoint(*dt, _location)[0]
-                    if all(abs(x - y) < 1e-8 for x, y in zip(_location, projection_point)):
+                    if all(
+                        abs(x - y) < 1e-8 for x, y in zip(_location, projection_point)
+                    ):
                         return i
         return None
 
@@ -210,7 +239,10 @@ def produce_mesh(json_data, msh_file):
     for port in ports:
         if "ground_location" in port:
             # Use 1e-2 safe margin to ensure that signal_location is in the signal polygon:
-            signal_location = [x + 1e-2 * (x - y) for x, y in zip(port["signal_location"], port["ground_location"])]
+            signal_location = [
+                x + 1e-2 * (x - y)
+                for x, y in zip(port["signal_location"], port["ground_location"])
+            ]
         else:
             signal_location = list(port["signal_location"])
         island_id = _find_island_at(signal_location, pec_islands)
@@ -225,17 +257,32 @@ def produce_mesh(json_data, msh_file):
             counter += 1
 
     # set domain boundary as ground for wave equation simulations
-    ports_dts = [dt for port in ports for dt in new_tags.get(f'port_{port["number"]}', [])]
+    ports_dts = [
+        dt for port in ports for dt in new_tags.get(f'port_{port["number"]}', [])
+    ]
     if json_data.get("tool", "capacitance") == "wave_equation":
-        solid_dts = [(d, t) for dts in material_dim_tags.values() for d, t in dts if d == 3]
-        face_dts = [(d, t) for dt in solid_dts for d, t in get_recursive_children([dt]) if d == 2]
-        material_dim_tags[f"ground_{counter}"] = [d for d in face_dts if face_dts.count(d) == 1 and d not in ports_dts]
+        solid_dts = [
+            (d, t) for dts in material_dim_tags.values() for d, t in dts if d == 3
+        ]
+        face_dts = [
+            (d, t)
+            for dt in solid_dts
+            for d, t in get_recursive_children([dt])
+            if d == 2
+        ]
+        material_dim_tags[f"ground_{counter}"] = [
+            d for d in face_dts if face_dts.count(d) == 1 and d not in ports_dts
+        ]
 
     # Add physical groups
     for mat, dts in material_dim_tags.items():
         no_port_dts = [dt for dt in dts if dt not in ports_dts]
         if no_port_dts:
-            gmsh.model.addPhysicalGroup(max(dt[0] for dt in no_port_dts), [dt[1] for dt in no_port_dts], name=f"{mat}")
+            gmsh.model.addPhysicalGroup(
+                max(dt[0] for dt in no_port_dts),
+                [dt[1] for dt in no_port_dts],
+                name=f"{mat}",
+            )
 
     for port in ports:
         port_name = f'port_{port["number"]}'
@@ -245,16 +292,30 @@ def produce_mesh(json_data, msh_file):
                 key_dts = {"signal": [], "ground": []}
                 for mat, dts in material_dim_tags.items():
                     if mat.startswith("signal"):
-                        key_dts["signal"] += [(d, t) for d, t in port_dts.intersection(dts) if d == 2]
+                        key_dts["signal"] += [
+                            (d, t) for d, t in port_dts.intersection(dts) if d == 2
+                        ]
                     elif mat.startswith("ground"):
-                        key_dts["ground"] += [(d, t) for d, t in port_dts.intersection(dts) if d == 2]
+                        key_dts["ground"] += [
+                            (d, t) for d, t in port_dts.intersection(dts) if d == 2
+                        ]
                     elif mat != "pec":
-                        key_dts[mat] = [(d, t) for d, t in port_dts.intersection(get_recursive_children(dts)) if d == 2]
+                        key_dts[mat] = [
+                            (d, t)
+                            for d, t in port_dts.intersection(
+                                get_recursive_children(dts)
+                            )
+                            if d == 2
+                        ]
                 for key, dts in key_dts.items():
                     if dts:
-                        gmsh.model.addPhysicalGroup(2, [dt[1] for dt in dts], name=f"{port_name}_{key}")
+                        gmsh.model.addPhysicalGroup(
+                            2, [dt[1] for dt in dts], name=f"{port_name}_{key}"
+                        )
             else:
-                gmsh.model.addPhysicalGroup(2, [dt[1] for dt in new_tags[port_name]], name=port_name)
+                gmsh.model.addPhysicalGroup(
+                    2, [dt[1] for dt in new_tags[port_name]], name=port_name
+                )
 
     # Generate and save mesh
     gmsh.model.mesh.generate(3)
@@ -294,7 +355,9 @@ def add_polygon(point_coordinates: [], mesh_size=0):
         tuple (int, int): entity id of the polygon and list of entity ids of edge lines
     """
     points = [gmsh.model.occ.addPoint(*coord, mesh_size) for coord in point_coordinates]
-    lines = [gmsh.model.occ.addLine(points[i - 1], points[i]) for i in range(1, len(points))]
+    lines = [
+        gmsh.model.occ.addLine(points[i - 1], points[i]) for i in range(1, len(points))
+    ]
     lines.append(gmsh.model.occ.addLine(points[-1], points[0]))
     loops = [gmsh.model.occ.addCurveLoop(lines)]
     return gmsh.model.occ.addPlaneSurface(loops), lines
@@ -314,7 +377,9 @@ def separated_hull_and_holes(polygon):
     return new_poly
 
 
-def set_mesh_size(dim_tags, min_mesh_size, max_mesh_size, dist_min, dist_max, sampling=None):
+def set_mesh_size(
+    dim_tags, min_mesh_size, max_mesh_size, dist_min, dist_max, sampling=None
+):
     """
     Set the mesh size such that it is `min_mesh_size` when near the curves of boundaries defined by the entities of
     dim_tags and gradually increasing to `max_mesh_size`.
@@ -353,11 +418,15 @@ def set_mesh_size(dim_tags, min_mesh_size, max_mesh_size, dist_min, dist_max, sa
     mesh_field_ids = []
     for dim_tag in dim_tags:
         if dim_tag[0] > 2:
-            dim_tags += gmsh.model.getBoundary([dim_tag], combined=False, oriented=False, recursive=False)
+            dim_tags += gmsh.model.getBoundary(
+                [dim_tag], combined=False, oriented=False, recursive=False
+            )
             continue
         tag_distance_field = gmsh.model.mesh.field.add("Distance")
         key_dict = {0: "PointsList", 1: "CurvesList", 2: "SurfacesList"}
-        gmsh.model.mesh.field.setNumbers(tag_distance_field, key_dict[dim_tag[0]], [dim_tag[1]])
+        gmsh.model.mesh.field.setNumbers(
+            tag_distance_field, key_dict[dim_tag[0]], [dim_tag[1]]
+        )
 
         # Sample the object with points
         if sampling is not None:
@@ -369,7 +438,9 @@ def set_mesh_size(dim_tags, min_mesh_size, max_mesh_size, dist_min, dist_max, sa
             # curve_length/min_mesh_size type of algorithm.
             bbox = gmsh.model.occ.getBoundingBox(*dim_tag)
             bbox_diam = coord_dist(bbox[0:3], bbox[3:6])  # diameter of bounding box
-            gmsh.model.mesh.field.setNumber(tag_distance_field, "Sampling", np.ceil(1.5 * bbox_diam / min_mesh_size))
+            gmsh.model.mesh.field.setNumber(
+                tag_distance_field, "Sampling", np.ceil(1.5 * bbox_diam / min_mesh_size)
+            )
 
         mesh_field_id = gmsh.model.mesh.field.add("Threshold")
         gmsh.model.mesh.field.setNumber(mesh_field_id, "InField", tag_distance_field)
@@ -406,7 +477,9 @@ def set_mesh_size_field(dim_tags, global_max, size, distance=None, slope=1.0):
         list of the threshold field ids that were defined in this function
     """
     dist = size if distance is None else distance
-    return set_mesh_size(dim_tags, size, global_max, dist, dist + (global_max - size) / slope)
+    return set_mesh_size(
+        dim_tags, size, global_max, dist, dist + (global_max - size) / slope
+    )
 
 
 def get_recursive_children(dim_tags):
@@ -420,7 +493,9 @@ def get_recursive_children(dim_tags):
     """
     children = set()
     while dim_tags:
-        dim_tags = gmsh.model.getBoundary(list(dim_tags), combined=False, oriented=False, recursive=False)
+        dim_tags = gmsh.model.getBoundary(
+            list(dim_tags), combined=False, oriented=False, recursive=False
+        )
         children = children.union(dim_tags)
     return children
 

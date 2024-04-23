@@ -6,7 +6,9 @@ import numpy as np
 
 from qdast.qubits.clockmon import Clockmon
 from kqcircuits.simulations.post_process import PostProcess
-from kqcircuits.simulations.single_element_simulation import get_single_element_sim_class
+from kqcircuits.simulations.single_element_simulation import (
+    get_single_element_sim_class,
+)
 from kqcircuits.pya_resolver import pya
 from kqcircuits.simulations.export.ansys.ansys_export import export_ansys
 from kqcircuits.simulations.export.elmer.elmer_export import export_elmer
@@ -21,7 +23,9 @@ from kqcircuits.simulations.post_process import PostProcess
 sim_tool = "q3d"
 
 # Simulation parameters
-sim_class = get_single_element_sim_class(Clockmon, ignore_ports=['port_drive', 'port_island1', 'port_island2'])  # pylint: disable=invalid-name
+sim_class = get_single_element_sim_class(
+    Clockmon, ignore_ports=["port_drive", "port_island1", "port_island2"]
+)  # pylint: disable=invalid-name
 sim_parameters = {
     "name": "clockmon",
     # "use_internal_ports": True,

@@ -32,12 +32,19 @@ def get_enabled_sweep(oDesign, setup, tab="HfssTab"):
     """Returns enabled analysis sweep. Returns None if not enabled."""
     sweep_names = oDesign.GetModule("AnalysisSetup").GetSweeps(str(setup))
     for name in sweep_names:
-        if oDesign.GetPropertyValue(tab, "AnalysisSetup:" + setup + ":" + name, "Enabled") == "true":
+        if (
+            oDesign.GetPropertyValue(
+                tab, "AnalysisSetup:" + setup + ":" + name, "Enabled"
+            )
+            == "true"
+        ):
             return name
     return None
 
 
-def get_solution_data(report_setup, report_type, solution_name, context_array, families_array, expression):
+def get_solution_data(
+    report_setup, report_type, solution_name, context_array, families_array, expression
+):
     """Returns value of given expression. If expression is a list the result is a dictionary."""
     if isinstance(expression, list):
         expressions = expression
@@ -52,7 +59,10 @@ def get_solution_data(report_setup, report_type, solution_name, context_array, f
     def getresult(s, expr):
         if s.IsDataComplex(expr):
             return [
-                complex(re, im) for (re, im) in zip(s.GetRealDataValues(expr, True), s.GetImagDataValues(expr, True))
+                complex(re, im)
+                for (re, im) in zip(
+                    s.GetRealDataValues(expr, True), s.GetImagDataValues(expr, True)
+                )
             ]
         else:
             return [float(re) for re in s.GetRealDataValues(expr, True)]
@@ -66,9 +76,13 @@ def get_solution_data(report_setup, report_type, solution_name, context_array, f
     return result
 
 
-def get_quantities(report_setup, report_type, solution_name, context_array, category_name):
+def get_quantities(
+    report_setup, report_type, solution_name, context_array, category_name
+):
     """Returns the available quantities in given category"""
-    return report_setup.GetAllQuantities(report_type, "Rectangular Plot", solution_name, context_array, category_name)
+    return report_setup.GetAllQuantities(
+        report_type, "Rectangular Plot", solution_name, context_array, category_name
+    )
 
 
 def create_x_vs_y_plot(
@@ -108,7 +122,11 @@ def create_x_vs_y_plot(
             [
                 "NAME:Axis",
                 ["NAME:PropServers", "%s:AxisY1" % plot_name],
-                ["NAME:ChangedProps", ["NAME:Specify Name", "Value:=", True], ["NAME:Name", "Value:=", y_label]],
+                [
+                    "NAME:ChangedProps",
+                    ["NAME:Specify Name", "Value:=", True],
+                    ["NAME:Name", "Value:=", y_label],
+                ],
             ],
         ]
     )

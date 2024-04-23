@@ -79,7 +79,9 @@ def produce_cross_section_mesh(json_data, msh_file):
         for n in layers.values():
             vacuum -= pya.Region(cell.shapes(layout.layer(*n)))
         # find free slot for vacuum layer
-        layers["vacuum"] = next([n, 0] for n in range(1000) if [n, 0] not in layers.values())
+        layers["vacuum"] = next(
+            [n, 0] for n in range(1000) if [n, 0] not in layers.values()
+        )
         cell.shapes(layout.layer(*layers["vacuum"])).insert(vacuum)
 
     # Create mesh using geometries in gds file
@@ -92,14 +94,16 @@ def produce_cross_section_mesh(json_data, msh_file):
         for simple_poly in reg.each():
             poly = separated_hull_and_holes(simple_poly)
             hull_point_coordinates = [
-                (point.x * layout.dbu, point.y * layout.dbu, 0) for point in poly.each_point_hull()
+                (point.x * layout.dbu, point.y * layout.dbu, 0)
+                for point in poly.each_point_hull()
             ]
             hull_plane_surface_id, _ = add_polygon(hull_point_coordinates)
             hull_dim_tag = (2, hull_plane_surface_id)
             hole_dim_tags = []
             for hole in range(poly.holes()):
                 hole_point_coordinates = [
-                    (point.x * layout.dbu, point.y * layout.dbu, 0) for point in poly.each_point_hole(hole)
+                    (point.x * layout.dbu, point.y * layout.dbu, 0)
+                    for point in poly.each_point_hole(hole)
                 ]
                 hole_plane_surface_id, _ = add_polygon(hole_point_coordinates)
                 hole_dim_tags.append((2, hole_plane_surface_id))
@@ -114,7 +118,8 @@ def produce_cross_section_mesh(json_data, msh_file):
     _, dim_tags_map_imp = gmsh.model.occ.fragment(all_dim_tags, [], removeTool=False)
     dim_tags_map = dict(zip(all_dim_tags, dim_tags_map_imp))
     new_tags = {
-        name: [new_tag for old_tag in tags for new_tag in dim_tags_map[old_tag]] for name, tags in dim_tags.items()
+        name: [new_tag for old_tag in tags for new_tag in dim_tags_map[old_tag]]
+        for name, tags in dim_tags.items()
     }
     gmsh.model.occ.synchronize()
 
@@ -138,7 +143,9 @@ def produce_cross_section_mesh(json_data, msh_file):
         for sname in name.split("&"):
             if sname in new_tags:
                 family = get_recursive_children(new_tags[sname]).union(new_tags[sname])
-                intersection = intersection.intersection(family) if intersection else family
+                intersection = (
+                    intersection.intersection(family) if intersection else family
+                )
 
         mesh_field_ids += set_mesh_size_field(
             list(intersection - get_recursive_children(intersection)),
@@ -148,7 +155,9 @@ def produce_cross_section_mesh(json_data, msh_file):
 
     # Set meshing options
     workflow = json_data.get("workflow", dict())
-    n_threads_dict = workflow["sbatch_parameters"] if "sbatch_parameters" in workflow else workflow
+    n_threads_dict = (
+        workflow["sbatch_parameters"] if "sbatch_parameters" in workflow else workflow
+    )
     gmsh_n_threads = int(n_threads_dict.get("gmsh_n_threads", 1))
     set_meshing_options(mesh_field_ids, mesh_global_max_size, gmsh_n_threads)
 
@@ -157,8 +166,12 @@ def produce_cross_section_mesh(json_data, msh_file):
         gmsh.model.addPhysicalGroup(2, [t[1] for t in new_tags[n]], name=n)
     metals = [n for n in new_tags if "signal" in n or "ground" in n]
     for n in metals:
-        metal_boundary = gmsh.model.getBoundary(new_tags[n], combined=False, oriented=False, recursive=False)
-        gmsh.model.addPhysicalGroup(1, [t[1] for t in metal_boundary], name=f"{n}_boundary")
+        metal_boundary = gmsh.model.getBoundary(
+            new_tags[n], combined=False, oriented=False, recursive=False
+        )
+        gmsh.model.addPhysicalGroup(
+            1, [t[1] for t in metal_boundary], name=f"{n}_boundary"
+        )
 
     set_outer_bcs(bbox, layout)
 
@@ -247,21 +260,34 @@ def produce_cross_section_sif_files(json_data, folder_path):
 
     sif_names = json_data["sif_names"]
     if len(sif_names) != 2:
-        logging.warning(f"Cross-section tool requires 2 sif names, given {len(sif_names)}")
+        logging.warning(
+            f"Cross-section tool requires 2 sif names, given {len(sif_names)}"
+        )
 
     sif_files = [
         save(
             f"{sif_names[0]}.sif",
-            sif_capacitance(json_data, folder_path, vtu_name=sif_names[0], angular_frequency=0, dim=2, with_zero=False),
+            sif_capacitance(
+                json_data,
+                folder_path,
+                vtu_name=sif_names[0],
+                angular_frequency=0,
+                dim=2,
+                with_zero=False,
+            ),
         )
     ]
     london_penetration_depth = json_data.get("london_penetration_depth", 0.0)
     if london_penetration_depth > 0:
-        circuit_definitions_file = save("inductance.definitions", sif_circuit_definitions(json_data))
+        circuit_definitions_file = save(
+            "inductance.definitions", sif_circuit_definitions(json_data)
+        )
         sif_files.append(
             save(
                 f"{sif_names[1]}.sif",
-                sif_inductance(json_data, folder_path, angular_frequency, circuit_definitions_file),
+                sif_inductance(
+                    json_data, folder_path, angular_frequency, circuit_definitions_file
+                ),
             )
         )
     else:
@@ -269,7 +295,12 @@ def produce_cross_section_sif_files(json_data, folder_path):
             save(
                 f"{sif_names[1]}.sif",
                 sif_capacitance(
-                    json_data, folder_path, vtu_name=sif_names[1], angular_frequency=0, dim=2, with_zero=True
+                    json_data,
+                    folder_path,
+                    vtu_name=sif_names[1],
+                    angular_frequency=0,
+                    dim=2,
+                    with_zero=True,
                 ),
             )
         )
@@ -304,7 +335,9 @@ def get_cross_section_capacitance_and_inductance(json_data, folder_path):
             l_matrix_file = Path(folder_path).joinpath(l_matrix_file_name)
             with open(f"{l_matrix_file}.names") as names:
                 data.columns = [
-                    line.split("res: ")[1].replace("\n", "") for line in names.readlines() if "res:" in line
+                    line.split("res: ")[1].replace("\n", "")
+                    for line in names.readlines()
+                    if "res:" in line
                 ]
             voltage = data["v_component(1) re"] + 1.0j * data["v_component(1) im"]
             current = data["i_component(1) re"] + 1.0j * data["i_component(1) im"]
@@ -331,14 +364,19 @@ def get_energy_integrals(path):
         (dict): energies stored
     """
     try:
-        energy_data, energy_layer_data = Path(path) / "energy.dat", Path(path) / "energy.dat.names"
+        energy_data, energy_layer_data = (
+            Path(path) / "energy.dat",
+            Path(path) / "energy.dat.names",
+        )
         energies = pd.read_csv(energy_data, sep=r"\s+", header=None).values.flatten()
 
         with open(energy_layer_data) as fp:
             energy_layers = [
                 match.group(1)
                 for line in fp
-                for match in re.finditer("diffusive energy: potential mask ([a-z_0-9]+)", line)
+                for match in re.finditer(
+                    "diffusive energy: potential mask ([a-z_0-9]+)", line
+                )
             ]
 
         return {f"E_{k}": energy for k, energy in zip(energy_layers, energies)}

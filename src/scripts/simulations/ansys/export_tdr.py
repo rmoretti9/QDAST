@@ -25,10 +25,15 @@ import time
 import ScriptEnv
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "util"))
-from util import get_enabled_setup, get_enabled_sweep  # pylint: disable=wrong-import-position,no-name-in-module
+from util import (
+    get_enabled_setup,
+    get_enabled_sweep,
+)  # pylint: disable=wrong-import-position,no-name-in-module
 
 
-def create_z_vs_time_plot(report_setup, report_type, solution_name, context_array, y_label, y_components):
+def create_z_vs_time_plot(
+    report_setup, report_type, solution_name, context_array, y_label, y_components
+):
     report_setup.CreateReport(
         "Time Domain Reflectometry",
         report_type,
@@ -55,7 +60,11 @@ def create_z_vs_time_plot(report_setup, report_type, solution_name, context_arra
             [
                 "NAME:Axis",
                 ["NAME:PropServers", "Time Domain Reflectometry:AxisY1"],
-                ["NAME:ChangedProps", ["NAME:Specify Name", "Value:=", True], ["NAME:Name", "Value:=", y_label]],
+                [
+                    "NAME:ChangedProps",
+                    ["NAME:Specify Name", "Value:=", True],
+                    ["NAME:Name", "Value:=", y_label],
+                ],
             ],
         ]
     )
@@ -64,7 +73,9 @@ def create_z_vs_time_plot(report_setup, report_type, solution_name, context_arra
 
 # Set up environment
 ScriptEnv.Initialize("Ansoft.ElectronicsDesktop")
-oDesktop.AddMessage("", "", 0, "Plotting TDR for all ports (%s)" % time.asctime(time.localtime()))
+oDesktop.AddMessage(
+    "", "", 0, "Plotting TDR for all ports (%s)" % time.asctime(time.localtime())
+)
 
 oDesktop.RestoreWindow()
 oProject = oDesktop.GetActiveProject()
@@ -84,7 +95,17 @@ oDesign.ChangeProperty(
         [
             "NAME:HfssTab",
             ["NAME:PropServers", "BoundarySetup:1"],
-            ["NAME:ChangedProps", ["NAME:Renorm All Terminals", "Value:=", False, "NAME:Deembed", "Value:=", False]],
+            [
+                "NAME:ChangedProps",
+                [
+                    "NAME:Renorm All Terminals",
+                    "Value:=",
+                    False,
+                    "NAME:Deembed",
+                    "Value:=",
+                    False,
+                ],
+            ],
         ],
     ]
 )
@@ -94,7 +115,17 @@ oDesign.ChangeProperty(
         [
             "NAME:HfssTab",
             ["NAME:PropServers", "BoundarySetup:2"],
-            ["NAME:ChangedProps", ["NAME:Renorm All Terminals", "Value:=", False, "NAME:Deembed", "Value:=", False]],
+            [
+                "NAME:ChangedProps",
+                [
+                    "NAME:Renorm All Terminals",
+                    "Value:=",
+                    False,
+                    "NAME:Deembed",
+                    "Value:=",
+                    False,
+                ],
+            ],
         ],
     ]
 )

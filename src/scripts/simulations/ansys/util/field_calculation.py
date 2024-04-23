@@ -26,7 +26,9 @@ def add_squared_electric_field_expression(oModule, name, vec_operator):
     oModule.AddNamedExpression(name, "Fields")
 
 
-def add_energy_integral_expression(oModule, name, objects, field_expr, dim, epsilon, subtraction_field):
+def add_energy_integral_expression(
+    oModule, name, objects, field_expr, dim, epsilon, subtraction_field
+):
     """Adds energy integral expression to field calculation"""
     for i, obj in enumerate(objects):
         oModule.CopyNamedExprToStack(field_expr)

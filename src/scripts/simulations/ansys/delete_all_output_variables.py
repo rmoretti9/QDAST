@@ -32,4 +32,10 @@ outputvars = oOutputVariable.GetOutputVariables()
 for x in outputvars:
     oOutputVariable.DeleteOutputVariable(x)
 
-oDesktop.AddMessage("", "", 0, "Deleted %d output variables (%s)" % (len(outputvars), time.asctime(time.localtime())))
+oDesktop.AddMessage(
+    "",
+    "",
+    0,
+    "Deleted %d output variables (%s)"
+    % (len(outputvars), time.asctime(time.localtime())),
+)

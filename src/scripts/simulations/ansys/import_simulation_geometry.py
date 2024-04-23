@@ -35,7 +35,9 @@ from field_calculation import add_squared_electric_field_expression,  add_energy
 
 # Set up environment
 ScriptEnv.Initialize("Ansoft.ElectronicsDesktop")
-oDesktop.AddMessage("", "", 0, "Starting import script (%s)" % time.asctime(time.localtime()))
+oDesktop.AddMessage(
+    "", "", 0, "Starting import script (%s)" % time.asctime(time.localtime())
+)
 
 # Import metadata (bounding box and port information)
 jsonfile = ScriptArgument
@@ -88,7 +90,9 @@ def color_by_material(material, is_sheet=False):
         return 240, 120, 240, 0.5
     n = 0.3 * (material_dict.get(material, dict()).get("permittivity", 1.0) - 1.0)
     alpha = 0.93 ** (2 * n if is_sheet else n)
-    return tuple(int(100 + 80 * c) for c in [cos(n - pi / 3), cos(n + pi), cos(n + pi / 3)]) + (alpha,)
+    return tuple(
+        int(100 + 80 * c) for c in [cos(n - pi / 3), cos(n + pi), cos(n + pi / 3)]
+    ) + (alpha,)
 
 
 # Set units
@@ -123,7 +127,18 @@ oEditor.ImportGDSII(
         layer_map,
         "OrderMap:=",
         order_map,
-        ["NAME:Structs", ["NAME:GDSIIStruct", "ImportStruct:=", True, "CreateNewCell:=", True, "StructName:=", "SIM1"]],
+        [
+            "NAME:Structs",
+            [
+                "NAME:GDSIIStruct",
+                "ImportStruct:=",
+                True,
+                "CreateNewCell:=",
+                True,
+                "StructName:=",
+                "SIM1",
+            ],
+        ],
     ]
 )
 
@@ -141,7 +156,9 @@ for lname, ldata in layers.items():
         # Create pec-sheets from edges
         edge_material = ldata.get("edge_material", None)
         if edge_material == "pec" and thickness != 0.0:
-            pec_sheets += objects_from_sheet_edges(oEditor, objects[lname], thickness, units)
+            pec_sheets += objects_from_sheet_edges(
+                oEditor, objects[lname], thickness, units
+            )
 
         thicken_sheet(oEditor, objects[lname], thickness, units)
     else:
@@ -191,7 +208,9 @@ for lname, ldata in layers.items():
 if pec_sheets:
     set_color(oEditor, pec_sheets, *color_by_material("pec", True))
     if ansys_tool in hfss_tools:
-        oBoundarySetup.AssignPerfectE(["NAME:PerfE1", "Objects:=", pec_sheets, "InfGroundPlane:=", False])
+        oBoundarySetup.AssignPerfectE(
+            ["NAME:PerfE1", "Objects:=", pec_sheets, "InfGroundPlane:=", False]
+        )
     elif ansys_tool == "q3d":
         oBoundarySetup.AssignThinConductor(
             [
@@ -209,7 +228,12 @@ if pec_sheets:
 # Subtract objects from others
 for lname, ldata in layers.items():
     if "subtract" in ldata:
-        subtract(oEditor, objects[lname], [o for n in ldata["subtract"] for o in objects[n]], True)
+        subtract(
+            oEditor,
+            objects[lname],
+            [o for n in ldata["subtract"] for o in objects[n]],
+            True,
+        )
 
 
 # Create ports or nets
@@ -240,7 +264,9 @@ if ansys_tool in hfss_tools:
 
                 renorm = port.get("renormalization", None)
                 oBoundarySetup.SetTerminalReferenceImpedances(
-                    "" if renorm is None else "{}ohm".format(renorm), str(port["number"]), renorm is not None
+                    "" if renorm is None else "{}ohm".format(renorm),
+                    str(port["number"]),
+                    renorm is not None,
                 )
 
                 deembed_len = port.get("deembed_len", None)
@@ -338,7 +364,9 @@ if ansys_tool in hfss_tools:
                 )
 
                 # Turn junctions to lumped RLC
-                current_start = ["%.32e%s" % (p, units) for p in port["signal_location"]]
+                current_start = [
+                    "%.32e%s" % (p, units) for p in port["signal_location"]
+                ]
                 current_end = ["%.32e%s" % (p, units) for p in port["ground_location"]]
                 oBoundarySetup.AssignLumpedRLC(
                     [
@@ -391,11 +419,27 @@ if ansys_tool in hfss_tools:
                                     "Z:=",
                                     current_start[2],
                                 ],
-                                ["NAME:PLPoint", "X:=", current_end[0], "Y:=", current_end[1], "Z:=", current_end[2]],
+                                [
+                                    "NAME:PLPoint",
+                                    "X:=",
+                                    current_end[0],
+                                    "Y:=",
+                                    current_end[1],
+                                    "Z:=",
+                                    current_end[2],
+                                ],
                             ],
                             [
                                 "NAME:PolylineSegments",
-                                ["NAME:PLSegment", "SegmentType:=", "Line", "StartIndex:=", 0, "NoOfPoints:=", 2],
+                                [
+                                    "NAME:PLSegment",
+                                    "SegmentType:=",
+                                    "Line",
+                                    "StartIndex:=",
+                                    0,
+                                    "NoOfPoints:=",
+                                    2,
+                                ],
                             ],
                             [
                                 "NAME:PolylineXSection",
@@ -454,7 +498,10 @@ if ansys_tool in hfss_tools:
                             [
                                 "NAME:Geometry3DAttributeTab",
                                 ["NAME:PropServers", "Junction%d" % port["number"]],
-                                ["NAME:ChangedProps", ["NAME:Show Direction", "Value:=", True]],
+                                [
+                                    "NAME:ChangedProps",
+                                    ["NAME:Show Direction", "Value:=", True],
+                                ],
                             ],
                         ]
                     )
@@ -467,7 +514,10 @@ elif ansys_tool == "q3d":
         signal_location = port["signal_location"]
         if "ground_location" in port:
             # Use 1e-2 safe margin to ensure that signal_location is inside the signal polygon:
-            signal_location = [x + 1e-2 * (x - y) for x, y in zip(signal_location, port["ground_location"])]
+            signal_location = [
+                x + 1e-2 * (x - y)
+                for x, y in zip(signal_location, port["ground_location"])
+            ]
         port_object = oEditor.GetBodyNamesByPosition(
             [
                 "NAME:Parameters",
@@ -482,18 +532,30 @@ elif ansys_tool == "q3d":
 
         port_object = [o for o in port_object if "_signal" in o]
 
-        if len(port_object) == 1 and port_object[0] not in port_objects and port_object[0] in signal_objects:
+        if (
+            len(port_object) == 1
+            and port_object[0] not in port_objects
+            and port_object[0] in signal_objects
+        ):
             port_objects.append(port_object[0])
 
     if not port_objects:
         port_objects = signal_objects  # port_objects is empty -> assign all signals as SignalNets without sorting
 
     for i, signal_object in enumerate(port_objects):
-        oBoundarySetup.AssignSignalNet(["NAME:Net{}".format(i + 1), "Objects:=", [signal_object]])
-    for i, floating_object in enumerate([obj for obj in signal_objects if obj not in port_objects]):
-        oBoundarySetup.AssignFloatingNet(["NAME:Floating{}".format(i + 1), "Objects:=", [floating_object]])
+        oBoundarySetup.AssignSignalNet(
+            ["NAME:Net{}".format(i + 1), "Objects:=", [signal_object]]
+        )
+    for i, floating_object in enumerate(
+        [obj for obj in signal_objects if obj not in port_objects]
+    ):
+        oBoundarySetup.AssignFloatingNet(
+            ["NAME:Floating{}".format(i + 1), "Objects:=", [floating_object]]
+        )
     for i, ground_object in enumerate(ground_objects):
-        oBoundarySetup.AssignGroundNet(["NAME:Ground{}".format(i + 1), "Objects:=", [ground_object]])
+        oBoundarySetup.AssignGroundNet(
+            ["NAME:Ground{}".format(i + 1), "Objects:=", [ground_object]]
+        )
     oBoundarySetup.AutoIdentifyNets()  # Combine Nets by conductor connections. Order: GroundNet, SignalNet, FloatingNet
 
 
@@ -513,13 +575,25 @@ if data.get("integrate_energies", False) and ansys_tool in hfss_tools:
 
         thickness = ldata.get("thickness", 0.0)
         if thickness == 0.0:
-            add_energy_integral_expression(oModule, "Ez_{}".format(lname), objects[lname], "Ezsq", 2, epsilon_0, "")
             add_energy_integral_expression(
-                oModule, "Exy_{}".format(lname), objects[lname], "Esq", 2, epsilon_0, "Ez_{}".format(lname)
+                oModule, "Ez_{}".format(lname), objects[lname], "Ezsq", 2, epsilon_0, ""
+            )
+            add_energy_integral_expression(
+                oModule,
+                "Exy_{}".format(lname),
+                objects[lname],
+                "Esq",
+                2,
+                epsilon_0,
+                "Ez_{}".format(lname),
             )
         elif material is not None:
-            epsilon = epsilon_0 * material_dict.get(material, {}).get("permittivity", 1.0)
-            add_energy_integral_expression(oModule, "E_{}".format(lname), objects[lname], "Esq", 3, epsilon, "")
+            epsilon = epsilon_0 * material_dict.get(material, {}).get(
+                "permittivity", 1.0
+            )
+            add_energy_integral_expression(
+                oModule, "E_{}".format(lname), objects[lname], "Esq", 3, epsilon, ""
+            )
 
 if data.get("integrate_magnetic_flux", False) and ansys_tool in hfss_tools:
     oModule = oDesign.GetModule("FieldsReporter")
@@ -527,7 +601,9 @@ if data.get("integrate_magnetic_flux", False) and ansys_tool in hfss_tools:
         if ldata.get("thickness", 0.0) != 0.0 or ldata.get("material", None) == "pec":
             continue
 
-        add_magnetic_flux_integral_expression(oModule, "flux_{}".format(lname), objects[lname])
+        add_magnetic_flux_integral_expression(
+            oModule, "flux_{}".format(lname), objects[lname]
+        )
 
 # Manual mesh refinement
 for mesh_layer, mesh_length in mesh_size.items():
@@ -564,7 +640,9 @@ if not ansys_project_template:
         if multiple_frequency:
             max_delta_s = setup["max_delta_s"]
             if not isinstance(type(max_delta_s), list):
-                max_delta_s = [max_delta_s] * len(setup["frequency"])  # make max_delta_s a list
+                max_delta_s = [max_delta_s] * len(
+                    setup["frequency"]
+                )  # make max_delta_s a list
             maf_setup_list = ["NAME:MultipleAdaptiveFreqsSetup"]
             for f, s in zip(setup["frequency"], max_delta_s):
                 maf_setup_list += [str(f) + setup["frequency_units"] + ":=", [s]]
@@ -803,7 +881,10 @@ if not ansys_project_template:
 
 else:  # use ansys_project_template
     # delete substrate and vacuum objects
-    delete(oEditor, [o for n, v in objects.items() if "substrate" in n or "vacuum" in n for o in v])
+    delete(
+        oEditor,
+        [o for n, v in objects.items() if "substrate" in n or "vacuum" in n for o in v],
+    )
 
     scriptpath = os.path.dirname(__file__)
     aedt_path = os.path.join(scriptpath, "../")
@@ -817,7 +898,9 @@ else:  # use ansys_project_template
 
     oDesign = oProject.GetActiveDesign()
     oEditor = oDesign.SetActiveEditor("3D Modeler")
-    sheet_name_list = oEditor.GetObjectsInGroup("Sheets") + oEditor.GetObjectsInGroup("Solids")
+    sheet_name_list = oEditor.GetObjectsInGroup("Sheets") + oEditor.GetObjectsInGroup(
+        "Solids"
+    )
     oEditor.Copy(["NAME:Selections", "Selections:=", ",".join(sheet_name_list)])
 
     oDesktop.OpenProject(os.path.join(aedt_path, template_path))

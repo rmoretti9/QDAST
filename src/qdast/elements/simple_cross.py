@@ -18,23 +18,25 @@ class SimpleCross(Element):
         # We define a hardcoded value for arm_width, so it cannot be changed from outside like arm_length.
         arm_width = 30
         # Define some variables to hold values used commonly in this function.
-        len1 = arm_width/2
-        len2 = arm_width/2 + self.arm_length
+        len1 = arm_width / 2
+        len2 = arm_width / 2 + self.arm_length
         # Define the cross polygon using a list of DPoints.
-        cross_poly = pya.DPolygon([
-            pya.DPoint(-len1, -len2),
-            pya.DPoint(-len1, -len1),
-            pya.DPoint(-len2, -len1),
-            pya.DPoint(-len2, len1),
-            pya.DPoint(-len1, len1),
-            pya.DPoint(-len1, len2),
-            pya.DPoint(len1, len2),
-            pya.DPoint(len1, len1),
-            pya.DPoint(len2, len1),
-            pya.DPoint(len2, -len1),
-            pya.DPoint(len1, -len1),
-            pya.DPoint(len1, -len2),
-        ])
+        cross_poly = pya.DPolygon(
+            [
+                pya.DPoint(-len1, -len2),
+                pya.DPoint(-len1, -len1),
+                pya.DPoint(-len2, -len1),
+                pya.DPoint(-len2, len1),
+                pya.DPoint(-len1, len1),
+                pya.DPoint(-len1, len2),
+                pya.DPoint(len1, len2),
+                pya.DPoint(len1, len1),
+                pya.DPoint(len2, len1),
+                pya.DPoint(len2, -len1),
+                pya.DPoint(len1, -len1),
+                pya.DPoint(len1, -len2),
+            ]
+        )
         # Add the cross polygon to the cell.
         # We use the get_layer() function to select in which layer the polygon is added.
         self.cell.shapes(self.get_layer("base_metal_gap_wo_grid")).insert(cross_poly)

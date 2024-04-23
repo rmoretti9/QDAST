@@ -53,9 +53,13 @@ if design_type == "HFSS":
 
         # Create capacitance vs frequency report
         unique_elements_c = [
-            "C_%s_%s" % (port_i, ports[j]) for i, port_i in enumerate(ports) for j in range(i, len(ports))
+            "C_%s_%s" % (port_i, ports[j])
+            for i, port_i in enumerate(ports)
+            for j in range(i, len(ports))
         ]  # The unique elements (half matrix), used for plotting C-matrix
-        unique_output_c = [e for e in unique_elements_c if e in oOutputVariable.GetOutputVariables()]
+        unique_output_c = [
+            e for e in unique_elements_c if e in oOutputVariable.GetOutputVariables()
+        ]
         if unique_output_c:
             create_x_vs_y_plot(
                 oReportSetup,
@@ -71,12 +75,21 @@ if design_type == "HFSS":
 
         # Create S vs frequency and S convergence reports
         unique_elements_s = [
-            "St(%s,%s)" % (port_i, ports[j]) for i, port_i in enumerate(ports) for j in range(i, len(ports))
+            "St(%s,%s)" % (port_i, ports[j])
+            for i, port_i in enumerate(ports)
+            for j in range(i, len(ports))
         ]  # The unique elements (half matrix), used for plotting S-matrix
         unique_output_s = [
             "dB(%s)" % e
             for e in unique_elements_s
-            if e in get_quantities(oReportSetup, "Terminal Solution Data", solution, context, "Terminal S Parameter")
+            if e
+            in get_quantities(
+                oReportSetup,
+                "Terminal Solution Data",
+                solution,
+                context,
+                "Terminal S Parameter",
+            )
         ]
         if unique_output_s:
             create_x_vs_y_plot(
@@ -105,7 +118,9 @@ if design_type == "HFSS":
     elif oDesign.GetSolutionType() == "Eigenmode":
         # Create eigenmode convergence report
         solution = setup + " : AdaptivePass"
-        modes = get_quantities(oReportSetup, "Eigenmode Parameters", solution, [], "Eigen Modes")
+        modes = get_quantities(
+            oReportSetup, "Eigenmode Parameters", solution, [], "Eigen Modes"
+        )
         create_x_vs_y_plot(
             oReportSetup,
             "Solution Convergence",
@@ -120,11 +135,25 @@ if design_type == "HFSS":
 
     # Create integral reports
     solution = setup + " : LastAdaptive"
-    integrals = get_quantities(oReportSetup, "Fields", solution, [], "Calculator Expressions")
-    energies = [e for e in integrals if e.startswith("E_") or e.startswith("Ez_") or e.startswith("Exy_")]
+    integrals = get_quantities(
+        oReportSetup, "Fields", solution, [], "Calculator Expressions"
+    )
+    energies = [
+        e
+        for e in integrals
+        if e.startswith("E_") or e.startswith("Ez_") or e.startswith("Exy_")
+    ]
     if energies:
         create_x_vs_y_plot(
-            oReportSetup, "Energy Integrals", "Fields", solution, [], ["Phase:=", ["0deg"]], "Phase", "E [J]", energies
+            oReportSetup,
+            "Energy Integrals",
+            "Fields",
+            solution,
+            [],
+            ["Phase:=", ["0deg"]],
+            "Phase",
+            "E [J]",
+            energies,
         )
     fluxes = [e for e in integrals if e.startswith("flux_")]
     if fluxes:
@@ -144,13 +173,19 @@ elif design_type == "Q3D Extractor":
     setup = get_enabled_setup(oDesign, tab="General")
     nets = oBoundarySetup.GetExcitations()[::2]
     net_types = oBoundarySetup.GetExcitations()[1::2]
-    signal_nets = [net for net, net_type in zip(nets, net_types) if net_type == "SignalNet"]
+    signal_nets = [
+        net for net, net_type in zip(nets, net_types) if net_type == "SignalNet"
+    ]
 
     # Create capacitance vs frequency and capacitance convergence reports
     unique_elements_c = [
-        "C_%s_%s" % (net_i, signal_nets[j]) for i, net_i in enumerate(signal_nets) for j in range(i, len(signal_nets))
+        "C_%s_%s" % (net_i, signal_nets[j])
+        for i, net_i in enumerate(signal_nets)
+        for j in range(i, len(signal_nets))
     ]  # The unique elements (half matrix), used for plotting
-    unique_output_c = [e for e in unique_elements_c if e in oOutputVariable.GetOutputVariables()]
+    unique_output_c = [
+        e for e in unique_elements_c if e in oOutputVariable.GetOutputVariables()
+    ]
     if unique_output_c:
         create_x_vs_y_plot(
             oReportSetup,

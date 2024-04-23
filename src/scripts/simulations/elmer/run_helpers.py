@@ -44,12 +44,16 @@ def write_simulation_machine_versions_file(path, name):
     gmsh_versions_list = []
     with open(path.joinpath("log_files").joinpath(name + ".Gmsh.log")) as f:
         gmsh_log = f.readlines()
-        gmsh_versions_list = [line.replace("\n", "") for line in gmsh_log if "ersion" in line]
+        gmsh_versions_list = [
+            line.replace("\n", "") for line in gmsh_log if "ersion" in line
+        ]
 
     elmer_versions_list = []
     with open(next(path.joinpath("log_files").glob("*Elmer.log"))) as f:
         elmer_log = f.readlines()
-        elmer_versions_list = [line.replace("\n", "") for line in elmer_log if "ersion" in line]
+        elmer_versions_list = [
+            line.replace("\n", "") for line in elmer_log if "ersion" in line
+        ]
 
     versions["gmsh"] = gmsh_versions_list
     versions["elmer"] = elmer_versions_list
@@ -77,7 +81,9 @@ def write_simulation_machine_versions_file(path, name):
 def run_elmer_grid(msh_path, n_processes, exec_path_override=None):
     elmergrid_executable = shutil.which("ElmerGrid")
     if elmergrid_executable is not None:
-        subprocess.check_call([elmergrid_executable, "14", "2", msh_path], cwd=exec_path_override)
+        subprocess.check_call(
+            [elmergrid_executable, "14", "2", msh_path], cwd=exec_path_override
+        )
         if n_processes > 1:
             subprocess.check_call(
                 [
@@ -94,7 +100,8 @@ def run_elmer_grid(msh_path, n_processes, exec_path_override=None):
             )
     else:
         logging.warning(
-            "ElmerGrid was not found! Make sure you have ElmerFEM installed: " "https://github.com/ElmerCSC/elmerfem"
+            "ElmerGrid was not found! Make sure you have ElmerFEM installed: "
+            "https://github.com/ElmerCSC/elmerfem"
         )
         sys.exit()
 
@@ -106,7 +113,9 @@ def is_microsoft(exec_path_override=None) -> bool:
     ret = subprocess.call(run_cmd, cwd=exec_path_override)
     # subprocess returns 0 if substring is found, 1 if not and some other error code is the call fails
     if ret not in (0, 1):
-        raise RuntimeError(f"Unexpected return code {ret} in is_microsoft() subprocess call")
+        raise RuntimeError(
+            f"Unexpected return code {ret} in is_microsoft() subprocess call"
+        )
     return not ret
 
 
@@ -114,11 +123,22 @@ def is_microsoft(exec_path_override=None) -> bool:
 # Note that this function only works when run OUTSIDE of singularity
 def is_singularity(exec_path_override=None) -> bool:
     # Follow the symbolic link pointing to ElmerSolver and check if path contains "singularity"
-    run_cmd = ["readlink", "-f", "$(which", "ElmerSolver)", "|", "grep", "-qi", "singularity"]
+    run_cmd = [
+        "readlink",
+        "-f",
+        "$(which",
+        "ElmerSolver)",
+        "|",
+        "grep",
+        "-qi",
+        "singularity",
+    ]
     ret = subprocess.call(" ".join(run_cmd), shell=True, cwd=exec_path_override)
     # subprocess returns 0 if substring is found, 1 if not and some other error code is the call fails
     if ret not in (0, 1):
-        raise RuntimeError(f"Unexpected return code {ret} is_singularity() subprocess call")
+        raise RuntimeError(
+            f"Unexpected return code {ret} is_singularity() subprocess call"
+        )
     return not ret
 
 
@@ -140,19 +160,34 @@ def worker(command, outfile, cwd, env):
         if outfile is not None:
             with open(outfile, "w") as f:
                 return subprocess.check_call(
-                    ["bash", command] if is_windows else command, stdout=f, stderr=f, text=True, env=env, cwd=cwd
+                    ["bash", command] if is_windows else command,
+                    stdout=f,
+                    stderr=f,
+                    text=True,
+                    env=env,
+                    cwd=cwd,
                 )
         else:
-            return subprocess.check_call(["bash", command] if is_windows else command, text=True, env=env, cwd=cwd)
+            return subprocess.check_call(
+                ["bash", command] if is_windows else command,
+                text=True,
+                env=env,
+                cwd=cwd,
+            )
     except subprocess.CalledProcessError as err:
         logging.warning(f"The worker for {err.cmd} exited with code {err.returncode}")
         logging.warning(err)
-        if is_windows and "is not recognized as an internal or external command" in err.stderr:
+        if (
+            is_windows
+            and "is not recognized as an internal or external command" in err.stderr
+        ):
             logging.warning("Do you have Bash (e.g. Git Bash or MSYS2) installed?")
         return err
 
 
-def pool_run_cmds(n_workers: int, cmds: list, output_files: list = None, cwd=None, env=None):
+def pool_run_cmds(
+    n_workers: int, cmds: list, output_files: list = None, cwd=None, env=None
+):
     """
     Workload manager for running multiple commands (Elmer instances) in parallel
 
@@ -223,12 +258,21 @@ def elmer_check_warnings(log_file, cwd=None):
         if "warning" in l_lower:
             logging.warning(f"{l.replace('WARNING::', '')}. See {log_file}:{ind+1}")
         elif "did not converge" in l_lower:
-            logging.warning(f" Linear system iteration did not converge. See {log_file}:{ind+1}")
+            logging.warning(
+                f" Linear system iteration did not converge. See {log_file}:{ind+1}"
+            )
         elif "solution trivially zero" in l_lower:
             logging.warning(f" Solution trivially zero. See {log_file}:{ind+1}")
 
 
-def _run_elmer_solver(sim_name, sif_names, n_parallel_simulations, n_processes, n_threads, exec_path_override=None):
+def _run_elmer_solver(
+    sim_name,
+    sif_names,
+    n_parallel_simulations,
+    n_processes,
+    n_threads,
+    exec_path_override=None,
+):
     """
     Internal function for running ElmerSolver based on explicit variables instead of the json file
 
@@ -253,22 +297,35 @@ def _run_elmer_solver(sim_name, sif_names, n_parallel_simulations, n_processes, 
     if n_processes > 1 and elmersolver_mpi_executable is not None:
         if is_microsoft(exec_path_override) and is_singularity(exec_path_override):
             # If using wsl and singularity the mpi command needs to be given inside singularity
-            run_cmds = [[elmersolver_mpi_executable, sif, "-np", str(n_processes)] for sif in sif_paths]
+            run_cmds = [
+                [elmersolver_mpi_executable, sif, "-np", str(n_processes)]
+                for sif in sif_paths
+            ]
         else:
             mpi_command = "mpirun" if shutil.which("mpirun") is not None else "mpiexec"
-            run_cmds = [[mpi_command, "-np", str(n_processes), elmersolver_mpi_executable, sif] for sif in sif_paths]
+            run_cmds = [
+                [mpi_command, "-np", str(n_processes), elmersolver_mpi_executable, sif]
+                for sif in sif_paths
+            ]
 
     elif elmersolver_executable is not None:
         run_cmds = [[elmersolver_executable, sif] for sif in sif_paths]
     else:
         logging.warning(
-            "ElmerSolver was not found! Make sure you have ElmerFEM installed: " "https://github.com/ElmerCSC/elmerfem"
+            "ElmerSolver was not found! Make sure you have ElmerFEM installed: "
+            "https://github.com/ElmerCSC/elmerfem"
         )
         sys.exit()
     output_files = [f"log_files/{sif}.Elmer.log" for sif in sif_names]
 
     if n_parallel_simulations > 1:
-        pool_run_cmds(n_parallel_simulations, run_cmds, output_files=output_files, cwd=exec_path_override, env=my_env)
+        pool_run_cmds(
+            n_parallel_simulations,
+            run_cmds,
+            output_files=output_files,
+            cwd=exec_path_override,
+            env=my_env,
+        )
     else:
         for cmd, out in zip(run_cmds, output_files):
             with open(out, "w") as f:
@@ -311,10 +368,16 @@ def run_paraview(result_path, n_processes, exec_path_override=None):
     if paraview_executable is not None:
         if n_processes > 1:
             pvtu_files = glob.glob("{}*.pvtu".format(result_path))
-            subprocess.check_call([paraview_executable] + pvtu_files, cwd=exec_path_override)
+            subprocess.check_call(
+                [paraview_executable] + pvtu_files, cwd=exec_path_override
+            )
         else:
             vtu_files = glob.glob("{}*.vtu".format(result_path))
-            subprocess.check_call([paraview_executable] + vtu_files, cwd=exec_path_override)
+            subprocess.check_call(
+                [paraview_executable] + vtu_files, cwd=exec_path_override
+            )
     else:
-        logging.warning("Paraview was not found! Make sure you have it installed: https://www.paraview.org/")
+        logging.warning(
+            "Paraview was not found! Make sure you have it installed: https://www.paraview.org/"
+        )
         sys.exit()

@@ -72,7 +72,15 @@ def create_polygon(oEditor, name, points, units):
             ],
             ["NAME:PolylineSegments"]
             + [
-                ["NAME:PLSegment", "SegmentType:=", "Line", "StartIndex:=", i, "NoOfPoints:=", 2]
+                [
+                    "NAME:PLSegment",
+                    "SegmentType:=",
+                    "Line",
+                    "StartIndex:=",
+                    i,
+                    "NoOfPoints:=",
+                    2,
+                ]
                 for i in range(len(points))
             ],
             [
@@ -93,7 +101,15 @@ def create_polygon(oEditor, name, points, units):
                 "Corner",
             ],
         ],
-        ["NAME:Attributes", "Name:=", name, "Flags:=", "", "PartCoordinateSystem:=", "Global"],
+        [
+            "NAME:Attributes",
+            "Name:=",
+            name,
+            "Flags:=",
+            "",
+            "PartCoordinateSystem:=",
+            "Global",
+        ],
     )
 
 
@@ -133,7 +149,13 @@ def thicken_sheet(oEditor, objects, thickness, units):
     """Thickens sheet to solid with given thickness and material"""
     if objects and thickness != 0.0:
         oEditor.SweepAlongVector(
-            ["NAME:Selections", "Selections:=", ",".join(objects), "NewPartsModelFlag:=", "Model"],
+            [
+                "NAME:Selections",
+                "Selections:=",
+                ",".join(objects),
+                "NewPartsModelFlag:=",
+                "Model",
+            ],
             [
                 "NAME:VectorSweepParameters",
                 "DraftAngle:=",
@@ -161,7 +183,10 @@ def set_material(oEditor, objects, material=None, solve_inside=None):
                     [
                         "NAME:Geometry3DAttributeTab",
                         ["NAME:PropServers"] + objects,
-                        ["NAME:ChangedProps", ["NAME:Solve Inside", "Value:=", solve_inside]],
+                        [
+                            "NAME:ChangedProps",
+                            ["NAME:Solve Inside", "Value:=", solve_inside],
+                        ],
                     ],
                 ]
             )
@@ -172,7 +197,10 @@ def set_material(oEditor, objects, material=None, solve_inside=None):
                     [
                         "NAME:Geometry3DAttributeTab",
                         ["NAME:PropServers"] + objects,
-                        ["NAME:ChangedProps", ["NAME:Material", "Value:=", '"{}"'.format(material)]],
+                        [
+                            "NAME:ChangedProps",
+                            ["NAME:Material", "Value:=", '"{}"'.format(material)],
+                        ],
                     ],
                 ]
             )
@@ -192,7 +220,15 @@ def set_material(oEditor, objects, material=None, solve_inside=None):
 def add_layer(layer_map, order_map, layer_num, dest_layer, order, layer_type="signal"):
     """Appends layer data to layer_map and order_map."""
     layer_map.append(
-        ["NAME:LayerMapInfo", "LayerNum:=", layer_num, "DestLayer:=", dest_layer, "layer_type:=", layer_type]
+        [
+            "NAME:LayerMapInfo",
+            "LayerNum:=",
+            layer_num,
+            "DestLayer:=",
+            dest_layer,
+            "layer_type:=",
+            layer_type,
+        ]
     )
     order_map += ["entry:=", ["order:=", order, "layer:=", dest_layer]]
 
@@ -201,7 +237,13 @@ def move_vertically(oEditor, objects, z_shift, units):
     """Moves objects in z-direction by z_shift."""
     if objects and z_shift != 0.0:
         oEditor.Move(
-            ["NAME:Selections", "Selections:=", ",".join(objects), "NewPartsModelFlag:=", "Model"],
+            [
+                "NAME:Selections",
+                "Selections:=",
+                ",".join(objects),
+                "NewPartsModelFlag:=",
+                "Model",
+            ],
             [
                 "NAME:TranslateParameters",
                 "TranslateVectorX:=",
@@ -233,8 +275,20 @@ def subtract(oEditor, objects, tool_objects, keep_originals=False):
     """Subtract tool_objects from objects."""
     if objects and tool_objects:
         oEditor.Subtract(
-            ["NAME:Selections", "Blank Parts:=", ",".join(objects), "Tool Parts:=", ",".join(tool_objects)],
-            ["NAME:SubtractParameters", "KeepOriginals:=", keep_originals, "TurnOnNBodyBoolean:=", True],
+            [
+                "NAME:Selections",
+                "Blank Parts:=",
+                ",".join(objects),
+                "Tool Parts:=",
+                ",".join(tool_objects),
+            ],
+            [
+                "NAME:SubtractParameters",
+                "KeepOriginals:=",
+                keep_originals,
+                "TurnOnNBodyBoolean:=",
+                True,
+            ],
         )
 
 
@@ -243,7 +297,13 @@ def unite(oEditor, objects, keep_originals=False):
     if len(objects) > 1:
         oEditor.Unite(
             ["NAME:Selections", "Selections:=", ",".join(objects)],
-            ["NAME:UniteParameters", "KeepOriginals:=", keep_originals, "TurnOnNBodyBoolean:=", True],
+            [
+                "NAME:UniteParameters",
+                "KeepOriginals:=",
+                keep_originals,
+                "TurnOnNBodyBoolean:=",
+                True,
+            ],
         )
 
 
@@ -254,7 +314,10 @@ def objects_from_sheet_edges(oEditor, objects, thickness, units):
         boundary_ids = [int(i) for i in oEditor.GetEdgeIDsFromObject(o)]
         edge_list = oEditor.CreateObjectFromEdges(
             ["NAME:Selections", "Selections:=", o, "NewPartsModelFlag:=", "Model"],
-            ["NAME:Parameters", ["NAME:BodyFromEdgeToParameters", "Edges:=", boundary_ids]],
+            [
+                "NAME:Parameters",
+                ["NAME:BodyFromEdgeToParameters", "Edges:=", boundary_ids],
+            ],
             ["CreateGroupsForNewObjects:=", False],
         )
         thicken_sheet(oEditor, edge_list, thickness, units)

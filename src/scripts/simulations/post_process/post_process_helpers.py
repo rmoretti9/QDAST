@@ -43,11 +43,16 @@ def find_varied_parameters(json_files):
     # Find parameters that are varied
     parameters = []
     for parameter in parameter_dict[nominal]:
-        if not all(parameter_dict[key][parameter] == parameter_dict[nominal][parameter] for key in keys):
+        if not all(
+            parameter_dict[key][parameter] == parameter_dict[nominal][parameter]
+            for key in keys
+        ):
             parameters.append(parameter)
 
     # Return compressed parameter_dict including only varied parameters
-    parameter_values = {k: [v[p] for p in parameters] for k, v in parameter_dict.items()}
+    parameter_values = {
+        k: [v[p] for p in parameters] for k, v in parameter_dict.items()
+    }
     return parameters, parameter_values
 
 
@@ -61,7 +66,9 @@ def tabulate_into_csv(file_name, data_dict, parameters, parameter_values):
         parameter_values: dictionary with list of parameter values as value
     """
     with open(file_name, "w") as csvfile:
-        writer = csv.writer(csvfile, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        writer = csv.writer(
+            csvfile, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
+        )
 
         layer_names = sorted({n for v in data_dict.values() for n in v})
         writer.writerow(["key"] + parameters + layer_names)

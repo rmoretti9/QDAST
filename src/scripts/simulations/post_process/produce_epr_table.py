@@ -53,17 +53,26 @@ def get_mer_coefficients(key, reg, mer_correction_path, groups):
         full_mer_path = "//wsl.localhost/Ubuntu" + str(full_mer_path)
         if not os.path.isfile(full_mer_path):
             full_mer_path = os.path.join(
-                os.path.abspath(__file__ + "/../../../"), "/".join(full_mer_path.split(os.sep)[-2:])
+                os.path.abspath(__file__ + "/../../../"),
+                "/".join(full_mer_path.split(os.sep)[-2:]),
             )
 
     with open(full_mer_path, "r") as f:
         correction_results = json.load(f)
 
-    mer_keys_E = [k for k, v in correction_results.items() if "mer" in k and k.startswith("E_")]
+    mer_keys_E = [
+        k for k, v in correction_results.items() if "mer" in k and k.startswith("E_")
+    ]
     mer_total_2d = sum([v for k, v in correction_results.items() if k in mer_keys_E])
     for group in groups:
         mer_coefficients[group] = (
-            sum([v for k, v in correction_results.items() if k in mer_keys_E and group.lower() in k.lower()])
+            sum(
+                [
+                    v
+                    for k, v in correction_results.items()
+                    if k in mer_keys_E and group.lower() in k.lower()
+                ]
+            )
             / mer_total_2d
         )
 
@@ -85,7 +94,11 @@ if len(sys.argv) > 1:
 
 # Find data files
 path = os.path.curdir
-result_files = [f for f in os.listdir(path) if f.endswith("_project_energy.csv") or f.endswith("_project_results.json")]
+result_files = [
+    f
+    for f in os.listdir(path)
+    if f.endswith("_project_energy.csv") or f.endswith("_project_results.json")
+]
 if result_files:
     # Find parameters that are swept
     definition_files = [
@@ -144,7 +157,8 @@ if result_files:
         elif "mer_correction_paths" not in pp_data:
             # use EPR groups to combine layers
             epr_dict[key] = {
-                "p_" + group: sum([v / total_energy for k, v in energy_items if group in k])
+                "p_"
+                + group: sum([v / total_energy for k, v in energy_items if group in k])
                 for group in pp_data["groups"]
             }
         else:
@@ -154,12 +168,20 @@ if result_files:
             energy_items_dict = dict()
             energy_items_dict["mer"] = dict()
             energy_items_dict["nonmer"] = dict()
-            region_keys = []  # Collect all those that are defined as regions except 'default' region
+            region_keys = (
+                []
+            )  # Collect all those that are defined as regions except 'default' region
             for reg, mer_correction_path in pp_data["mer_correction_paths"]:
-                mer_correction_dict[reg] = get_mer_coefficients(key, reg, mer_correction_path, pp_data["groups"])
+                mer_correction_dict[reg] = get_mer_coefficients(
+                    key, reg, mer_correction_path, pp_data["groups"]
+                )
                 if not reg == "default":
-                    energy_items_dict["mer"][reg] = [(k, v) for k, v in energy_items if "mer" in k and reg in k]
-                    energy_items_dict["nonmer"][reg] = [(k, v) for k, v in energy_items if not "mer" in k and reg in k]
+                    energy_items_dict["mer"][reg] = [
+                        (k, v) for k, v in energy_items if "mer" in k and reg in k
+                    ]
+                    energy_items_dict["nonmer"][reg] = [
+                        (k, v) for k, v in energy_items if not "mer" in k and reg in k
+                    ]
                     region_keys += [k for k, v in energy_items if reg in k]
 
             # Now take all those region keys and remove them from all the keys.
@@ -170,52 +192,101 @@ if result_files:
             all_keys = set(energy.keys())
             default_keys = all_keys - region_keys
 
-            energy_items_dict["mer"]["default"] = [(k, energy[k]) for k in default_keys if "mer" in k]
-            energy_items_dict["nonmer"]["default"] = [(k, energy[k]) for k in default_keys if not "mer" in k]
+            energy_items_dict["mer"]["default"] = [
+                (k, energy[k]) for k in default_keys if "mer" in k
+            ]
+            energy_items_dict["nonmer"]["default"] = [
+                (k, energy[k]) for k in default_keys if not "mer" in k
+            ]
 
             epr_dict[key] = {}
             for reg, mer_coefficients in mer_correction_dict.items():
                 mer_total = sum([v for k, v in energy_items_dict["mer"][reg]])
                 for group in pp_data["groups"]:
-                    epr_mer = {k: v / total_energy for k, v in energy_items_dict["mer"][reg] if group in k}
-                    epr_nonmer = {k: v / total_energy for k, v in energy_items_dict["nonmer"][reg] if group in k}
-                    epr_dict[key][f"p_{group}_{reg}_nonmer"] = sum([v for k, v in epr_nonmer.items()])
-                    epr_dict[key][f"p_{group}_{reg}_mer"] = sum([v for k, v in epr_mer.items()])
-                    epr_dict[key][f"p_{group}_{reg}_mer_fixed"] = mer_total * mer_coefficients[group] / total_energy
-                    epr_dict[key][f"p_{group}_{reg}"] = sum(epr_mer.values()) + sum(epr_nonmer.values())
+                    epr_mer = {
+                        k: v / total_energy
+                        for k, v in energy_items_dict["mer"][reg]
+                        if group in k
+                    }
+                    epr_nonmer = {
+                        k: v / total_energy
+                        for k, v in energy_items_dict["nonmer"][reg]
+                        if group in k
+                    }
+                    epr_dict[key][f"p_{group}_{reg}_nonmer"] = sum(
+                        [v for k, v in epr_nonmer.items()]
+                    )
+                    epr_dict[key][f"p_{group}_{reg}_mer"] = sum(
+                        [v for k, v in epr_mer.items()]
+                    )
+                    epr_dict[key][f"p_{group}_{reg}_mer_fixed"] = (
+                        mer_total * mer_coefficients[group] / total_energy
+                    )
+                    epr_dict[key][f"p_{group}_{reg}"] = sum(epr_mer.values()) + sum(
+                        epr_nonmer.values()
+                    )
                     epr_dict[key][f"p_{group}_{reg}_fixed"] = (
-                        epr_dict[key][f"p_{group}_{reg}_mer_fixed"] + epr_dict[key][f"p_{group}_{reg}_nonmer"]
+                        epr_dict[key][f"p_{group}_{reg}_mer_fixed"]
+                        + epr_dict[key][f"p_{group}_{reg}_nonmer"]
                     )
 
             epr_dict[key]["total_participation"] = 0.0
             epr_dict[key]["total_participation_fixed"] = 0.0
             for i, group in enumerate(pp_data["groups"]):
                 epr_dict[key][f"p_{group}_nonmer"] = sum(
-                    [v for k, v in epr_dict[key].items() if group in k and "nonmer" in k]
+                    [
+                        v
+                        for k, v in epr_dict[key].items()
+                        if group in k and "nonmer" in k
+                    ]
                 )
                 epr_dict[key][f"p_{group}_mer"] = sum(
                     [
                         v
                         for k, v in epr_dict[key].items()
-                        if group in k and "mer" in k and "fixed" not in k and "nonmer" not in k
+                        if group in k
+                        and "mer" in k
+                        and "fixed" not in k
+                        and "nonmer" not in k
                     ]
                 )
                 epr_dict[key][f"p_{group}_mer_fixed"] = sum(
-                    [v for k, v in epr_dict[key].items() if group in k and "mer_fixed" in k]
+                    [
+                        v
+                        for k, v in epr_dict[key].items()
+                        if group in k and "mer_fixed" in k
+                    ]
                 )
 
                 epr_dict[key][f"p_{group}"] = sum(
-                    [v for k, v in epr_dict[key].items() if group in k and "mer" not in k and "fixed" not in k]
+                    [
+                        v
+                        for k, v in epr_dict[key].items()
+                        if group in k and "mer" not in k and "fixed" not in k
+                    ]
                 )
 
                 epr_dict[key][f"p_{group}_fixed"] = sum(
-                    [v for k, v in epr_dict[key].items() if group in k and "fixed" in k and "mer" not in k]
+                    [
+                        v
+                        for k, v in epr_dict[key].items()
+                        if group in k and "fixed" in k and "mer" not in k
+                    ]
                 )
 
                 epr_dict[key]["total_participation"] += epr_dict[key][f"p_{group}"]
-                epr_dict[key]["total_participation_fixed"] += epr_dict[key][f"p_{group}_fixed"]
+                epr_dict[key]["total_participation_fixed"] += epr_dict[key][
+                    f"p_{group}_fixed"
+                ]
 
             print("total_participation", epr_dict[key]["total_participation"])
-            print("total_participation_fixed", epr_dict[key]["total_participation_fixed"])
+            print(
+                "total_participation_fixed", epr_dict[key]["total_participation_fixed"]
+            )
 
-    tabulate_into_csv(f"{os.path.basename(os.path.abspath(path))}_epr.csv", epr_dict, parameters, parameter_values)
+    tabulate_into_csv(
+        f"{os.path.basename(os.path.abspath(path))}_epr.csv",
+        epr_dict,
+        parameters,
+        parameter_values,
+    )
