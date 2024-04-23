@@ -154,8 +154,8 @@ for sim_tool in sim_tools:
             'run_paraview': not quiet,  # this is visual view of the results which can be
                                         # removed to speed up the process
             'python_executable': 'python',  # use 'kqclib' when using singularity image (you can also put a full path)
-            'elmer_n_processes': -1,  # -1 means all the physical cores
-            'gmsh_n_threads': -1,  # -1 means all the physical cores
+            'elmer_n_processes': 1,  # -1 means all the physical cores
+            'gmsh_n_threads': 1,  # -1 means all the physical cores
         },
         'mesh_size': {
             'vacuum': 1000,
