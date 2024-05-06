@@ -36,7 +36,8 @@ from kqcircuits.simulations.export.xsection.xsection_export import (
 )
 
 sim_tools = ["elmer", "eigenmode"]
-
+# sim_tools = ["eigenmode"]
+Lj = 1.4348926834765362e-08
 
 flip_chip = False
 etch_opposite_face = False
@@ -48,14 +49,14 @@ mer_dims_default = {
     "metal": 7.0,
     "substrate": 3.0,
 }
-center = (750.0, 750.0)
+center = (1000, 1000)
 
 # Simulation parameters
 sim_class = get_single_element_sim_class(
     Clockmon,
     ignore_ports=["port_drive", "port_0", "port_island1_signal", "port_island2_signal"],
 )
-sim_class.junction_inductance = 13.539e-9  # Manually adjusting Lj
+sim_class.junction_inductance = Lj # Manually adjusting Lj
 sim_class.sim_tool = "eig"
 sim_parameters = {
     "name": f"clockmon",
@@ -64,8 +65,8 @@ sim_parameters = {
     "qubit_face": ["1t1"],
     "face_stack": ["1t1"],
     "with_squid": False,
-    "junction_inductance": 13.539e-9,
-    "box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(1500, 1500)),
+    "junction_inductance": Lj,
+    "box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(2000, 2000)),
     "tls_layer_thickness": [
         4.8e-9 * 1e6,
         0.3e-9 * 1e6,
@@ -80,14 +81,14 @@ sim_parameters = {
         "oxideMS": {"permittivity": 11.4},
         "oxideSA": {"permittivity": 4},
     },
-    "ground_gap": [650, 450],
+    "ground_gap": [630, 610],
     "a": 10,
     "b": 6,
-    "island_extent": [550, 130],
+    "island_extent": [535, 200],
     "coupler_extent": [150, 20],
-    "island_to_island_distance": 20,
-    "coupler_offset": 160,
-    "clock_diameter": 60,
+    "island_to_island_distance": 50,
+    "coupler_offset": 255,
+    "clock_diameter": 90,
     "sim_tool": "eig",
     "bending_angle": 0,
 }
@@ -112,8 +113,8 @@ for sim_tool in sim_tools:
     ansys_export_parameters.update(
         {
             "ansys_tool": "eigenmode",
-            "max_delta_f": 0.5,  # quite tight
-            "maximum_passes": 18,
+            "max_delta_f": 0.05,  # quite tight
+            "maximum_passes": 25,
             "minimum_passes": 1,
             "minimum_converged_passes": 2,
             "n_modes": 1,
@@ -281,8 +282,8 @@ for sim_tool in sim_tools:
         }
         cords_list = []
         for sweep_parameters in sweep_parameters_list:
-            cord1 = pya.DPoint(1008, 790)
-            cord2 = pya.DPoint(1008 + metal_edge_region_x, 790)
+            cord1 = pya.DPoint(1248, 1060)
+            cord2 = pya.DPoint(1248 + metal_edge_region_x, 1060)
             cords_list.append((cord1, cord2))
         xsection_simulations_metal_edge = create_xsections_from_simulations(
             simulations,

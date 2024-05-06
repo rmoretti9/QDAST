@@ -60,7 +60,7 @@ export_parameters = {
 }
 
 # Sweep ranges
-finger_control = np.linspace(1, 8, 2)
+finger_control = np.linspace(1, 8, 101)
 
 # Get layout
 logging.basicConfig(level=logging.WARN, stream=sys.stdout)
@@ -76,17 +76,6 @@ simulations += cross_sweep_simulation(
     sim_parameters,
     {"finger_control": finger_control},
 )
-
-# # Multi face gap capacitor sweeps
-# simulations += cross_sweep_simulation(
-#     layout,
-#     sim_class,
-#     {
-#         **sim_parameters,
-#         "name": sim_parameters["name"] + "_gap",
-#         **gap_parameters,
-#     },
-# )
 
 # Export Ansys files
 export_ansys(simulations, **export_parameters)

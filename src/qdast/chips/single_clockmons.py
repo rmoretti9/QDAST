@@ -1,4 +1,5 @@
 from math import pi
+import pandas as pd
 from qdast.chips.qdast_chip import QDASTChip
 from kqcircuits.elements.meander import Meander
 from qdast.qubits.clockmon import Clockmon
@@ -69,6 +70,10 @@ class SingleClockmons(QDASTChip):
         "Coupler type for test resonator couplers",
         ["smooth", "smooth", "smooth", "smooth"],
     )
+    _readout_structure_info = {
+        "feedline": [],
+        "tees": []
+    }
 
     def build(self):
         """Produces a Clockmons PCell."""
@@ -80,6 +85,7 @@ class SingleClockmons(QDASTChip):
         feedline_x_distance = 200
         self._produce_feedline(feedline_x_distance)
         self._produce_readout_resonators()
+        self.get_readout_structure_info()
 
     def _produce_waveguide(self, path, term2=0, turn_radius=None):
         """Produces a coplanar waveguide that follows the given path.
@@ -102,6 +108,7 @@ class SingleClockmons(QDASTChip):
             term2=term2,
         )
         self.insert_cell(waveguide)
+        self._readout_structure_info["feedline"].append(waveguide.length())
         return waveguide
 
     def _produce_qubit(self, qubit_cell, center_x, center_y, rotation, name=None):
@@ -126,16 +133,6 @@ class SingleClockmons(QDASTChip):
 
     def _produce_qubits(self):
         """Produces four Clockmon qubits in predefined positions in a SingleClockmons chip.
-
-        Three qubits are above the feedline and three are below it. The produced qubits are at equal distances
-        from the feedline, and the distances between qubits in the x-direction are equal. The qubits are centered around
-        the center of the chip.
-
-        Returns:
-            A tuple containing the refpoints of the qubits. Each element in the tuple contains the refpoints for a
-            single qubit. The qubits are ordered such that 0,1 are the upper qubits (from left to right), while
-            2,3 are the lower qubits (from left to right).
-
         """
         qubit = self.add_element(
             Clockmon,
@@ -150,30 +147,31 @@ class SingleClockmons(QDASTChip):
             bending_angle=0,
             junction_type="Manhattan Single Junction Centered",
         )
-        qubit_spacing_x = 800  # shortest x-distance between qubit centers on different sides of the feedline
+        qubit_spacing_x = 800  # x-distance between qubits on the same feedline side
+        qubit_spacing_x_alt = 300 # x-distance between qubits on different feedline sides
         qubit_spacing_y = 1500  # shortest y-distance between qubit centers on different sides of the feedline
         qubits_center_x = 2.5e3  # the x-coordinate around which qubits are centered
         # qubits above the feedline, from left to right
         y_a = 3.5e3 + qubit_spacing_y / 2
         y_b = 1.5e3 - qubit_spacing_y / 2
         qb0_refpoints = self._produce_qubit(
-            qubit, qubits_center_x - qubit_spacing_x * (3 / 2), y_b, 0, "qb_0"
+            qubit, qubits_center_x - qubit_spacing_x, y_b, 0, "qb_0"
         )
         qb1_refpoints = self._produce_qubit(
-            qubit, qubits_center_x - qubit_spacing_x * (1 / 2), y_a, 2, "qb_1"
+            qubit, qubits_center_x - qubit_spacing_x + qubit_spacing_x_alt, y_a, 2, "qb_1"
         )
         # qubits below the feedline, from left to right
         qb2_refpoints = self._produce_qubit(
-            qubit, qubits_center_x + qubit_spacing_x * (1 / 2), y_b, 0, "qb_2"
+            qubit, qubits_center_x + qubit_spacing_x, y_b, 0, "qb_2"
         )
         qb3_refpoints = self._produce_qubit(
-            qubit, qubits_center_x + qubit_spacing_x * (3 / 2), y_a, 2, "qb_3"
+            qubit, qubits_center_x + qubit_spacing_x + qubit_spacing_x_alt, y_a, 2, "qb_3"
         )
         self._qubit_x_coords = [
-            qubits_center_x - qubit_spacing_x * (5 / 2),
-            qubits_center_x - qubit_spacing_x * (3 / 2),
-            qubits_center_x + qubit_spacing_x * (1 / 2),
-            qubits_center_x + qubit_spacing_x * (3 / 2),
+            qubits_center_x - qubit_spacing_x,
+            qubits_center_x - qubit_spacing_x + qubit_spacing_x_alt,
+            qubits_center_x + qubit_spacing_x,
+            qubits_center_x + qubit_spacing_x + qubit_spacing_x_alt
         ]
         self._qubit_refpoints = [
             qb0_refpoints,
@@ -294,3 +292,7 @@ class SingleClockmons(QDASTChip):
             self.insert_cell(cplr, cplr_dtrans)
 
             self._produce_readout_resonator(cplr, cplr_dtrans, i)
+            
+    def get_readout_structure_info(self):
+        df = pd.DataFrame.from_dict(self._readout_structure_info, orient = "index")
+        df.to_csv("C:/Users/labranca/Desktop/work/single_clockmons_readout_structure.csv")

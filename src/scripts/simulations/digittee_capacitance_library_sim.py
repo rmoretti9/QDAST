@@ -4,14 +4,13 @@ from pathlib import Path
 
 import numpy as np
 
-from qdast.qubits.clockmon import Clockmon
+from qdast.elements.digit_tee_coupler import DigitTee
 from kqcircuits.simulations.post_process import PostProcess
 from kqcircuits.simulations.single_element_simulation import (
     get_single_element_sim_class,
 )
 from kqcircuits.pya_resolver import pya
 from kqcircuits.simulations.export.ansys.ansys_export import export_ansys
-from kqcircuits.simulations.export.elmer.elmer_export import export_elmer
 from kqcircuits.simulations.export.simulation_export import export_simulation_oas
 from kqcircuits.util.export_helper import (
     create_or_empty_tmp_directory,
@@ -19,22 +18,29 @@ from kqcircuits.util.export_helper import (
     open_with_klayout_or_default_application,
 )
 from kqcircuits.simulations.post_process import PostProcess
-
+from kqcircuits.simulations.export.simulation_export import (
+    cross_sweep_simulation,
+    export_simulation_oas,
+)
 sim_tool = "q3d"
 
 # Simulation parameters
 sim_class = get_single_element_sim_class(
-    Clockmon, ignore_ports=["port_drive", "port_island1", "port_island2"]
+    DigitTee, #ignore_ports=["port_0", "port_1"]
 )  # pylint: disable=invalid-name
 sim_parameters = {
-    "name": "clockmon",
-    # "use_internal_ports": True,
+    "name": "digittee",
+    "use_internal_ports": True,
     # "use_ports": True,
     "with_squid": False,
     "face_stack": ["1t1"],
     "box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(1500, 1500)),
     # "separate_island_internal_ports": sim_tool != "eigenmode",  # DoublePads specific
     "waveguide_length": 200,
+    "a": 10,
+    "b": 6,
+    "finger_gap": 6,
+    
 }
 
 dir_path = create_or_empty_tmp_directory(Path(__file__).stem + f"_{sim_tool}")
@@ -48,7 +54,7 @@ export_parameters_ansys = {
     'percent_error': 0.1,
     'maximum_passes': 25,
     'minimum_passes': 2,
-    'minimum_converged_passes': 3,
+    'minimum_converged_passes': 2,
     "post_process": PostProcess("produce_cmatrix_table.py"),
 }
 
@@ -57,28 +63,16 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 layout = get_active_or_new_layout()
 
 simulations = []
+finger_control = np.linspace(1, 5, 101)
 
-name = sim_parameters["name"]
-simulations = [
-    sim_class(
-        layout,
-        **{
-            **sim_parameters,
-            "ground_gap": [630, 610],
-            "a": 10,
-            "b": 6,
-            "island_extent": [535, 200],
-            "coupler_extent": [150, 20],
-            "island_to_island_distance": 50,
-            "coupler_offset": 255,
-            "clock_diameter": 90,
-            "sim_tool": "eig",
-            "bending_angle": 0,
-            "sim_tool": "q3d",
-            "name": name,
-        },
-    )
-]
+# Multi face finger (interdigital) capacitor sweeps
+simulations += cross_sweep_simulation(
+    layout,
+    sim_class,
+    sim_parameters,
+    {"finger_control": finger_control},
+)
+
 
 # Create simulation
 oas = export_simulation_oas(simulations, dir_path)

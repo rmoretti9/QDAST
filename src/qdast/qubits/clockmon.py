@@ -14,7 +14,6 @@ from kqcircuits.util.geometry_helper import arc_points
 
 
 @add_parameters_from(Squid, junction_type="Manhattan Single Junction Centered")
-# @add_parameters_from(Manhattan)
 @add_parameters_from(ManhattanSingleJunctionCentered)
 class Clockmon(Qubit):
     """A two-island qubit, consisting of two rounded rectangles shunted by a junction, with one capacitive coupler.
@@ -129,7 +128,7 @@ class Clockmon(Qubit):
         # Coupler port
         self.add_port(
             "0",
-            self.refpoints["cplr"],
+            self.refpoints["0"],
             direction=pya.DVector(pya.DPoint(0, float(self.ground_gap[1]))),
         )
 
@@ -150,11 +149,11 @@ class Clockmon(Qubit):
         if offset > float(self.ground_gap[1]) / 2 - height - 50:
             has_gap = True
             stem_height = 50
-            self.refpoints["cplr"] = pya.DPoint(0, offset + height + stem_height)
+            self.refpoints["0"] = pya.DPoint(0, offset + height + stem_height)
         else:
             has_gap = False
             stem_height = float(self.ground_gap[1]) / 2 - height
-            self.refpoints["cplr"] = pya.DPoint(0, float(self.ground_gap[1]) / 2)
+            self.refpoints["0"] = pya.DPoint(0, float(self.ground_gap[1]) / 2)
 
         coupler_points = [
             pya.DPoint(-width / 2, offset + height),
@@ -230,10 +229,10 @@ class Clockmon(Qubit):
         return island_region
 
     def _build_leads(self):
-        self._width_untapered = 8
-        self._width_tapered = 4
-        self._height_untapered = 10
-        self._height_tapered = 8
+        self._width_untapered = 12
+        self._width_tapered = 8
+        self._height_untapered = 19.75
+        self._height_tapered = 12
         self._length_bent_section = 6
         y_offset = (
             self.island_to_island_distance / 2
@@ -242,8 +241,8 @@ class Clockmon(Qubit):
         )
         bending_angle = self.bending_angle
         lead_points = [
-            pya.DPoint(self._width_untapered / 2, y_offset),
-            pya.DPoint(-self._width_untapered / 2, y_offset),
+            pya.DPoint(self._width_untapered / 2 + 10, y_offset),
+            pya.DPoint(-self._width_untapered / 2 - 10, y_offset),
             pya.DPoint(-self._width_untapered / 2, y_offset - self._height_untapered),
             pya.DPoint(
                 -self._width_tapered / 2,
@@ -343,7 +342,7 @@ class Clockmon(Qubit):
                 )
 
         elif self.sim_tool == "eig":
-            port_polygon = pya.DBox(0, 0, 4, 2)
+            port_polygon = pya.DBox(0, 0, 8, 4)
             # Eigenmode ports
             leads_length = (
                 self._height_untapered
@@ -351,8 +350,8 @@ class Clockmon(Qubit):
                 + self._length_bent_section
             )
             translations = [
-                pya.DPoint(-2, self.clock_diameter / 2 - leads_length),
-                pya.DPoint(-2, -(self.clock_diameter / 2 - leads_length + 2)),
+                pya.DPoint(-4, (self.clock_diameter) / 2 - leads_length),
+                pya.DPoint(-4, -(self.clock_diameter / 2 - leads_length + 4)),
             ]
             port_names = ["island1", "island2"]
             for i, (trans, name) in enumerate(zip(translations, port_names)):
@@ -360,7 +359,7 @@ class Clockmon(Qubit):
                 port_regions += pya.Region(port_poly.to_itype(self.layout.dbu))
                 self.add_port(
                     name,
-                    trans + pya.DPoint(2, 2 * (i % 2)),
+                    trans + pya.DPoint(4, 4 * (i % 2)),
                     pya.DVector(0, 2 * (i % 2) - 1),
                 )
 

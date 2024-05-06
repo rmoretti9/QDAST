@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 
 from qdast.qubits.clockmon import Clockmon
+from qdast.elements.digit_tee_coupler import DigitTee
 from kqcircuits.simulations.post_process import PostProcess
 from kqcircuits.simulations.single_element_simulation import (
     get_single_element_sim_class,
@@ -19,22 +20,30 @@ from kqcircuits.util.export_helper import (
     open_with_klayout_or_default_application,
 )
 from kqcircuits.simulations.post_process import PostProcess
+from kqcircuits.simulations.export.simulation_export import (
+    cross_sweep_simulation,
+    export_simulation_oas,
+)
 
+from qdast.elements.waveguide_segment import WaveguideSegment
 sim_tool = "q3d"
 
 # Simulation parameters
 sim_class = get_single_element_sim_class(
-    Clockmon, ignore_ports=["port_drive", "port_island1", "port_island2"]
+    WaveguideSegment, #ignore_ports=["port_0", "port_1"]
 )  # pylint: disable=invalid-name
 sim_parameters = {
-    "name": "clockmon",
-    # "use_internal_ports": True,
+    "name": "waveguide",
+    "use_internal_ports": True,
     # "use_ports": True,
     "with_squid": False,
     "face_stack": ["1t1"],
-    "box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(1500, 1500)),
+    "box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(1000, 1000)),
     # "separate_island_internal_ports": sim_tool != "eigenmode",  # DoublePads specific
-    "waveguide_length": 200,
+    "a": 10,
+    "b": 6,
+    "waveguide_length": 0,
+
 }
 
 dir_path = create_or_empty_tmp_directory(Path(__file__).stem + f"_{sim_tool}")
@@ -57,28 +66,17 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 layout = get_active_or_new_layout()
 
 simulations = []
+waveguide_length = []
 
-name = sim_parameters["name"]
-simulations = [
-    sim_class(
-        layout,
-        **{
-            **sim_parameters,
-            "ground_gap": [630, 610],
-            "a": 10,
-            "b": 6,
-            "island_extent": [535, 200],
-            "coupler_extent": [150, 20],
-            "island_to_island_distance": 50,
-            "coupler_offset": 255,
-            "clock_diameter": 90,
-            "sim_tool": "eig",
-            "bending_angle": 0,
-            "sim_tool": "q3d",
-            "name": name,
-        },
-    )
-]
+# Multi face finger (interdigital) capacitor sweeps
+for wg_length in np.linspace(10, 500, 101):
+    simulations += [
+        sim_class(layout, **{**sim_parameters,
+        "wg_length": wg_length,
+        "name": f"waveguide_coupler_width_{wg_length}",}, #pya.DPath([pya.DPoint(0, 0), pya.DPoint(wg_length, 0)], 0)}
+        )
+    ]
+
 
 # Create simulation
 oas = export_simulation_oas(simulations, dir_path)
