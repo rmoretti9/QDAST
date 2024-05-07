@@ -1,0 +1,57 @@
+import skrf as rf
+from skrf.media.cpw import CPW
+
+def assemble_network(options):
+    f_min, f_max = options["frequency"]
+    freq = rf.Frequency(start=f_min, stop=f_max, unit='GHz', npoints=options["n_points"])
+    capacitor = rf.DefinedGammaZ0(freq, z0=50).capacitor
+    inductor = rf.DefinedGammaZ0(freq, z0=50).inductor
+    cpw = CPW(frequency = freq, w = 10e-6, s = 6e-6, ep_r = 11.9)
+    port1 = rf.Circuit.Port(freq, 'port1', z0=50) # Launcher 1
+    port2 = rf.Circuit.Port(freq, 'port2', z0=50) # Launcher 2
+
+    tl = []
+    cplr = []
+    qplr = []
+    readout_res_c = []
+    readout_res_l = []
+    qubit_c = []
+    qubit_l = []
+    gnd = []
+
+    cnx = []
+    
+    for i, fl in enumerate(options["feedline_traits"]):
+        tl.append(cpw.line(d = fl/1e6, unit='m', name='trans_line_'+str(i)))
+
+    for i, (ck, cqr, rr_c, rr_l, qb_c, qb_l) in enumerate(zip(
+                                                                  options["ck"],
+                                                                  options["cqr"],
+                                                                  options["readout_resonator_c"],
+                                                                  options["readout_resonator_l"],
+                                                                  options["qubit_c"],
+                                                                  options["qubit_l"])):
+        cplr.append(capacitor(ck, name='ck_'+str(i)))
+        qplr.append(capacitor(cqr, name='cqr_'+str(i)))
+        readout_res_c.append(capacitor(rr_c, name='rr_c_'+str(i)))
+        readout_res_l.append(inductor(rr_l, name='rr_l_'+str(i)))
+        qubit_c.append(capacitor(qb_c, name='qb_c_'+str(i)))
+        qubit_l.append(inductor(qb_l, name='qb_l_'+str(i)))
+    n_qubits = len(options["qubit_c"])
+
+    for i in range(len(options["qubit_c"])):
+        gnd.append(rf.Circuit.Ground(freq, name='gnd_'+str(i)))
+ 
+    n_qubits = len(options["qubit_c"])
+    for i in range(n_qubits+1):
+        if i == 0:
+            cnx.append([(port1, 0), (tl[i], 0)])
+        elif i == n_qubits:
+            cnx.append([(tl[i], 1), (port2, 0)])
+            break
+        # else:
+        cnx.append([(tl[i], 1), (tl[i+1], 0), (cplr[i], 0),])
+        cnx.append([(cplr[i], 1), (readout_res_c[i], 0), (readout_res_l[i], 0), (qplr[i], 0)])
+        cnx.append([(qplr[i], 1), (qubit_c[i], 0), (qubit_l[i], 0)])
+        cnx.append([(readout_res_c[i], 1), (readout_res_l[i], 1), (qubit_c[i], 1), (qubit_l[i], 1), (gnd[i], 0)])      
+    return cnx

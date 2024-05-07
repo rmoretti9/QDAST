@@ -72,7 +72,8 @@ class SingleClockmons(QDASTChip):
     )
     _readout_structure_info = {
         "feedline": [],
-        "tees": []
+        "tees": [],
+        "readout_res_lengths": [],
     }
 
     def build(self):
@@ -201,6 +202,7 @@ class SingleClockmons(QDASTChip):
             meanders=num_meanders,
             r=turn_radius,
         )
+        self._readout_structure_info["readout_res_lengths"].append(total_length)
 
     def _produce_feedline(self, x_distance):
         """Produces a feedline for a SingleClockmons chip.
@@ -295,4 +297,4 @@ class SingleClockmons(QDASTChip):
             
     def get_readout_structure_info(self):
         df = pd.DataFrame.from_dict(self._readout_structure_info, orient = "index")
-        df.to_csv("C:/Users/labranca/Desktop/work/single_clockmons_readout_structure.csv")
+        # df.to_csv("QDAST\src\modeling\single_clockmons\single_clockmons_readout_structure.csv")
