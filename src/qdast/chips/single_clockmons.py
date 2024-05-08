@@ -33,6 +33,7 @@ def _get_num_meanders(meander_length, turn_radius, meander_min_width):
     name_brand="",
     name_copy="",
 )
+
 @add_parameters_from(Junction, "junction_type")
 class SingleClockmons(QDASTChip):
     """The PCell declaration for a SingleClockmons chip.
@@ -60,22 +61,26 @@ class SingleClockmons(QDASTChip):
         "Number of fingers for readout resonator couplers",
         [1.2, 1.3, 1.4, 1.5],
     )
-    l_fingers = Param(
-        pdt.TypeList,
-        "Length of fingers for readout resonator couplers",
-        [30, 30, 30, 30],
-    )
     type_coupler = Param(
         pdt.TypeList,
         "Coupler type for test resonator couplers",
         ["smooth", "smooth", "smooth", "smooth"],
+    )
+    coupler_width = Param(
+        pdt.TypeList,
+        "Qubit coupler width",
+        [150, 150, 150, 150],
     )
     _readout_structure_info = {
         "feedline": [],
         "tees": [],
         "readout_res_lengths": [],
     }
-
+    l_fingers = Param(
+        pdt.TypeList,
+        "Length of fingers for readout resonator couplers",
+        [30, 30, 30, 30],
+    )
     def build(self):
         """Produces a Clockmons PCell."""
 
@@ -112,7 +117,7 @@ class SingleClockmons(QDASTChip):
         self._readout_structure_info["feedline"].append(waveguide.length())
         return waveguide
 
-    def _produce_qubit(self, qubit_cell, center_x, center_y, rotation, name=None):
+    def _produce_qubit(self, coupler_width, center_x, center_y, rotation, name=None):
         """Produces a qubit in a SingleClockmons chip.
 
         Args:
@@ -126,28 +131,29 @@ class SingleClockmons(QDASTChip):
             refpoints of the qubit.
 
         """
-        qubit_trans = pya.DTrans(rotation, False, center_x, center_y)
-        _, refpoints_abs = self.insert_cell(
-            qubit_cell, qubit_trans, name, rec_levels=None
-        )
-        return refpoints_abs
-
-    def _produce_qubits(self):
-        """Produces four Clockmon qubits in predefined positions in a SingleClockmons chip.
-        """
         qubit = self.add_element(
             Clockmon,
             ground_gap=[650, 450],
             a=10,
             b=6,
             island_extent=[550, 130],
-            coupler_extent=[150, 20],
+            coupler_extent=[coupler_width, 20],
             island_to_island_distance=20,
             coupler_offset=160,
             clock_diameter=60,
             bending_angle=0,
             junction_type="Manhattan Single Junction Centered",
         )
+        qubit_trans = pya.DTrans(rotation, False, center_x, center_y)
+        _, refpoints_abs = self.insert_cell(
+            qubit, qubit_trans, name, rec_levels=None
+        )
+        return refpoints_abs
+
+    def _produce_qubits(self):
+        """Produces four Clockmon qubits in predefined positions in a SingleClockmons chip.
+        """
+
         qubit_spacing_x = 800  # x-distance between qubits on the same feedline side
         qubit_spacing_x_alt = 300 # x-distance between qubits on different feedline sides
         qubit_spacing_y = 1500  # shortest y-distance between qubit centers on different sides of the feedline
@@ -156,17 +162,17 @@ class SingleClockmons(QDASTChip):
         y_a = 3.5e3 + qubit_spacing_y / 2
         y_b = 1.5e3 - qubit_spacing_y / 2
         qb0_refpoints = self._produce_qubit(
-            qubit, qubits_center_x - qubit_spacing_x, y_b, 0, "qb_0"
+            float(self.coupler_width[0]), qubits_center_x - qubit_spacing_x, y_b, 0, "qb_0"
         )
         qb1_refpoints = self._produce_qubit(
-            qubit, qubits_center_x - qubit_spacing_x + qubit_spacing_x_alt, y_a, 2, "qb_1"
+            float(self.coupler_width[1]), qubits_center_x - qubit_spacing_x + qubit_spacing_x_alt, y_a, 2, "qb_1"
         )
         # qubits below the feedline, from left to right
         qb2_refpoints = self._produce_qubit(
-            qubit, qubits_center_x + qubit_spacing_x, y_b, 0, "qb_2"
+            float(self.coupler_width[2]), qubits_center_x + qubit_spacing_x, y_b, 0, "qb_2"
         )
         qb3_refpoints = self._produce_qubit(
-            qubit, qubits_center_x + qubit_spacing_x + qubit_spacing_x_alt, y_a, 2, "qb_3"
+            float(self.coupler_width[3]), qubits_center_x + qubit_spacing_x + qubit_spacing_x_alt, y_a, 2, "qb_3"
         )
         self._qubit_x_coords = [
             qubits_center_x - qubit_spacing_x,
@@ -231,6 +237,7 @@ class SingleClockmons(QDASTChip):
             )
             inst_cross, _ = self.insert_cell(cell_cross, cross_trans)
             tee_refpoints.append(self.get_refpoints(cell_cross, inst_cross.dtrans))
+        self._readout_structure_info["tees"] = [self.a, self.a, 2*self.a]
         self._tee_refpoints = tee_refpoints
         self._produce_waveguide(
             [
@@ -297,4 +304,4 @@ class SingleClockmons(QDASTChip):
             
     def get_readout_structure_info(self):
         df = pd.DataFrame.from_dict(self._readout_structure_info, orient = "index")
-        # df.to_csv("QDAST\src\modeling\single_clockmons\single_clockmons_readout_structure.csv")
+        df.to_csv("C:/Users/labranca/Desktop/work/QDAST/src/modeling/single_clockmons/single_clockmons_readout_structure.csv", mode='w+')

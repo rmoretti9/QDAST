@@ -7,22 +7,7 @@ from scipy.special import ellipk
 
 from math import sqrt, inf, tanh
 
-def cpw_capacitance_inductance(w, s, l, epsilon_r):
-    """
-    Calculates the capacitance and inductance of a CPW resonator.
-    
-    Parameters:
-    w (float): Width of the center conductor (m)
-    s (float): Gap between the center conductor and ground planes (m)
-    l (float): Length of the CPW resonator (m)
-    epsilon_r (float): Relative permittivity of the substrate
-    
-    Returns:
-    C (float): Capacitance of the CPW resonator (F)
-    L (float): Inductance of the CPW resonator (H)
-    """
-    
-    # Permittivity of free space
+def cpw_cl_ll(w, s, epsilon_r):
     epsilon_0 = 8.854e-12
     
     # Permeability of free space
@@ -43,8 +28,24 @@ def cpw_capacitance_inductance(w, s, l, epsilon_r):
     
     # Inductance per unit length
     L_l = mu_0 * K_k_prime / (4 * K_k)
+    return C_l, L_l
+
+def cpw_capacitance_inductance(w, s, l, epsilon_r):
+    """
+    Calculates the capacitance and inductance of a CPW resonator.
     
-    # Total capacitance and inductance
+    Parameters:
+    w (float): Width of the center conductor (m)
+    s (float): Gap between the center conductor and ground planes (m)
+    l (float): Length of the CPW resonator (m)
+    epsilon_r (float): Relative permittivity of the substrate
+    
+    Returns:
+    C (float): Capacitance of the CPW resonator (F)
+    L (float): Inductance of the CPW resonator (H)
+    """
+    
+    C_l, L_l = cpw_cl_ll(w, s, epsilon_r)
     C = C_l * l
     L = L_l * l
     
@@ -58,26 +59,30 @@ def get_equivalent_lc(C, L, l, Z0):
     c_r = 1/((2*pi*resonator_frequency)**2*l_r)
     return c_r, l_r
 
-def loaded_quarter_wave_notch_resonator_kappa(frequency: float, Z0: float, ZL: float, C: float):
-    """ Returns decay rate (kappa) of loaded quarter-wave resonator
+import numpy as np
+from math import *
+from scipy.special import ellipk
+
+__all__ = ['kappa_in']
 
 
-    Derivation is based on approximating kappa = 2*frequency * |S12|^2 / |S11|^2 of following two-port system:
-    ::
+def resonator_kappa(resonance_frequency, coupling_capacitance, z0):
+    """Key References:
 
+    D. Schuster, Ph.D. Thesis, Yale University (2007)
+    https://rsl.yale.edu/sites/default/files/files/RSL_Theses/SchusterThesis.pdf
 
-                          C
-        port1----[Z0]----||----[ZL]----port2
+    T. McConkey, Ph.D. Thesis, University of Waterloo (2018)
+    https://uwspace.uwaterloo.ca/bitstream/handle/10012/13464/McConkey_Thomas.pdf?sequence=3&isAllowed=y
 
+    Mohebbi and Majedi, Superconducting Science and Technology 22, 125028 (2009)
+    https://iopscience.iop.org/article/10.1088/0953-2048/22/12/125028/meta
 
-    Args:
-        frequency: Loaded resonator frequency (Hz)
-        Z0: Characteristic impedance of the resonator line (Ohm)
-        ZL: Characteristic impedance of the transmission line (Ohm).
-        C: Coupling capacitance to transmission line (F)
-
-
-    Returns:
-        (float): External decay rate kappa (Hz), such that the FWHM line width in Hz is kappa/(2*pi)
+    P. Krantz, et al. Physical Review Applied 6, 021318 (2019)
+    https://aip.scitation.org/doi/10.1063/1.5089550
     """
-    return 32 * (C * pi) ** 2 * Z0 * ZL * frequency ** 3
+
+    # Calculation of kappa
+    omega_r = resonance_frequency * 2 * pi
+    kappa = (2 / pi) * (omega_r**3.0) * (coupling_capacitance**2.0) * (z0**2.0)
+    return kappa
