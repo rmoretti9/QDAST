@@ -218,8 +218,8 @@ class Clockmon(Qubit):
                 pya.DPolygon(
                     arc_points(
                         self.clock_diameter / 2,
-                        start=math.pi - 0.2,
-                        stop=0.2,
+                        start=math.pi - 0.3,
+                        stop=0.3,
                         origin=pya.DPoint(0, 0),
                     )
                 ).to_itype(self.layout.dbu)
@@ -231,9 +231,9 @@ class Clockmon(Qubit):
     def _build_leads(self):
         self._width_untapered = 12
         self._width_tapered = 8
-        self._height_untapered = 19.75
+        self._height_untapered = 19.25
         self._height_tapered = 12
-        self._length_bent_section = 6
+        self._length_bent_section = 9
         y_offset = (
             self.island_to_island_distance / 2
             if self.island_to_island_distance > self.clock_diameter
@@ -241,8 +241,8 @@ class Clockmon(Qubit):
         )
         bending_angle = self.bending_angle
         lead_points = [
-            pya.DPoint(self._width_untapered / 2 + 10, y_offset),
-            pya.DPoint(-self._width_untapered / 2 - 10, y_offset),
+            pya.DPoint(self._width_untapered / 2 + self.clock_diameter/7, y_offset),
+            pya.DPoint(-self._width_untapered / 2 - self.clock_diameter/7, y_offset),
             pya.DPoint(-self._width_untapered / 2, y_offset - self._height_untapered),
             pya.DPoint(
                 -self._width_tapered / 2,
