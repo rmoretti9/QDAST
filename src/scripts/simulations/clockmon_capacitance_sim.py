@@ -34,7 +34,7 @@ sim_parameters = {
     "face_stack": ["1t1"],
     "box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(1500, 1500)),
     # "separate_island_internal_ports": sim_tool != "eigenmode",  # DoublePads specific
-    "waveguide_length": 200,
+    "waveguide_length": 0,
 }
 
 dir_path = create_or_empty_tmp_directory(Path(__file__).stem + f"_{sim_tool}")
@@ -68,7 +68,7 @@ simulations = [
             "a": 10,
             "b": 6,
             "island_extent": [535, 200],
-            "coupler_extent": [150, 20],
+            "coupler_extent": [105, 20],
             "island_to_island_distance": 50,
             "coupler_offset": 255,
             "clock_diameter": 90,

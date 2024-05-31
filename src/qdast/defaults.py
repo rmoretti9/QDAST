@@ -35,7 +35,7 @@ default_sampleholders = {
         "n": 4,
         "launcher_type": "RF",
         "launcher_width": 240,
-        "launcher_gap": 179,
+        "launcher_gap": 144,
         "launcher_indent": 680,
         "pad_pitch": 1200,
         "chip_box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(5000, 5000)),

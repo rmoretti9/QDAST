@@ -95,6 +95,7 @@ def get_csigma_cqr(cmatrix):
     C33 = cmatrix[2, 2] if cmatrix.ndim == 2 else cmatrix[:, 2, 2]
 
     # Formulas adapted from https://qudev.phys.ethz.ch/static/content/science/Documents/semester/Burkhard_Simon_SemesterThesis_130211.pdf
+    # Or similarly: https://www.nature.com/articles/s41534-020-0269-1.pdf
     c_sigma = ((C33 + C13)*(C22 + C12))/(C33 + C22 + C13 + C12) + C23
     beta = (C33*C12 - C22*C13)/((C33+C13)*(C22 + C12) + (C33 + C22 + C13 + C12)*C23)
     # Note that c_qr can also be written (perhaps more intuitively) as:

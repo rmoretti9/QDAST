@@ -6,9 +6,9 @@ import pandas as pd
 @add_parameters_from(SingleClockmons)
 class SingleClockmons00(SingleClockmons):
     def build(self):
-        self.readout_res_lengths = [8220.1, 8101.4, 7986.1, 7873.9]
-        self.n_fingers = [2.0865, 2.0687, 2.0513, 2.0344]
-        self.coupler_widths = [127.82, 131.24, 134.53, 137.69]
+        self.readout_res_lengths = [8295.0, 8178.9, 8066.0, 7956.1]
+        self.n_fingers = [1.9811, 1.9643, 1.9476, 1.9311]
+        self.coupler_widths = [112.3, 108.81, 105.43, 102.16]
         self.with_feedline_resonator = False
         self._readout_structure_info = {
         "feedline": [],

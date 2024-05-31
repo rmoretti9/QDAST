@@ -6,15 +6,16 @@ import pandas as pd
 @add_parameters_from(SingleClockmons)
 class SingleClockmons01(SingleClockmons):
     def build(self):
-        self.readout_res_lengths = [8220.1, 8101.4, 7986.1, 7873.9]
-        self.n_fingers = [2.0865, 2.0687, 2.0513, 2.0344]
-        self.coupler_widths = [127.82, 131.24, 134.53, 137.69]
-        self.with_feedline_resonator = True
+        self.readout_res_lengths = [8294.5, 8172.6 , 8028.1, 7888.3]
+        self.n_fingers = [1.9843, 2.0027, 2.1644, 2.2957]
+        self.coupler_widths = [112.3, 108.81, 105.43, 102.16]
+        self.with_feedline_resonator = True,
+        self.feedline_capacitor_n_fingers = 4.25267767,
         self._readout_structure_info = {
-        "feedline": [],
-        "tees": [],
-        "readout_res_lengths": [],
-    }
+            "feedline": [],
+            "tees": [],
+            "readout_res_lengths": [],
+        }
         super().build()
         self.get_readout_structure_info()
 
