@@ -15,7 +15,8 @@ from kqcircuits.util.coupler_lib import cap_params
 from kqcircuits.util.parameters import Param, pdt, add_parameters_from
 from kqcircuits.junctions.junction import Junction
 
-
+from kqcircuits.defaults import default_layers
+from kqcircuits.util.groundgrid import make_grid
 def _get_num_meanders(meander_length, turn_radius, meander_min_width):
     """Get the required number of meanders to create a meander element with the given parameters."""
 
@@ -53,7 +54,9 @@ class SingleClockmons(QDASTChip):
             left to right).
 
     """
-
+    # name_mask = Param(pdt.TypeString, "Name of the mask", "M000")  # string '_3' will leave empty space for M000
+    # name_chip = Param(pdt.TypeString, "Name of the chip", "CTest")
+    # name_copy = Param(pdt.TypeString, "Name of the copy", None)
     readout_res_lengths = Param(
         pdt.TypeList,
         "Readout resonator lengths (four resonators)",
@@ -65,7 +68,7 @@ class SingleClockmons(QDASTChip):
         [1.2, 1.3, 1.4, 1.5],
     )
     feedline_capacitor_n_fingers = Param(
-        pdt.TypeList,
+        pdt.TypeDouble,
         "Number of fingers for feedline resonator coupler",
         3.1,
     )
@@ -95,7 +98,6 @@ class SingleClockmons(QDASTChip):
 
     def build(self):
         """Produces a Clockmons PCell."""
-
         self.launchers = self.produce_launchers(
             "SquareNSWE_5x5", launcher_assignments={4: "FL-IN", 2: "FL-OUT"}
         )
@@ -160,7 +162,8 @@ class SingleClockmons(QDASTChip):
             junction_type="Manhattan Single Junction Centered", 
             sim_tool = self.sim_tool,
             with_squid = self.with_squid,
-            pad_width = 6
+            pad_width = 6,
+            taper_width = 95/7
         )
         qubit_trans = pya.DTrans(rotation, False, center_x, center_y)
         _, refpoints_abs = self.insert_cell(

@@ -47,14 +47,17 @@ class Clockmon(Qubit):
     drive_position = Param(
         pdt.TypeList, "Coordinate for the drive port (µm, µm)", [-450, 0]
     )
-    island_extent = Param(pdt.TypeList, "Islands width and height (µm, µm)", [150, 100])
+    island_extent = Param(pdt.TypeList, "Islands width and height (µm, µm)", [350, 120])
     island_to_island_distance = Param(
-        pdt.TypeDouble, "Island to island distance", 50, unit="μm"
+        pdt.TypeDouble, "Island to island distance", 80, unit="μm"
     )
-    clock_diameter = Param(pdt.TypeDouble, "Junction space allocation", 70, unit="μm")
+    n_ports = Param(pdt.TypeString, "Number of couplers", "1", choices=["0", "1", "2"])
+    
+    taper_width = Param(pdt.TypeDouble, "Base lead width", 10, unit="μm")
+    clock_diameter = Param(pdt.TypeDouble, "Junction space allocation", 100, unit="μm")
     with_squid = Param(pdt.TypeBoolean, "Boolean whether to include the squid", True)
     bending_angle = Param(pdt.TypeDouble, "Leads bending angle", 45, unit="degrees")
-    sim_tool = Param(pdt.TypeString, "Simulation tool", "q3d", choices=["q3d", "eig"])
+    sim_tool = Param(pdt.TypeString, "Simulation tool", "none", choices=["none", "q3d", "eig"])
 
     def build(self):
 
@@ -82,13 +85,18 @@ class Clockmon(Qubit):
             20 / self.layout.dbu,
             self.n,
         )
-
+        etch_region = ground_gap_region - island_region
         # Readout coupler
-        coupler_region, coupler_gap_region = self._build_coupler()
-
-        etch_region = (
-            ground_gap_region - island_region + coupler_gap_region - coupler_region
-        )
+        trans = []
+        if self.n_ports is "1":
+            trans += [pya.CplxTrans(1, 0, False, 0, 0)]
+        elif self.n_ports is "2":
+            trans += [pya.CplxTrans(1, 0, False, 0, 0),
+                     pya.CplxTrans(1, 180, False, 0, 0)]
+        for i, t in enumerate(trans):
+            coupler_region, coupler_gap_region = self._build_coupler(t, str(i))
+            etch_region += coupler_gap_region
+            etch_region -= coupler_region
 
         # SQUID
         squid_transf = pya.DCplxTrans(
@@ -125,13 +133,18 @@ class Clockmon(Qubit):
         )
         self.add_protection(protection_region)
 
-        # Coupler port
-        self.add_port(
-            "0",
-            self.refpoints["0"],
-            direction=pya.DVector(pya.DPoint(0, float(self.ground_gap[1]))),
-        )
-
+        # Coupler ports
+        for i in range(int(self.n_ports)):
+            self.add_port(
+                str(i),
+                self.refpoints[str(i)],
+                direction=pya.DVector(trans[i]*pya.DPoint(0, float(self.ground_gap[1]))),
+            )
+        # self.add_port(
+        #     "1",
+        #     self.refpoints["1"],
+        #     direction=pya.DVector(pya.DPoint(0, float(self.ground_gap[1]))),
+        # )
         # Drive port
         self.add_port(
             "drive",
@@ -141,19 +154,20 @@ class Clockmon(Qubit):
             ),
         )
 
-    def _build_coupler(self):
+    def _build_coupler(self, trans, port_id):
         width = float(self.coupler_extent[0])
         height = float(self.coupler_extent[1])
         offset = self.coupler_offset
 
+        
         if offset > float(self.ground_gap[1]) / 2 - height - 50:
             has_gap = True
             stem_height = 50
-            self.refpoints["0"] = pya.DPoint(0, offset + height + stem_height)
+            self.refpoints[port_id] = pya.DPoint(0, offset + height + stem_height)*trans
         else:
             has_gap = False
             stem_height = float(self.ground_gap[1]) / 2 - height
-            self.refpoints["0"] = pya.DPoint(0, float(self.ground_gap[1]) / 2)
+            self.refpoints[port_id] = pya.DPoint(0, float(self.ground_gap[1]) / 2)*trans
 
         coupler_points = [
             pya.DPoint(-width / 2, offset + height),
@@ -195,7 +209,8 @@ class Clockmon(Qubit):
 
         else:
             total_coupler_gap_region = pya.Region()
-
+        total_coupler_region = total_coupler_region.transformed(trans)
+        total_coupler_gap_region = total_coupler_gap_region.transformed(trans)
         return total_coupler_region, total_coupler_gap_region
 
     def _build_island(self):
@@ -241,7 +256,7 @@ class Clockmon(Qubit):
         )
         bending_angle = self.bending_angle
         lead_points = [
-            pya.DPoint(self._width_untapered / 2 + self.clock_diameter/7, y_offset),
+            pya.DPoint(self._width_untapered / 2 + self.taper_width, y_offset),
             pya.DPoint(-self._width_untapered / 2 - self.clock_diameter/7, y_offset),
             pya.DPoint(-self._width_untapered / 2, y_offset - self._height_untapered),
             pya.DPoint(

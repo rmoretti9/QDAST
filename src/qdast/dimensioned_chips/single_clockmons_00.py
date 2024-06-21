@@ -15,6 +15,10 @@ class SingleClockmons00(SingleClockmons):
         "tees": [],
         "readout_res_lengths": [],
     }
+        self.name_chip = "V00"
+        self.name_copy = "UniMiB"
+        self.with_squid = True
+        self.margin = 120
         super().build()
         self.get_readout_structure_info()
 
