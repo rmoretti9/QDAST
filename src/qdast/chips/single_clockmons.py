@@ -15,8 +15,6 @@ from kqcircuits.util.coupler_lib import cap_params
 from kqcircuits.util.parameters import Param, pdt, add_parameters_from
 from kqcircuits.junctions.junction import Junction
 
-from kqcircuits.defaults import default_layers
-from kqcircuits.util.groundgrid import make_grid
 def _get_num_meanders(meander_length, turn_radius, meander_min_width):
     """Get the required number of meanders to create a meander element with the given parameters."""
 
@@ -154,9 +152,9 @@ class SingleClockmons(QDASTChip):
             a=10,
             b=6,
             island_extent=[535, 200],
-            coupler_extent=[coupler_width, 20],
+            coupler_widths=[coupler_width, 0, 0, 0, 0, 0],
             island_to_island_distance=50,
-            coupler_offset=255,
+            coupler_offsets=[255, 0, 0, 0, 0, 0],
             clock_diameter=95,
             bending_angle=0,
             junction_type="Manhattan Single Junction Centered", 
