@@ -24,17 +24,17 @@ sim_tool = "q3d"
 
 # Simulation parameters
 sim_class = get_single_element_sim_class(
-    Clockmon, ignore_ports=["port_drive", "port_island1", "port_island2"]
+    Clockmon, ignore_ports=["port_drive", "port_island1", "port_island2", "port_1", "port_3", "port_4", "port_5"]
 )  # pylint: disable=invalid-name
 sim_parameters = {
-    "name": "clockmon",
+    "name": "clockmon_0_2",
     # "use_internal_ports": True,
     # "use_ports": True,
     "with_squid": False,
     "face_stack": ["1t1"],
     "box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(1500, 1500)),
     # "separate_island_internal_ports": sim_tool != "eigenmode",  # DoublePads specific
-    "waveguide_length": 0,
+    "waveguide_length": 200,
 }
 
 dir_path = create_or_empty_tmp_directory(Path(__file__).stem + f"_{sim_tool}")
@@ -48,7 +48,7 @@ export_parameters_ansys = {
     'percent_error': 0.1,
     'maximum_passes': 25,
     'minimum_passes': 2,
-    'minimum_converged_passes': 3,
+    'minimum_converged_passes': 2,
     "post_process": PostProcess("produce_cmatrix_table.py"),
 }
 
@@ -69,13 +69,14 @@ simulations = [
             "b": 6,
             "island_extent": [535, 200],
             "coupler_widths": [105, 0, 105, 0, 0, 0],
-            "coupler_offsets": [255, 0, 287.5, 0, 0, 0],
+            "coupler_offsets": [255, 0, 288, 0, 0, 0],
             "coupler_heights": [20, 0, 20, 0, 0, 0],
             "island_to_island_distance": 50,
-            "clock_diameter": 90,
-            "sim_tool": "eig",
+            "clock_diameter": 95,
             "bending_angle": 0,
             "sim_tool": "q3d",
+            "pad_width": 6,
+            "taper_width": 95/7,
             "name": name,
         },
     )

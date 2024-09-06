@@ -271,7 +271,7 @@ class Clockmon(Qubit):
         bending_angle = self.bending_angle
         lead_points = [
             pya.DPoint(self._width_untapered / 2 + self.taper_width, y_offset),
-            pya.DPoint(-self._width_untapered / 2 - self.clock_diameter/7, y_offset),
+            pya.DPoint(-self._width_untapered / 2 - self.taper_width, y_offset),
             pya.DPoint(-self._width_untapered / 2, y_offset - self._height_untapered),
             pya.DPoint(
                 -self._width_tapered / 2,
@@ -346,12 +346,12 @@ class Clockmon(Qubit):
             translations = [
                 pya.DPoint(4/5*island_width / 2, self.island_to_island_distance / 2 + float(self.island_extent[1])),
                 pya.DPoint(
-                    gap_width / 2 - port_width, island_midpoint_height - port_height / 2 + 150
+                    4/5*island_width / 2, float(self.ground_gap[1])/2 - port_height / 2
                 ),
                 pya.DPoint(4/5*island_width / 2, -self.island_to_island_distance / 2 - float(self.island_extent[1])),
                 pya.DPoint(
-                    gap_width / 2 - port_width,
-                    -island_midpoint_height - port_height / 2 - 150,
+                    4/5*island_width / 2,
+                    -float(self.ground_gap[1])/2 + port_height / 2,
                 ),
             ]
             port_names = [
@@ -360,11 +360,11 @@ class Clockmon(Qubit):
                 "island2_signal",
                 "island2_ground",
             ]
-            orientations = [90, 0, -90, 0]
-            orientations_ports = [-1, 0, 1, 0]
-            ports_offset = [1, 1, -1, 1]
-            port_corner_x = [0, -1, 0, -1]
-            port_corner_y = [1, 0, -1, 0]
+            orientations = [90, 90, -90, -90]
+            orientations_ports = [-1, -1, 1, 1]
+            ports_offset = [1, 0, -1, 0]
+            port_corner_x = [0, 0, 0, 0]
+            port_corner_y = [1, -1, -1, 1]
             for i, (trans, name) in enumerate(zip(translations, port_names)):
                 port_poly = pya.DCplxTrans(1, orientations[i], False, trans) * port_polygon
                 port_regions += pya.Region(port_poly.to_itype(self.layout.dbu))
@@ -403,7 +403,11 @@ class Clockmon(Qubit):
     def get_sim_ports(cls, simulation):
         return [
             WaveguideToSimPort("port_0", side="top"),
-            WaveguideToSimPort("port_2", side="top"),
+            WaveguideToSimPort("port_1", side="right"),
+            WaveguideToSimPort("port_2", side="right"),
+            WaveguideToSimPort("port_3", side="bottom"),
+            WaveguideToSimPort("port_4", side="left"),
+            WaveguideToSimPort("port_5", side="left"),
             JunctionSimPort("port_island1_signal", "port_island1_ground"),
             JunctionSimPort("port_island2_signal", "port_island2_ground"),
             JunctionSimPort("port_island1", "port_island2"),
