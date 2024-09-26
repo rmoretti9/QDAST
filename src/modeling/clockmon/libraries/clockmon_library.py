@@ -7,29 +7,31 @@ import os
 from modeling.waveguides.libraries.waveguide_library import waveguide_library
 
 def clockmon_library(deembed = 200):
+    """
+    Returns an interpolating function that maps coupler widths to capacitance matrices.
+    Deembedding is performed using the waveguide library.
+    
+    Parameters
+    ----------
+    deembed : int, optional
+        The deembedding distance in um. Default is 200 um.
+        
+    Returns
+    -------
+    library : scipy.interpolate.interp1d
+        An interpolating function that maps coupler widths to capacitance matrices.
+    """
     dir_name = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(dir_name, "clockmon_capacitance_library_sim_q3d_results.csv")
     df = pd.read_csv(file_path)
-    coupler_widths_str = df["coupler_extent"].values
-
-    coupler_widths = []
-    pattern = r'[-+]?\d*\.\d+|\d+'
-
-    for s in coupler_widths_str:
-        match = re.search(pattern, s)
-        if match:
-            coupler_widths.append(float(match.group()))
-        else:
-            coupler_widths.append(None)
-    sweep_dim = len(coupler_widths)
-    CMatrix = np.zeros((sweep_dim, 3, 3))
-    for i in range(sweep_dim):
-        CMatrix[i] = df.iloc[i].values[2:].reshape(3,3)
+    coupler_widths = df["coupler_extent"].apply(lambda x: float(re.search(r'[-+]?\d*\.\d+|\d+', x).group()))
+    CMatrix = df.iloc[:, 2:].values.reshape(-1, 3, 3)
     
     wg_lib = waveguide_library()
-    CMatrix[:, 0, 0] = CMatrix[:, 0, 0] - wg_lib(deembed)
+    CMatrix[:, 0, 0] -= wg_lib(deembed)
     library = interpolate.interp1d(coupler_widths, CMatrix, axis = 0)
     return library
+
 
 def clockmon_coupling_libraries(deembed = 200):
     dir_name = os.path.dirname(os.path.abspath(__file__))
