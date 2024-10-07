@@ -134,11 +134,37 @@ class CRModel():
         self.a1_bare = self.tmon1.anharmonicity()
         self.a2_bare = self.tmon2.anharmonicity()
 
-    def time_evolution(self, drive_strength, tlist, m2):
+    def time_evolution(self, init_state, drive_strength, tlist, m2, echo=False, tsteps = 101):
         op_list = []
         op_list.extend((sx1, sy1, sz1))
         op_list.extend((sx2, sy2, sz2))
         self.op_list = op_list
         D = self.w1_use - self.w2_use
-        Hp = D/2*sz1 + self.J*(sp1*sm2 + sm1*sp2) + drive_strength*sx1 + m2*drive_strength*sx2
-        Hm = D/2*sz1 + self.J*(sp1*sm2 + sm1*sp2) - drive_strength*sx1 - m2*drive_strength*sx2
+        Hp = 2*np.pi*(D/2*sz1 + self.J*(sp1*sm2 + sm1*sp2) + drive_strength*sx1 + m2*drive_strength*sx2)
+        Hm = 2*np.pi*(D/2*sz1 + self.J*(sp1*sm2 + sm1*sp2) - drive_strength*sx1 - m2*drive_strength*sx2)
+
+        if echo:
+            num_operators = len(op_list)
+            output = np.zeros((num_operators, len(tlist)))
+            for t, time in enumerate(tlist):
+                if time == 0:
+                    for i in range(num_operators):
+                        output[i, :] = qt.expect(op_list[i], init_state)
+                    # output(qt.expect(e_op_list, psi0)[0])
+                else:
+                    time_subarray = np.linspace(0, time, tsteps)
+                    output1 = qt.mesolve(Hp, init_state, time_subarray[0:int(len(time_subarray)/2)], [], [])
+                    psiEcho = qt.tensor(qt.gates.rx(np.pi), qt.identity(2)) * output1.states[-1]
+                    output2 = qt.mesolve(Hm, psiEcho, time_subarray[int(len(time_subarray)/2):], [], op_list)
+                    # print(output2.expect[4][-1])
+                    for i in range(num_operators):
+                        output[i, t] = output2.expect[i][-1]
+            return output
+        else:
+            output = qt.mesolve(Hp, init_state, tlist, [], op_list)
+            return output.expect
+
+    def create_report(self):
+        print("Frequencies: ", self.w1_use, self.w2_use, "[GHz / 2pi]")
+        print("Anharmonicities: ", self.a1_bare, self.a2_bare, "[GHz / 2pi]")
+        print("Exchange rate J: ", self.J, "[GHz / 2pi]")
