@@ -23,7 +23,7 @@ sm2 = qt.tensor(qt.qeye(2), qt.sigmam())
 
 class CRModel():
     """Cross-resonance model."""
-    def __init__(self, w1, w2, wc, a1, a2, g1, g2, C1, C2, use_dressed_freq, mode_a, truncated_dim):
+    def __init__(self, w1, w2, wc, a1, a2, g1, g2, C1, C2, use_dressed_freq, mode_a, truncated_dim, crosstalk = 0):
         self.w1 = w1
         self.w2 = w2
         self.wc = wc
@@ -47,14 +47,14 @@ class CRModel():
             self.a1_use, self.a2_use = self.a1_dressed, self.a2_dressed
         elif mode_a == "input":
             self.a1_use, self.a2_use = a1, a2
-        self.compute_J()
+        self.compute_J(crosstalk)
 
-    def compute_J(self):
+    def compute_J(self, crosstalk):
         w1, w2 = self.w1_use, self.w2_use
         numerator = self.g2 * self.g1 * (w1 + w2 - 2 * self.wc)
         denominator = 2 * (w1 - self.wc) * (w2 - self.wc)
         J = numerator / denominator
-        self.J = J
+        self.J = J + crosstalk
     
     def zz_strength(self, drive_strength):
         D = self.w1_use - self.w2_use
