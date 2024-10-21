@@ -2,6 +2,7 @@ from qdast.chips.single_clockmons import SingleClockmons
 from qdast.chips.qdast_chip import QDASTChip
 from kqcircuits.util.parameters import Param, pdt, add_parameters_from
 import pandas as pd
+import os
 
 @add_parameters_from(SingleClockmons)
 class SingleClockmons01(SingleClockmons):
@@ -30,4 +31,6 @@ class SingleClockmons01(SingleClockmons):
             self._readout_structure_info["readout_structure"] = ["simple"]
 
         df = pd.DataFrame.from_dict(self._readout_structure_info, orient = "index")
-        df.to_csv("C:/Users/labranca/Desktop/work/QDAST/src/modeling/single_clockmons/single_clockmons_readout_structure01.csv", mode='w')
+        current_directory = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(current_directory, 'single_clockmons_01.csv')
+        df.to_csv(file_path, mode='w')

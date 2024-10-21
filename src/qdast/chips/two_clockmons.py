@@ -50,13 +50,13 @@ class TwoClockmons(QDASTChip):
     """
     readout_res_lengths = Param(
         pdt.TypeList,
-        "Readout resonator lengths (four resonators)",
-        [4000, 4100, 4200, 4300],
+        "Readout resonator lengths",
+        [4000, 4100],
     )
     n_fingers = Param(
         pdt.TypeList,
         "Number of fingers for readout resonator couplers",
-        [1.2, 1.3, 1.4, 1.5],
+        [1.2, 1.3],
     )
     feedline_capacitor_n_fingers = Param(
         pdt.TypeDouble,
@@ -67,7 +67,7 @@ class TwoClockmons(QDASTChip):
     type_coupler = Param(
         pdt.TypeList,
         "Coupler type for test resonator couplers",
-        ["smooth", "smooth", "smooth", "smooth"],
+        ["smooth", "smooth"],
     )
     readout_coupler_widths = Param(
         pdt.TypeList,
@@ -83,14 +83,15 @@ class TwoClockmons(QDASTChip):
     _readout_structure_info = {
         "feedline": [],
         "tees": [],
-        "readout_res_lengths": [],
+        "readout_res_1": [],
+        "readout_res_2": []
     }
     l_fingers = Param(
         pdt.TypeList,
         "Length of fingers for readout resonator couplers",
-        [30, 30, 30, 30],
+        [30, 30],
     )
-    with_feedline_resonator = Param(pdt.TypeBoolean, "Enable feedline resonator", True)
+    with_feedline_resonator = Param(pdt.TypeBoolean, "Enable feedline resonator", False)
     coupler_length = Param(pdt.TypeDouble, "Bus coupler length", 8000)
 
     def build(self):
@@ -106,7 +107,6 @@ class TwoClockmons(QDASTChip):
         self._produce_readout_resonators()
         self._produce_coupler()
         self._produce_chargelines()
-        # # self.get_readout_structure_info()
 
     def _produce_waveguide(self, path, term2=0, turn_radius=None, a = None, b = None):
         """Produces a coplanar waveguide that follows the given path.
@@ -135,7 +135,6 @@ class TwoClockmons(QDASTChip):
             b = b
         )
         self.insert_cell(waveguide)
-        self._readout_structure_info["feedline"].append(waveguide.length())
         return waveguide
 
     def _produce_qubit(self, qubit_id, center_x, center_y, rotation, name=None):
@@ -161,7 +160,7 @@ class TwoClockmons(QDASTChip):
             b=6,
             island_extent=[535, 200],
             coupler_widths=[rr_width, 0, qb_width, 0, 0, 0] if qubit_id == 0 else [rr_width, 0, 0, qb_width, 0, 0],
-            coupler_offsets = [255, 0, 287.5, 0, 0, 0] if qubit_id == 0 else [255, 0, 0, 250, 0, 0],
+            coupler_offsets = [255, 0, 288, 0, 0, 0] if qubit_id == 0 else [255, 0, 0, 250, 0, 0],
             island_to_island_distance=50,
             clock_diameter=95,
             bending_angle=0,
@@ -247,7 +246,7 @@ class TwoClockmons(QDASTChip):
                 meanders=num_meanders,
                 r=turn_radius,
             )
-            self._readout_structure_info["readout_res_lengths"].append(total_length)
+            self._readout_structure_info["readout_res_1"].append(total_length)
 
         if res_idx == 1:
             cell_cross = self.add_element(
@@ -293,7 +292,8 @@ class TwoClockmons(QDASTChip):
                 meanders=num_meanders,
                 r=turn_radius,
             )
-            self._readout_structure_info["readout_res_lengths"].append(total_length)
+        self._readout_structure_info["readout_res_"+ str(res_idx+1)] = wg_1.length(), wg_2.length(), wg_3.length(), meander_length
+
     def _produce_feedline(self):
 
         cell_cross = self.add_element(
@@ -318,7 +318,7 @@ class TwoClockmons(QDASTChip):
 
         self._readout_structure_info["tees"] = [self.a, self.a, 2*self.a]
         self._tee_refpoints = tee_refpoints
-        self._produce_waveguide(
+        fl_1 = self._produce_waveguide(
             [
                 self.launchers["FL-IN"][0],
                 pya.DPoint(tee_refpoints[0]["port_left"].x, 2.5e3),
@@ -326,14 +326,14 @@ class TwoClockmons(QDASTChip):
 
             ]
         )
-        self._produce_waveguide(
+        fl_2 = self._produce_waveguide(
             [
                 tee_refpoints[0]["port_right"],
                 pya.DPoint(tee_refpoints[0]["port_right"].x, tee_refpoints[1]["port_left"].y),
                 tee_refpoints[1]["port_left"],
             ]
         )
-        self._produce_waveguide(
+        fl_3 = self._produce_waveguide(
             [
                 tee_refpoints[1]["port_right"],
                 pya.DPoint(self.launchers["FL-OUT"][0].x, self.launchers["FL-OUT"][0].y - 200),
@@ -341,6 +341,8 @@ class TwoClockmons(QDASTChip):
 
             ]
         )
+
+        self._readout_structure_info["feedline"] = fl_1.length(), fl_2.length(), fl_3.length()
 
     def _produce_readout_resonators(self):
         # Coupler
@@ -453,12 +455,3 @@ class TwoClockmons(QDASTChip):
             b = self.b/2,
             term2 = self.b
         )      
-        
-    # def get_readout_structure_info(self):
-    #     if self.with_feedline_resonator:
-    #         self._readout_structure_info["readout_structure"] = ["feedline_resonator"]
-    #     else:
-    #         self._readout_structure_info["readout_structure"] = ["simple"]
-
-    #     df = pd.DataFrame.from_dict(self._readout_structure_info, orient = "index")
-    #     df.to_csv("C:/Users/labranca/Desktop/work/QDAST/src/modeling/single_clockmons/single_clockmons_readout_structure.csv", mode='w+')

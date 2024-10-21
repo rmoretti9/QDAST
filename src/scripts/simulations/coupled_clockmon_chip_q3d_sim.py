@@ -9,10 +9,10 @@ from kqcircuits.util.export_helper import (
     get_active_or_new_layout,
     open_with_klayout_or_default_application,
 )
-from qdast.simulations.coupled_clockmons_sim import TwoClockmonsSim
+from qdast.simulations.coupled_clockmons_q3d_sim import TwoClockmonsQ3DSim
 sim_tool = "q3d"
 # Simulation parameters
-sim_class = TwoClockmonsSim
+sim_class = TwoClockmonsQ3DSim
 
 sim_parameters = {
     "name": "coupled_clockmons_chip",

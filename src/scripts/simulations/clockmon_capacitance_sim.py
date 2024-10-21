@@ -46,7 +46,7 @@ export_parameters_ansys = {
     "path": dir_path,
     "exit_after_run": True,
     'percent_error': 0.1,
-    'maximum_passes': 25,
+    'maximum_passes': 5,
     'minimum_passes': 2,
     'minimum_converged_passes': 3,
     "post_process": PostProcess("produce_cmatrix_table.py"),
