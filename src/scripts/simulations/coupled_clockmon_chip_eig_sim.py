@@ -16,14 +16,6 @@ import logging
 import sys
 from qdast.simulations.coupled_clockmons_eig_sim import TwoClockmonsEigSim
 Lj = 1.43580331e-8
-
-mer_dims_default = {
-    "gap": 1.0,
-    "vacuum": 1.0,
-    "metal": 1.0,
-    "substrate": 1.0,
-}
-
 # Simulation parameters
 sim_class = TwoClockmonsEigSim
 
@@ -39,14 +31,6 @@ sim_parameters = {
     "junction_inductance": Lj,
     "box": pya.DBox(pya.DPoint(0, 1000), pya.DPoint(2600, 3500)),
     "tls_sheet_approximation": True,
-    "metal_height": 0.2,
-    "tls_layer_material": ["oxideMA", "oxideMS", "oxideSA"],
-    "material_dict": {
-        **ast.literal_eval(Simulation.material_dict),
-        "oxideMA": {"permittivity": 8},
-        "oxideMS": {"permittivity": 11.4},
-        "oxideSA": {"permittivity": 4},
-    },
 }
 sim_class.junction_inductance = Lj # Manually adjusting Lj
 
@@ -68,11 +52,11 @@ ansys_export_parameters.update(
         "maximum_passes": 12,
         "minimum_passes": 1,
         "minimum_converged_passes": 2,
-        "n_modes": 1,
-        "frequency": 6,  # minimum allowed frequency
+        "n_modes": 2,
+        "frequency": 4,  # minimum allowed frequency
         "mesh_size": {
-            "1t1_substratemer": 550,
-            "1t1_vacuummer": 550,
+            "1t1_substratemer": 10,
+            "1t1_vacuummer": 10,
         },
         # mer_correction_path is not portable! TODO: make relative path
         "post_process": PostProcess(
@@ -91,20 +75,6 @@ layout = get_active_or_new_layout()
 parameters_list = [
     {
         "name": "clockmon_chip",  # required when specifying sims manually
-        "partition_regions": [
-            {
-                "name": "mer",
-                "face": "1t1",
-                "metal_edge_dimensions": [
-                    mer_dims_default["gap"],
-                    mer_dims_default["metal"],
-                ],
-                "vertical_dimensions": [
-                    mer_dims_default["substrate"],
-                    mer_dims_default["vacuum"],
-                ],
-            },
-        ],
     }
 ]
 

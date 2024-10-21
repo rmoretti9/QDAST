@@ -357,12 +357,12 @@ class TwoClockmons(QDASTChip):
                 cplr_pos = (
                     self._tee_refpoints[i]["port_bottom"]
                 )
-                cplr_dtrans = pya.CplxTrans(1, 180, False, cplr_pos.x + smooth_capacitor_height, cplr_pos.y)
+                cplr_dtrans = pya.DCplxTrans(1, 180, False, cplr_pos.x + smooth_capacitor_height, cplr_pos.y)
             elif i == 1:
                 cplr_pos = (
                     self._tee_refpoints[i]["port_bottom"]
                 )
-                cplr_dtrans = pya.CplxTrans(1, 90, False, cplr_pos.x, cplr_pos.y - smooth_capacitor_height)
+                cplr_dtrans = pya.DCplxTrans(1, 90, False, cplr_pos.x, cplr_pos.y - smooth_capacitor_height)
             self.insert_cell(cplr, cplr_dtrans)
 
             self._produce_readout_resonator(cplr, cplr_dtrans, i)
