@@ -15,7 +15,7 @@ import ast
 import logging
 import sys
 from qdast.simulations.coupled_clockmons_eig_sim import TwoClockmonsEigSim
-Lj = 1.43580331e-8
+Lj = [1.272239314e-08, 1.372239314e-08]
 # Simulation parameters
 sim_class = TwoClockmonsEigSim
 
@@ -29,7 +29,7 @@ sim_parameters = {
     "with_squid": False,
     "sim_tool": "eig",
     "junction_inductance": Lj,
-    "box": pya.DBox(pya.DPoint(0, 1000), pya.DPoint(2600, 3500)),
+    "box": pya.DBox(pya.DPoint(1800, 2300), pya.DPoint(4200, 4800)),
     "tls_sheet_approximation": True,
 }
 sim_class.junction_inductance = Lj # Manually adjusting Lj
@@ -49,15 +49,11 @@ ansys_export_parameters.update(
     {
         "ansys_tool": "eigenmode",
         "max_delta_f": 0.1,  # quite tight
-        "maximum_passes": 12,
+        "maximum_passes": 20,
         "minimum_passes": 1,
         "minimum_converged_passes": 2,
-        "n_modes": 2,
-        "frequency": 4,  # minimum allowed frequency
-        "mesh_size": {
-            "1t1_substratemer": 10,
-            "1t1_vacuummer": 10,
-        },
+        "n_modes": 1,
+        "min_frequency": 5,  # minimum allowed frequency
         # mer_correction_path is not portable! TODO: make relative path
         "post_process": PostProcess(
             "produce_epr_table.py",

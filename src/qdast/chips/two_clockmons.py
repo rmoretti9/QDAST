@@ -80,12 +80,7 @@ class TwoClockmons(QDASTChip):
         "Qubit coupler width",
         [70, 70],
     )
-    _readout_structure_info = {
-        "feedline": [],
-        "tees": [],
-        "readout_res_1": [],
-        "readout_res_2": []
-    }
+
     l_fingers = Param(
         pdt.TypeList,
         "Length of fingers for readout resonator couplers",
@@ -96,6 +91,7 @@ class TwoClockmons(QDASTChip):
 
     def build(self):
         """Produces a Clockmons PCell."""
+        self._readout_structure_info = {}
         self.launchers = self.produce_launchers(
             "SquareNSWE_5x5", launcher_assignments={4: "FL-IN", 1: "FL-OUT",
                                                     3: "DL-0",
@@ -169,7 +165,7 @@ class TwoClockmons(QDASTChip):
             with_squid = self.with_squid,
             pad_width = 6,
             taper_width = 95/7,
-            drive_position = [0, -450] if qubit_id == 0 else [500, -200]
+            drive_position = [-400, -550] if qubit_id == 0 else [450, -200]
         )
         qubit_trans = pya.CplxTrans(1, rotation, False, center_x, center_y)
         _, refpoints_abs = self.insert_cell(
@@ -240,13 +236,13 @@ class TwoClockmons(QDASTChip):
             num_meanders = _get_num_meanders(meander_length, turn_radius, w)
             self.insert_cell(
                 Meander,
-                start=pya.DPoint(tee_refpoints["port_right"].x + 350, tee_refpoints["port_right"].y + 50),
-                end=pya.DPoint(tee_refpoints["port_right"].x + 700, tee_refpoints["port_right"].y+400),
+                start_point=pya.DPoint(tee_refpoints["port_right"].x + 350, tee_refpoints["port_right"].y + 50),
+                end_point=pya.DPoint(tee_refpoints["port_right"].x + 700, tee_refpoints["port_right"].y+400),
                 length=meander_length,
                 meanders=num_meanders,
                 r=turn_radius,
             )
-            self._readout_structure_info["readout_res_1"].append(total_length)
+            # self._readout_structure_info["readout_res_1"] = total_length
 
         if res_idx == 1:
             cell_cross = self.add_element(
@@ -286,8 +282,8 @@ class TwoClockmons(QDASTChip):
             num_meanders = _get_num_meanders(meander_length, turn_radius, w)
             self.insert_cell(
                 Meander,
-                start=pya.DPoint(tee_refpoints["port_bottom"].x + 800, tee_refpoints["port_bottom"].y),
-                end=pya.DPoint(tee_refpoints["port_bottom"].x + 850 + 550, tee_refpoints["port_bottom"].y),
+                start_point=pya.DPoint(tee_refpoints["port_bottom"].x + 800, tee_refpoints["port_bottom"].y),
+                end_point=pya.DPoint(tee_refpoints["port_bottom"].x + 850 + 550, tee_refpoints["port_bottom"].y),
                 length=meander_length,
                 meanders=num_meanders,
                 r=turn_radius,
@@ -396,8 +392,8 @@ class TwoClockmons(QDASTChip):
         num_meanders = _get_num_meanders(meander_length, turn_radius, w)
         self.insert_cell(
             Meander,
-            start=pya.DPoint(self.qubits_refpoints[1]["port_3"].x, self.qubits_refpoints[0]["port_2"].y),
-            end=pya.DPoint(self.qubits_refpoints[1]["port_3"].x, self.qubits_refpoints[1]["port_3"].y - 100),
+            start_point=pya.DPoint(self.qubits_refpoints[1]["port_3"].x, self.qubits_refpoints[0]["port_2"].y),
+            end_point=pya.DPoint(self.qubits_refpoints[1]["port_3"].x, self.qubits_refpoints[1]["port_3"].y - 100),
             length=meander_length,
             meanders=num_meanders,
             r=turn_radius,
@@ -418,9 +414,9 @@ class TwoClockmons(QDASTChip):
             self.LIBRARY_NAME,
             a=self.a,
             b=self.b,
-            a2=self.a/2,
-            b2=self.b/2,
-            taper_length=50,
+            a2=self.a/3,
+            b2=self.b/3,
+            taper_length=80,
         )
         _, taper_ref0 = self.insert_cell(
             taper_cell, pya.CplxTrans(1, 90, False, pya.DPoint(self.qubits_refpoints[0]["port_drive"].x, self.launchers["DL-0"][0].y + 200))
@@ -430,8 +426,8 @@ class TwoClockmons(QDASTChip):
                 taper_ref0["port_b"],
                 self.qubits_refpoints[0]["port_drive"]
             ],
-            a = self.a/2,
-            b = self.b/2,
+            a = self.a/3,
+            b = self.b/3,
             term2 = self.b
         )      
         
@@ -451,7 +447,7 @@ class TwoClockmons(QDASTChip):
                 taper_ref1["port_b"],
                 self.qubits_refpoints[1]["port_drive"]
             ],
-            a = self.a/2,
-            b = self.b/2,
+            a = self.a/3,
+            b = self.b/3,
             term2 = self.b
         )      

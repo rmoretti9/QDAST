@@ -80,11 +80,11 @@ ansys_export_parameters.update(
         "minimum_passes": 1,
         "minimum_converged_passes": 2,
         "n_modes": 2,
-        "frequency": 4,  # minimum allowed frequency
-        "mesh_size": {
-            "1t1_substratemer": 30,
-            "1t1_vacuummer": 30,
-        },
+        "min_frequency": 1,  # minimum allowed frequency
+        # "mesh_size": {
+        #     "1t1_substratemer": 30,
+        #     "1t1_vacuummer": 30,
+        # },
         # mer_correction_path is not portable! TODO: make relative path
         "post_process": PostProcess(
             "produce_epr_table.py",

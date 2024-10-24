@@ -7,8 +7,8 @@ import os
 @add_parameters_from(TwoClockmons)
 class TwoClockmons00(TwoClockmons):
     def build(self):
-        self.readout_res_lengths = [3898.98, 4008.07]
-        self.coupler_length = 8188.899799763432
+        self.readout_res_lengths = [3849.03, 3958.36] 
+        self.coupler_length = 8279.7
         self.n_fingers = [1.9151, 1.9476]
         self.readout_coupler_widths = [95.018, 93.116]
         self.qubit_coupler_widths = [166.09, 166.09]

@@ -147,7 +147,7 @@ class SingleClockmons(QDASTChip):
 
         """
         qubit = self.add_element(
-            Clockmon,
+            Clockmon, 
             ground_gap=[630, 610], 
             a=10,
             b=6,
@@ -221,8 +221,8 @@ class SingleClockmons(QDASTChip):
         num_meanders = _get_num_meanders(total_length, turn_radius, w)
         self.insert_cell(
             Meander,
-            start=meander_start,
-            end=meander_end,
+            start_point=meander_start,
+            end_point=meander_end,
             length=total_length,
             meanders=num_meanders,
             r=turn_radius,

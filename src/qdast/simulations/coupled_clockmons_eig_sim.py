@@ -23,8 +23,16 @@ class TwoClockmonsEigSim(Simulation):
                 InternalPort(
                     1,
                     *self.etched_line(refpoints["qb_0_port_island1"], refpoints["qb_0_port_island2"]),
-                    inductance=self.junction_inductance,
+                    inductance=self.junction_inductance[0],
                     capacitance=1e-16,
                     junction=True,
-                ),])
+                ),
+                InternalPort(
+                    2,
+                    *self.etched_line(refpoints["qb_1_port_island1"], refpoints["qb_1_port_island2"]),
+                    inductance=self.junction_inductance[1],
+                    capacitance=1e-16,
+                    junction=True,
+                )                
+                ])
             # self.ports
