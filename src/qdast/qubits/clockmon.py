@@ -55,7 +55,9 @@ class Clockmon(Qubit):
     island_to_island_distance = Param(
         pdt.TypeDouble, "Island to island distance", 80, unit="μm"
     )
-    
+    bent_section_length = Param(pdt.TypeDouble, "Bent section length", 9, unit="μm")
+    lead_height_untapered = Param(pdt.TypeDouble, "Height of the untapered lead", 19.25, unit="μm")
+    lead_height_tapered = Param(pdt.TypeDouble, "Height of the tapered lead", 12, unit="μm")
     taper_width = Param(pdt.TypeDouble, "Base lead width", 10, unit="μm")
     clock_diameter = Param(pdt.TypeDouble, "Junction space allocation", 100, unit="μm")
     with_squid = Param(pdt.TypeBoolean, "Boolean whether to include the squid", True)
@@ -260,9 +262,9 @@ class Clockmon(Qubit):
     def _build_leads(self):
         self._width_untapered = 12
         self._width_tapered = 8
-        self._height_untapered = 19.25
-        self._height_tapered = 12
-        self._length_bent_section = 9
+        # self.lead_height_untapered = 19.25
+        # self.lead_height_tapered = 12
+        # self.bent_section_length = 9
         y_offset = (
             self.island_to_island_distance / 2
             if self.island_to_island_distance > self.clock_diameter
@@ -272,16 +274,16 @@ class Clockmon(Qubit):
         lead_points = [
             pya.DPoint(self._width_untapered / 2 + self.taper_width, y_offset),
             pya.DPoint(-self._width_untapered / 2 - self.taper_width, y_offset),
-            pya.DPoint(-self._width_untapered / 2, y_offset - self._height_untapered),
+            pya.DPoint(-self._width_untapered / 2, y_offset - self.lead_height_untapered),
             pya.DPoint(
                 -self._width_tapered / 2,
-                y_offset - self._height_untapered - self._height_tapered,
+                y_offset - self.lead_height_untapered - self.lead_height_tapered,
             ),
             pya.DPoint(
                 self._width_tapered / 2,
-                y_offset - self._height_untapered - self._height_tapered,
+                y_offset - self.lead_height_untapered - self.lead_height_tapered,
             ),
-            pya.DPoint(self._width_untapered / 2, y_offset - self._height_untapered),
+            pya.DPoint(self._width_untapered / 2, y_offset - self.lead_height_untapered),
         ]
         straight_lead_region = pya.Region(
             pya.DPolygon(lead_points).to_itype(self.layout.dbu)
@@ -289,8 +291,8 @@ class Clockmon(Qubit):
         bent_lead_polygon = pya.DPolygon(
             [
                 pya.DPoint(-self._width_tapered / 2, 0),
-                pya.DPoint(-self._width_tapered / 2, -self._length_bent_section),
-                pya.DPoint(self._width_tapered / 2, -self._length_bent_section),
+                pya.DPoint(-self._width_tapered / 2, -self.bent_section_length),
+                pya.DPoint(self._width_tapered / 2, -self.bent_section_length),
                 pya.DPoint(self._width_tapered / 2, 0),
             ]
         )
@@ -309,7 +311,7 @@ class Clockmon(Qubit):
                 1,
                 0,
                 False,
-                pya.DPoint(0, y_offset - self._height_untapered - self._height_tapered),
+                pya.DPoint(0, y_offset - self.lead_height_untapered - self.lead_height_tapered),
             )
             * angle_patch_polygon
         )
@@ -320,7 +322,7 @@ class Clockmon(Qubit):
                 1,
                 bending_angle,
                 False,
-                pya.DPoint(0, y_offset - self._height_untapered - self._height_tapered),
+                pya.DPoint(0, y_offset - self.lead_height_untapered - self.lead_height_tapered),
             )
             * bent_lead_polygon
         )
@@ -379,9 +381,9 @@ class Clockmon(Qubit):
             port_polygon = pya.DBox(0, 0, 8, 4)
             # Eigenmode ports
             leads_length = (
-                self._height_untapered
-                + self._height_tapered
-                + self._length_bent_section
+                self.lead_height_untapered
+                + self.lead_height_tapered
+                + self.bent_section_length
             )
             translations = [
                 pya.DPoint(-4, (self.clock_diameter) / 2 - leads_length),

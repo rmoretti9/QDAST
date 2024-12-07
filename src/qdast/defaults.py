@@ -40,4 +40,26 @@ default_sampleholders = {
         "pad_pitch": 1200,
         "chip_box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(5000, 5000)),
     },
+
+    "6-ports-10x10": {
+        "n": 6,
+        "launcher_type": "RF",
+        "launcher_width": 200,
+        "launcher_gap": 153,
+        "launcher_indent": 680,
+        "pad_pitch": 1200,
+        "chip_box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(10000, 10000)),
+    },
 }
+
+
+    # "SMA8": {
+    #     "n": 8,
+    #     "launcher_type": "RF",
+    #     "launcher_width": 300,
+    #     "launcher_gap": 260,
+    #     "launcher_indent": 800,
+    #     "launcher_frame_gap": 180,
+    #     "pad_pitch": 4400,
+    #     "chip_box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(10000, 10000)),
+    # },

@@ -53,6 +53,9 @@ class QDASTChip(Chip):
                     8: "WN",
                 }
 
+        if sampleholder_type == "6-ports-10x10":
+            return {}
+
         if sampleholder_type in default_sampleholders:
             return self.produce_n_launchers(
                 **default_sampleholders[sampleholder_type],
