@@ -10,6 +10,7 @@ from kqcircuits.defaults import default_chip_label_face_prefixes
 class QDASTChipFrame(ChipFrame):
     """Wrapper of KQCircuits ChipFrame to further customize labeling."""
     produce_labels = Param(pdt.TypeBoolean, "Produce chip labels", True)
+    label_offset = Param(pdt.TypeDouble, "Chip label symmetric offset", 0)
 
     def build(self):
         """Produces dicing edge, markers, labels and ground grid for the chip face."""
@@ -20,6 +21,8 @@ class QDASTChipFrame(ChipFrame):
 
     def _produce_labels(self):
         x_min, x_max, y_min, y_max = self._box_points()
+        x_min += self.label_offset
+        x_max -= self.label_offset
         if self.use_face_prefix:
             face_id = self.face()["id"]
             face_prefix = (

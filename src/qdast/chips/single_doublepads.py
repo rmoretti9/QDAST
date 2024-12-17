@@ -10,7 +10,7 @@ import os
 from kqcircuits.elements.waveguide_coplanar_splitter import (
     WaveguideCoplanarSplitter,
     t_cross_parameters,
-)
+) 
 from kqcircuits.pya_resolver import pya
 from kqcircuits.util.coupler_lib import cap_params
 from kqcircuits.util.parameters import Param, pdt, add_parameters_from
@@ -39,6 +39,7 @@ def _get_num_meanders(meander_length, turn_radius, meander_min_width):
 
 @add_parameters_from(Junction, "junction_type")
 @add_parameters_from(Clockmon, "sim_tool", "with_squid")
+@add_parameters_from(QDASTChip, label_offset = 1500)
 class SingleDoublepads(QDASTChip):
     """The PCell declaration for a SingleDoublepads chip.
     """
@@ -48,7 +49,7 @@ class SingleDoublepads(QDASTChip):
     readout_res_lengths = Param(
         pdt.TypeList,
         "Readout resonator lengths (four resonators)",
-        [6900, 7000, 7100, 7200, 7300, 7400],
+        [4000, 4100, 4200, 4300, 4400, 4500],
     )
     n_fingers = Param(
         pdt.TypeList,
@@ -111,7 +112,7 @@ class SingleDoublepads(QDASTChip):
         self._produce_readout_resonators()
         # # self.get_readout_structure_info()
 
-    def _produce_waveguide(self, path, term2=0, turn_radius=None):
+    def _produce_waveguide(self, path, term2=0, turn_radius=None, object = None):
         if turn_radius is None:
             turn_radius = self.r
         waveguide = self.add_element(
@@ -121,7 +122,8 @@ class SingleDoublepads(QDASTChip):
             term2=term2,
         )
         self.insert_cell(waveguide)
-        self._readout_structure_info["feedline"].append(waveguide.length())
+        if object == "feedline":
+            self._readout_structure_info["feedline"].append(waveguide.length())
         return waveguide
 
     def _produce_qubit(self, coupler_width, center_x, center_y, rotation, name=None):
@@ -157,8 +159,8 @@ class SingleDoublepads(QDASTChip):
         qubit_spacing_y = 5e3  # shortest y-distance between qubit centers on different sides of the feedline
         qubits_center_x = 5e3  # the x-coordinate around which qubits are centered
         # qubits above the feedline, from left to right
-        y_a = 5e3 + qubit_spacing_y / 2
-        y_b = 5e3 - qubit_spacing_y / 2
+        y_a = 5e3 + 1500
+        y_b = 5e3 - 1500
         qb0_refpoints = self._produce_qubit(
             float(self.coupler_widths[0]), qubits_center_x - qubit_spacing_x, y_b, 0, "qb_0"
         )
@@ -195,27 +197,57 @@ class SingleDoublepads(QDASTChip):
             qb5_refpoints
         ]
 
-    def _produce_readout_resonator(self, capacitor, capacitor_dtrans, res_idx):
+    def _produce_readout_resonator(self, capacitor, capacitor_dtrans, res_idx, qubit_refp):
 
+        flip = -1 if res_idx %2 else 1
         total_length = float(self.readout_res_lengths[res_idx])
         turn_radius = 50
+        w = 500
+        capacitor_pos = self.get_refpoints(capacitor, capacitor_dtrans)["port_a"]
 
-        # non-meandering part of the resonator
-        meander_start = self.get_refpoints(capacitor, capacitor_dtrans)["port_a"]
-        meander_end = self._qubit_refpoints[res_idx]["port_0"]
+        cell_cross = self.add_element(
+            WaveguideCoplanarSplitter,
+            **t_cross_parameters(
+                a=self.a, b=self.b, a2=self.a, b2=self.b, length_extra_side=2 * self.a,
+            ),
+        )
+        cross_length = self.b*3 + 2*self.a
+        cross_trans1 = pya.CplxTrans(
+            1, -90, False, pya.DPoint(qubit_refp["port_0"].x, capacitor_pos.y - flip*(150 + self.a/2 + self.b))
+        )
+        _, tee_refpoints = self.insert_cell(cell_cross, cross_trans1)
 
-        # meandering part of the resonator
-        w = 1000
-        num_meanders = _get_num_meanders(total_length, turn_radius, w)
+        wg_1 = self._produce_waveguide(
+            [
+                capacitor_pos,
+                pya.DPoint(capacitor_pos.x, tee_refpoints["port_left"].y),
+
+            ]
+        )
+        wg_2 = self._produce_waveguide(
+            [
+                tee_refpoints["port_right"],
+                pya.DPoint(qubit_refp["port_0"].x, qubit_refp["port_0"].y + flip*300),
+                pya.DPoint(qubit_refp["port_0"].x, qubit_refp["port_0"].y ),
+            ]
+        )
+        wg_3 = self._produce_waveguide(
+            [
+                tee_refpoints["port_bottom"],
+                pya.DPoint(tee_refpoints["port_bottom"].x - 300, tee_refpoints["port_bottom"].y),
+                pya.DPoint(tee_refpoints["port_bottom"].x - 350, tee_refpoints["port_bottom"].y - flip*50)
+            ]
+        )
+        meander_length = total_length - wg_1.length() - cross_length - wg_2.length() - wg_3.length()
+        num_meanders = _get_num_meanders(meander_length, turn_radius, w)
         self.insert_cell(
             Meander,
-            start_point=meander_start,
-            end_point=meander_end,
-            length=total_length,
+            start_point=pya.DPoint(tee_refpoints["port_bottom"].x - 350, tee_refpoints["port_bottom"].y - flip*50),
+            end_point=pya.DPoint(tee_refpoints["port_bottom"].x - 1050, tee_refpoints["port_bottom"].y - flip*750),
+            length=meander_length,
             meanders=num_meanders,
             r=turn_radius,
         )
-        self._readout_structure_info["readout_res_lengths"].append(total_length)
 
     def _produce_feedline_resonator(self):
         cell_cross = self.add_element(
@@ -257,7 +289,7 @@ class SingleDoublepads(QDASTChip):
                 self.refpoints_fl_in["base"],
                 cplr_refpoints["port_a"],
                 # tee_refpoints[0]["port_left"],
-            ]
+            ], object= "feedline"
         )
         self._produce_waveguide(
             [
@@ -273,51 +305,51 @@ class SingleDoublepads(QDASTChip):
                 pya.DPoint(cplr_refpoints["port_b"].x + 800, 7500),
                 pya.DPoint(cplr_refpoints["port_b"].x + 800, 5e3),
                 tee_refpoints[0]["port_left"],
-            ], turn_radius= 50
+            ], object= "feedline"
         )
         
         self._produce_waveguide(
             [
                 tee_refpoints[0]["port_right"],
                 tee_refpoints[1]["port_right"],
-            ]
+            ], object= "feedline"
         )
         
         self._produce_waveguide(
             [
                 tee_refpoints[1]["port_left"],
                 tee_refpoints[2]["port_left"],
-            ]
+            ], object= "feedline"
         )
         self._produce_waveguide(
             [
                 tee_refpoints[2]["port_right"],
                 tee_refpoints[3]["port_right"],
-            ]
+            ], object= "feedline"
         )
         self._produce_waveguide(
             [
-                tee_refpoints[3]["port_right"],
-                tee_refpoints[4]["port_right"],
-            ]
+                tee_refpoints[3]["port_left"],
+                tee_refpoints[4]["port_left"],
+            ], object= "feedline"
         )
         self._produce_waveguide(
             [
                 tee_refpoints[4]["port_right"],
                 tee_refpoints[5]["port_right"],
-            ]
+            ], object= "feedline"
         )
         self._produce_waveguide(
             [
                 tee_refpoints[5]["port_left"],
                 feedline_tee_refp["port_left"],
-            ]
+            ], object= "feedline"
         )
         self._produce_waveguide(
             [
                 feedline_tee_refp["port_right"],
                 self.refpoints_fl_out["base"]
-            ]
+            ], object= "feedline"
         )
         self._produce_waveguide(
             [
@@ -326,7 +358,7 @@ class SingleDoublepads(QDASTChip):
                 pya.DPoint(feedline_tee_refp["port_bottom"].x + 100, feedline_tee_refp["port_bottom"].y - 500),
                 pya.DPoint(feedline_tee_refp["port_bottom"].x + 200, feedline_tee_refp["port_bottom"].y - 500),
                 pya.DPoint(feedline_tee_refp["port_bottom"].x + 200, feedline_tee_refp["port_bottom"].y - 1200),
-            ]
+            ], object= "feedline"
         )
 
     def _produce_readout_resonators(self):
@@ -350,7 +382,7 @@ class SingleDoublepads(QDASTChip):
             cplr_dtrans = pya.DTrans(2 * (i % 2) + 1, False, cplr_pos.x, cplr_pos.y)
             self.insert_cell(cplr, cplr_dtrans)
 
-            self._produce_readout_resonator(cplr, cplr_dtrans, i)
+            self._produce_readout_resonator(cplr, cplr_dtrans, i, self._qubit_refpoints[i])
             
     # def get_readout_structure_info(self):
     #     if self.with_feedline_resonator:

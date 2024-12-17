@@ -16,6 +16,7 @@ from kqcircuits.pya_resolver import pya
     "chip_dicing_in_base_metal",
     "dice_grid_margin",
     "produce_labels",
+    "label_offset",
     marker_types=[default_marker_type] * 8,
 )
 class QDASTChip(Chip):
