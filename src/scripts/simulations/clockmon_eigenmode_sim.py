@@ -54,7 +54,7 @@ center = (1000, 1000)
 # Simulation parameters
 sim_class = get_single_element_sim_class(
     Clockmon,
-    ignore_ports=["port_drive", "port_0", "port_island1_signal", "port_island2_signal"],
+    ignore_ports=["port_drive", "port_1", "port_2", "port_3", "port_4", "port_5", "port_island1_signal", "port_island2_signal"],
 )
 sim_class.junction_inductance = Lj # Manually adjusting Lj
 sim_class.sim_tool = "eig"
@@ -84,10 +84,10 @@ sim_parameters = {
     "ground_gap": [630, 610],
     "a": 10,
     "b": 6,
-    "island_extent": [535, 200],
-    "coupler_extent": [150, 20],
+    "coupler_widths": [150, 0, 0, 0, 0, 0],
+    "island_extent": [535, 200], 
     "island_to_island_distance": 50,
-    "coupler_offset": 255,
+    "coupler_offsets": [255, 0, 0, 0, 0, 0],
     "clock_diameter": 90,
     "sim_tool": "eig",
     "bending_angle": 0,
@@ -118,7 +118,7 @@ for sim_tool in sim_tools:
             "minimum_passes": 1,
             "minimum_converged_passes": 2,
             "n_modes": 1,
-            "frequency": 1,  # minimum allowed frequency
+            "min_frequency": 1,  # minimum allowed frequency
             "mesh_size": {
                 "1t1_substratemer": 20,
                 "1t1_vacuummer": 20,

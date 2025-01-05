@@ -45,10 +45,10 @@ export_parameters_ansys = {
     "ansys_tool": sim_tool,
     "path": dir_path,
     "exit_after_run": True,
-    'percent_error': 0.1,
-    'maximum_passes': 5,
+    'percent_error': 0.05,
+    'maximum_passes': 25,
     'minimum_passes': 2,
-    'minimum_converged_passes': 3,
+    'minimum_converged_passes': 2,
     "post_process": PostProcess("produce_cmatrix_table.py"),
 }
 
@@ -64,23 +64,27 @@ simulations = [
         layout,
         **{
             **sim_parameters,
-            "ground_gap": [630, 610],
-            "a": 10,
-            "b": 6,
-            "island_extent": [535, 200],
-            "coupler_widths": [105, 0, 0, 0, 0, 0],
-            "coupler_offsets": [255, 0, 0, 0, 0, 0],
-            "coupler_heights": [20, 0, 0, 0, 0, 0],
-            "island_to_island_distance": 50,
-            "clock_diameter": 90,
-            "sim_tool": "eig",
-            "bending_angle": 0,
-            "sim_tool": "q3d",
-            "name": name,
+            "ground_gap":[630, 610], 
+            "a":10,
+            "b":6,
+            "island_extent":[535, 200],
+            "coupler_widths":[100, 0, 0, 0, 0, 0],
+            "island_to_island_distance":50,
+            "coupler_offsets":[255, 0, 0, 0, 0, 0],
+            "clock_diameter":50,
+            "bending_angle":0,
+            "sim_tool" : "q3d",
+            "with_squid" : False,
+            "pad_width" : 6,
+            "taper_width" : 95/7,
+            "bent_section_length": 8,
+            "lead_height_untapered": 4,
+            "lead_height_tapered": 8,
+            "drive_position": [0, -405]
         },
     )
 ]
-
+ 
 # Create simulation
 oas = export_simulation_oas(simulations, dir_path)
 

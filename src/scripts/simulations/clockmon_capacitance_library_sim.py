@@ -24,7 +24,7 @@ sim_tool = "q3d"
 
 # Simulation parameters
 sim_class = get_single_element_sim_class(
-    Clockmon, ignore_ports=["port_drive", "port_island1", "port_island2"]
+    Clockmon, ignore_ports=["port_drive", "port_island1", "port_island2", "port_1", "port_2", "port_3", "port_4", "port_5"]
 )  # pylint: disable=invalid-name
 
 # Get layout
@@ -46,7 +46,7 @@ sim_parameters = {
     "island_extent": [535, 200],
     "coupler_extent": [150, 20],
     "island_to_island_distance": 50,
-    "coupler_offset": 255,
+    "coupler_offsets": [255, 0, 0, 0, 0, 0],
     "clock_diameter": 90,
     "sim_tool": "q3d",
     "bending_angle": 0,
@@ -68,12 +68,12 @@ export_parameters_ansys = {
 }
 
 simulations = []
-coupler_widths = np.linspace(20, 250, 101)
+coupler_widths = np.linspace(252.3, 367.3, 50)
 simulations +=cross_sweep_simulation(
         layout,
         sim_class,
         sim_parameters,
-        {"coupler_extent": [[coupler_width, 20] for coupler_width in coupler_widths]}
+        {"coupler_widths": [[coupler_width, 0, 0, 0, 0, 0] for coupler_width in coupler_widths]}
     )
 
 
