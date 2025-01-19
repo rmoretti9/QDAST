@@ -35,7 +35,7 @@ class Clockmon(Qubit):
         pdt.TypeList, "Height of the couplers in µm", [20, 20, 20, 20, 20, 20]
     )
 
-    coupler_r = Param(pdt.TypeDouble, "Coupler rounding radius", 10, unit="μm")
+    coupler_r = Param(pdt.TypeDouble, "Coupler rounding radius", 5, unit="μm")
     coupler_a = Param(
         pdt.TypeDouble,
         "Width of the coupler waveguide center conductor",
@@ -191,6 +191,14 @@ class Clockmon(Qubit):
             pya.DPoint(width / 2, offset),
             pya.DPoint(width / 2, offset + height),
         ]
+
+        if self.coupler_widths[coupler_id] < 2* self.coupler_r:
+            coupler_points +=arc_points(
+                self.coupler_r, start=3*math.pi/2, stop=math.pi, origin=pya.DPoint(10, offset + height + self.coupler_r)
+            )
+            coupler_points += arc_points(
+                self.coupler_r, start=0, stop=-math.pi/2, origin=pya.DPoint(-10, offset + height + self.coupler_r)
+            )
         waveguide_points = [
             pya.DPoint(-self.a / 2, offset + stem_height + height),
             pya.DPoint(-self.a / 2, offset + height),

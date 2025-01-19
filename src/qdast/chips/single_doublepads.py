@@ -17,6 +17,7 @@ from kqcircuits.util.parameters import Param, pdt, add_parameters_from
 from kqcircuits.junctions.junction import Junction
 from kqcircuits.elements.launcher import Launcher
 from kqcircuits.elements.waveguide_coplanar_taper import WaveguideCoplanarTaper
+from kqcircuits.util.geometry_helper import arc_points
 
 def _get_num_meanders(meander_length, turn_radius, meander_min_width):
     """Get the required number of meanders to create a meander element with the given parameters."""
@@ -154,7 +155,7 @@ class SingleDoublepads(QDASTChip):
             bent_section_length  = 8,
             lead_height_untapered = 4,
             lead_height_tapered = 8,
-            drive_position = [0, -405]
+            drive_position = [0, -355]
         )
         qubit_trans = pya.DTrans(rotation, False, center_x, center_y)
         _, refpoints_abs = self.insert_cell(
@@ -558,7 +559,7 @@ class SingleDoublepads(QDASTChip):
                     pya.DPoint(tee_refpoints_1["port_right"].x, tee_refpoints_1["port_right"].y - 1000),
              ]
             )
-
+ 
         self._produce_waveguide(
                 [
                     tee_refpoints_1["port_bottom"],

@@ -5,11 +5,11 @@ import pandas as pd
 import os
 
 @add_parameters_from(SingleDoublepads)
-class SingleDoublepads00(SingleDoublepads):
+class SingleDoublepads01(SingleDoublepads):
     def build(self):
-        self.readout_res_lengths = [4200, 4200 , 4100, 4200, 3900, 3800]
-        self.n_fingers = [1.9843, 2.0027, 2.1644, 2.2957, 2, 2]
-        self.coupler_widths = [112.3, 108.81, 105.43, 102.16, 100, 100]
+        self.readout_res_lengths = [3848.0, 3771.2 , 3557.8, 3626.2, 3697.3, 3513.6]
+        self.n_fingers = [2.4374, 2.4126, 2.3428, 2.3656, 2.3887, 2.328]
+        self.coupler_widths = [345.02, 331.55, 295.85, 307.05, 318.89, 288.74]
         self.with_feedline_resonator = True,
         self.feedline_capacitor_n_fingers = 4.25267767,
         self._readout_structure_info = {
@@ -17,7 +17,7 @@ class SingleDoublepads00(SingleDoublepads):
             "tees": [],
             "readout_res_lengths": [],
         }
-        self.name_chip = "V00"
+        self.name_chip = "V01"
         self.name_copy = "UniMiB"
         self.with_squid = True
         self.margin = 120
@@ -32,5 +32,5 @@ class SingleDoublepads00(SingleDoublepads):
 
         df = pd.DataFrame.from_dict(self._readout_structure_info, orient = "index")
         current_directory = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(current_directory, 'single_doublepads_00.csv')
+        file_path = os.path.join(current_directory, 'single_doublepads_01.csv')
         df.to_csv(file_path, mode='w')
