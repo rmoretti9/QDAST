@@ -18,7 +18,7 @@ class SingleDoublepads00(SingleDoublepads):
             "readout_res_lengths": [],
         }
         self.name_chip = "V00"
-        self.name_copy = "UniMiB"
+        self.name_copy = ""
         self.with_squid = False
         self.margin = 120
         super().build()

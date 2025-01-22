@@ -7,9 +7,9 @@ import os
 @add_parameters_from(SingleDoublepads)
 class SingleDoublepads01(SingleDoublepads):
     def build(self):
-        self.readout_res_lengths = [3848.0, 3771.2 , 3557.8, 3626.2, 3697.3, 3513.6]
+        self.readout_res_lengths = [3841.5, 3774.3 , 3552.6, 3620.7, 3691.4, 3508.5]
         self.n_fingers = [2.4374, 2.4126, 2.3428, 2.3656, 2.3887, 2.328]
-        self.coupler_widths = [345.02, 331.55, 295.85, 307.05, 318.89, 288.74]
+        self.coupler_widths = [358.15, 325.3, 306.22, 317.95, 330.52, 298.75]
         self.with_feedline_resonator = True,
         self.feedline_capacitor_n_fingers = 4.25267767,
         self._readout_structure_info = {
@@ -18,8 +18,8 @@ class SingleDoublepads01(SingleDoublepads):
             "readout_res_lengths": [],
         }
         self.name_chip = "V01"
-        self.name_copy = "UniMiB"
-        self.with_squid = True
+        self.name_copy = ""
+        self.with_squid = False
         self.margin = 120
         super().build()
         self.get_readout_structure_info()

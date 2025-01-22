@@ -7,14 +7,14 @@ import os
 @add_parameters_from(TwoClockmons)
 class TwoClockmons00(TwoClockmons):
     def build(self):
-        self.readout_res_lengths = [3849.03, 3958.36] 
-        self.coupler_length = 8279.7
-        self.n_fingers = [1.9151, 1.9476]
-        self.readout_coupler_widths = [95.018, 93.116]
-        self.qubit_coupler_widths = [166.09, 166.09]
+        self.readout_res_lengths = [3856.84, 3966.97] 
+        self.coupler_length = 8253.48
+        self.n_fingers = [1.867, 1.8989]
+        self.readout_coupler_widths = [93.11, 90.02]
+        self.qubit_coupler_widths = [195.2, 195.26]
         self.with_feedline_resonator = True,
         self.name_chip = "V00"
-        self.name_copy = "UniMiB"
+        self.name_copy = ""
         self.with_squid = False
         self.margin = 120
         super().build()
