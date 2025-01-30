@@ -24,7 +24,7 @@ sim_tool = "q3d"
 
 # Simulation parameters
 sim_class = get_single_element_sim_class(
-    Clockmon, ignore_ports=["port_drive", "port_island1", "port_island2", "port_1", "port_2", "port_3", "port_4", "port_5"]
+    Clockmon, ignore_ports=["port_drive", "port_island1", "port_island2", "port_0", "port_1", "port_2", "port_3", "port_4", "port_5"]
 )  # pylint: disable=invalid-name
 sim_parameters = {
     "name": "clockmon",
@@ -68,9 +68,9 @@ simulations = [
             "a":10,
             "b":6,
             "island_extent":[535, 200],
-            "coupler_widths":[100, 0, 0, 0, 0, 0],
+            "coupler_widths":[0, 0, 0, 0, 0, 0],
             "island_to_island_distance":50,
-            "coupler_offsets":[255, 0, 0, 0, 0, 0],
+            "coupler_offsets":[0, 0, 0, 0, 0, 0],
             "clock_diameter":50,
             "bending_angle":0,
             "sim_tool" : "q3d",
