@@ -62,6 +62,7 @@ class Clockmon(Qubit):
     clock_diameter = Param(pdt.TypeDouble, "Junction space allocation", 100, unit="μm")
     with_squid = Param(pdt.TypeBoolean, "Boolean whether to include the squid", True)
     bending_angle = Param(pdt.TypeDouble, "Leads bending angle", 45, unit="degrees")
+    external_leads_offset = Param(pdt.TypeDouble, "Junction horizontal offset", 0, unit="μm")
     sim_tool = Param(pdt.TypeString, "Simulation tool", "none", choices=["none", "q3d", "eig"])
 
     def build(self):
@@ -82,9 +83,20 @@ class Clockmon(Qubit):
         )
 
         # Islands
-        island1_region = self._build_island() + self._build_leads()
-        island2_region = island1_region.transformed(pya.CplxTrans(1, 180, False, 0, 0))
-        island_region = island1_region + island2_region
+        island1_region = self._build_island()
+        island2_region = island1_region.transformed(pya.CplxTrans(1, 0, True, 0, 0))
+
+        if self.external_leads_offset < 0:
+            island_region = island1_region + island2_region + self._build_leads(mirrored = False, x_offset = self.external_leads_offset).transformed(pya.CplxTrans(1, 0, True, 0, 0)) + self._build_leads(mirrored = True, x_offset = self.external_leads_offset)
+        else:
+            island_region = island1_region + island2_region + self._build_leads(mirrored = False, x_offset = -self.external_leads_offset).transformed(pya.CplxTrans(1, 180, True, 0, 0)) + self._build_leads(mirrored = True, x_offset = -self.external_leads_offset).transformed(pya.CplxTrans(1, 180, False, 0, 0))
+
+        # else:
+        #     island1_region = self._build_island() + self._build_leads()
+        #     island2_region = island1_region.transformed(pya.CplxTrans(1, 180, False, 0, 0))
+        #     island_region = island1_region + island2_region
+
+        
         island_region.round_corners(
             20 / self.layout.dbu,
             20 / self.layout.dbu,
@@ -129,7 +141,7 @@ class Clockmon(Qubit):
         etch_region -= coupler_region
         # SQUID
         squid_transf = pya.DCplxTrans(
-            1, -self.bending_angle, False, pya.DVector(0, self.squid_offset)
+            1, -self.bending_angle, False, pya.DVector(self.external_leads_offset, self.squid_offset)
         )
         if self.with_squid:
             self.produce_squid(
@@ -267,7 +279,7 @@ class Clockmon(Qubit):
 
         return island_region
 
-    def _build_leads(self):
+    def _build_leads(self, mirrored, x_offset):
         self._width_untapered = 12
         self._width_tapered = 8
         # self.lead_height_untapered = 19.25
@@ -278,7 +290,7 @@ class Clockmon(Qubit):
             if self.island_to_island_distance > self.clock_diameter
             else self.clock_diameter / 2
         )
-        bending_angle = self.bending_angle
+        bending_angle = self.bending_angle if mirrored else -self.bending_angle
         lead_points = [
             pya.DPoint(self._width_untapered / 2 + self.taper_width, y_offset),
             pya.DPoint(-self._width_untapered / 2 - self.taper_width, y_offset),
@@ -293,8 +305,9 @@ class Clockmon(Qubit):
             ),
             pya.DPoint(self._width_untapered / 2, y_offset - self.lead_height_untapered),
         ]
+        lead_polygon = pya.DCplxTrans(1, 0, False, pya.DPoint(x_offset, 0))*pya.DPolygon(lead_points)
         straight_lead_region = pya.Region(
-            pya.DPolygon(lead_points).to_itype(self.layout.dbu)
+            lead_polygon.to_itype(self.layout.dbu)
         )
         bent_lead_polygon = pya.DPolygon(
             [
@@ -314,12 +327,13 @@ class Clockmon(Qubit):
                 pya.DPoint(0, 0),
             ]
         )
+        rot_patch = 0 if mirrored else 1
         angle_patch_polygon = (
             pya.DCplxTrans(
                 1,
-                0,
+                180*rot_patch,
                 False,
-                pya.DPoint(0, y_offset - self.lead_height_untapered - self.lead_height_tapered),
+                pya.DPoint(x_offset, y_offset - self.lead_height_untapered - self.lead_height_tapered),
             )
             * angle_patch_polygon
         )
@@ -330,13 +344,33 @@ class Clockmon(Qubit):
                 1,
                 bending_angle,
                 False,
-                pya.DPoint(0, y_offset - self.lead_height_untapered - self.lead_height_tapered),
+                pya.DPoint(x_offset, y_offset - self.lead_height_untapered - self.lead_height_tapered),
             )
             * bent_lead_polygon
         )
         bent_lead_region = pya.Region(bent_lead_polygon.to_itype(self.layout.dbu))
 
-        lead_region = straight_lead_region + bent_lead_region + angle_patch_region
+        external_lead_points = [pya.DPoint(- self.taper_width - self._width_untapered/2 + x_offset, y_offset + 10),
+            pya.DPoint(-self.taper_width - self._width_untapered/2 + x_offset, y_offset),
+            pya.DPoint(self.taper_width + self._width_untapered/2 + x_offset, y_offset),]
+        external_lead_points += arc_points(
+                        10,
+                        start=2*math.pi/2,
+                        stop=math.pi/2,
+                        origin=pya.DPoint(self.taper_width + self._width_untapered/2 + x_offset+ 10, y_offset),
+                    )
+        external_lead_points += [pya.DPoint(self.taper_width + self._width_untapered/2, y_offset + 10),
+                                 pya.DPoint(0, y_offset + 10 + 2*self.taper_width + self._width_untapered),
+                                 pya.DPoint(self.taper_width + self._width_untapered/2 + x_offset + 10, y_offset + 10 + 2*self.taper_width + self._width_untapered)
+                                 ]
+        external_lead_points += arc_points(
+                        10 + 2*self.taper_width + self._width_untapered,
+                        start=math.pi/2,
+                        stop=math.pi,
+                        origin=pya.DPoint(self.taper_width + self._width_untapered/2 + x_offset + 10, y_offset),
+                    )
+        lead_extension = pya.Region(pya.DPolygon(external_lead_points).to_itype(self.layout.dbu))
+        lead_region = straight_lead_region + bent_lead_region + angle_patch_region + lead_extension
         return lead_region
 
     def _make_ports(self):
