@@ -18,6 +18,7 @@ from kqcircuits.junctions.junction import Junction
 from kqcircuits.elements.launcher import Launcher
 from kqcircuits.elements.waveguide_coplanar_taper import WaveguideCoplanarTaper
 from kqcircuits.util.geometry_helper import arc_points
+from qdast.elements.fluxlines.fluxline_tapered import FluxlineTapered
 
 def _get_num_meanders(meander_length, turn_radius, meander_min_width):
     """Get the required number of meanders to create a meander element with the given parameters."""
@@ -40,10 +41,31 @@ def _get_num_meanders(meander_length, turn_radius, meander_min_width):
 )
 @add_parameters_from(
     Clockmon,
+    fluxline_type = "Fluxline Tapered",
     with_squid=False,
-    sim_tool="eig"
+    sim_tool="eig",
 )
 class DetectionDevice2s1a(QDASTChip):
+    sensing_1_coupler_widths = Param(
+        pdt.TypeList,
+        "S1 coupler widths",
+        [100, 100]
+    )
+    sensing_2_coupler_widths = Param(
+        pdt.TypeList,
+        "S2 coupler widths",
+        [110, 110]
+    )
+    ancilla_coupler_widths = Param(
+        pdt.TypeList,
+        "A1 coupler widths",
+        [105, 105, 105]
+    )
+    coupler_res_length = Param(
+        pdt.TypeList,
+        "Coupler resonator lengths",
+        [10000, 8100],
+    )
     readout_res_lengths = Param(
         pdt.TypeList,
         "Readout resonator lengths",
@@ -67,9 +89,12 @@ class DetectionDevice2s1a(QDASTChip):
         self._produce_feedline_resonator(mirror_x = 1, mirror_y = 1, id = 0, l1_id = "9", l2_id = "10")
         self._produce_feedline_resonator(mirror_x = -1, mirror_y = 1, id = 1, l1_id = "7", l2_id = "6")
         self._produce_feedline_resonator(mirror_x = 1, mirror_y = -1, id = 2, l1_id = "1", l2_id = "12")
+        self._produce_drivelines()
 
         self._produce_qubits()
         self._produce_readout_reasonators()
+        self._produce_fluxlines()
+        self._produce_couplers()
 
     def _produce_waveguide(self, path, term2=0, turn_radius=None, a = None, b = None, object = None):
         if a is None:
@@ -99,16 +124,24 @@ class DetectionDevice2s1a(QDASTChip):
             a=10,
             b=6,
             island_extent=[535, 200],
-            coupler_widths=[0, 0, 0, 80, 0, 0],
+            coupler_widths=[float(self.sensing_1_coupler_widths[0]), 0, 0, float(self.sensing_1_coupler_widths[1]), 0, 0],
             island_to_island_distance=50,
-            coupler_offsets=[0, 0, 0, 255, 0, 0],
-            clock_diameter=95,
+            coupler_offsets=[255, 0, 0, 255, 0, 0],
+            clock_diameter=0,
             bending_angle=0,
             junction_type="Manhattan Single Junction Centered", 
             sim_tool = self.sim_tool,
             with_squid = self.with_squid,
             pad_width = 6,
-            taper_width = 95/7
+            taper_width = 0,
+            width_tapered = 4,
+            width_untapered = 6,
+            drive_position = [self._driveline_terminations[0].x - 3500, self._driveline_terminations[0].y - 4000],
+            external_leads_offset = 300,
+            bent_section_length = 6,
+            lead_height_tapered = 4,
+            lead_height_untapered = 4,
+            fluxline_type = "Fluxline Tapered"
         )
         qubit_trans = pya.DCplxTrans(1, 0, False, 3500, 4000)
         _, refpoints_s1 = self.insert_cell(
@@ -121,16 +154,25 @@ class DetectionDevice2s1a(QDASTChip):
             a=10,
             b=6,
             island_extent=[535, 200],
-            coupler_widths=[0, 0, 0, 80, 0, 0],
+            coupler_widths=[135, 0, 0, 80, 0, 0],
             island_to_island_distance=50,
-            coupler_offsets=[0, 0, 0, 255, 0, 0],
-            clock_diameter=95,
+            coupler_offsets=[255, 0, 0, 255, 0, 0],
+            clock_diameter=0,
             bending_angle=0,
             junction_type="Manhattan Single Junction Centered", 
             sim_tool = self.sim_tool,
             with_squid = self.with_squid,
             pad_width = 6,
-            taper_width = 95/7
+            taper_width = 0,
+            width_tapered = 4,
+            width_untapered = 6,
+            drive_position = [self._driveline_terminations[1].x - 6500, self._driveline_terminations[1].y - 4000],
+            external_leads_offset = 300,
+            bent_section_length = 6,
+            lead_height_tapered = 4,
+            lead_height_untapered = 4,
+            fluxline_type = "Fluxline Tapered",
+
         )
         qubit_trans = pya.DCplxTrans(1, 0, False, 6500, 4000)
         _, refpoints_s2 = self.insert_cell(
@@ -143,18 +185,26 @@ class DetectionDevice2s1a(QDASTChip):
             a=10,
             b=6,
             island_extent=[535, 200],
-            coupler_widths=[80, 0, 0, 0, 0, 0],
+            coupler_widths=[0, 0, 0, 115, 110, 80],
             island_to_island_distance=50,
-            coupler_offsets=[255, 0, 0, 0, 0, 0],
-            clock_diameter=95,
+            coupler_offsets=[0, 0, 0, 255, 300, 300],
+            clock_diameter=0,
             bending_angle=0,
             junction_type="Manhattan Single Junction Centered", 
             sim_tool = self.sim_tool,
             with_squid = self.with_squid,
             pad_width = 6,
-            taper_width = 95/7
+            taper_width = 0,
+            width_tapered = 4,
+            width_untapered = 6,
+            drive_position = [self._driveline_terminations[2].x - 5000, self._driveline_terminations[2].y - 7000],
+            external_leads_offset = 300,
+            bent_section_length = 6,
+            lead_height_tapered = 4,
+            lead_height_untapered = 4,
+            fluxline_type = "Fluxline Tapered",
         )
-        qubit_trans = pya.DCplxTrans(1, 0, False, 5000, 6000)
+        qubit_trans = pya.DCplxTrans(1, 0, False, 5000, 7000)
         _, refpoints_a1 = self.insert_cell(
             qubit, qubit_trans, name = "S1", rec_levels=None
         )
@@ -405,6 +455,188 @@ class DetectionDevice2s1a(QDASTChip):
         meander_end = self._qubits_refpoints[1]['port_3']
         w = 1000
         meander_length = float(self.readout_res_lengths[1]) - wg_1.length()
+        num_meanders = _get_num_meanders(meander_length, 50, w)
+        self.insert_cell(
+            Meander,
+            start_point=meander_start,
+            end_point=meander_end,
+            length=meander_length,
+            meanders=num_meanders,
+            r=50,)
+        
+        wg2 = self._produce_waveguide([
+            self._cplr_res_refpoints[2]['port_b'],
+            pya.DPoint(self._cplr_res_refpoints[2]['port_b'].x + 100, self._cplr_res_refpoints[2]['port_b'].y - 100),
+            pya.DPoint(self._cplr_res_refpoints[2]['port_b'].x + 100, self._qubits_refpoints[2]['port_5'].y),
+            pya.DPoint(self._cplr_res_refpoints[2]['port_b'].x + 200, self._qubits_refpoints[2]['port_5'].y),
+        ])
+        wg2_2 = self._produce_waveguide([
+            pya.DPoint(self._cplr_res_refpoints[2]['port_b'].x + 1800, self._qubits_refpoints[2]['port_5'].y),
+            pya.DPoint(self._qubits_refpoints[2]['port_5'].x, self._qubits_refpoints[2]['port_5'].y)
+        ])
+        meander_start = pya.DPoint(self._cplr_res_refpoints[2]['port_b'].x + 200, self._qubits_refpoints[2]['port_5'].y)
+        meander_end = pya.DPoint(self._cplr_res_refpoints[2]['port_b'].x + 1800, self._qubits_refpoints[2]['port_5'].y)
+        w = 1000
+        meander_length = float(self.readout_res_lengths[2]) - wg2.length() - wg2_2.length()
+        num_meanders = _get_num_meanders(meander_length, 50, w)
+        self.insert_cell(
+            Meander,
+            start_point=meander_start,
+            end_point=meander_end,
+            length=meander_length,
+            meanders=num_meanders,
+            r=50,)
+    
+    def _produce_drivelines(self):
+        self._driveline_terminations = []
+        # S1
+        self._produce_waveguide([
+            self.launchers['11'][0],
+            pya.DPoint(self.launchers['11'][0].x + 1900, self.launchers['11'][0].y),
+            pya.DPoint(self.launchers['11'][0].x + 2100, self.launchers['11'][0].y - 200),
+        ])
+        taper_cell, _ = WaveguideCoplanarTaper.create_with_refpoints(
+            self.layout,
+            self.LIBRARY_NAME,
+            a=self.a,
+            b=self.b,
+            a2=self.a/2,
+            b2=self.b/2,
+            taper_length=80,
+        )
+        taper_trans_1 = pya.DCplxTrans(1, -45, False, pya.DPoint(self.launchers['11'][0].x + 2100, self.launchers['11'][0].y - 200))
+        _, taper_ref1 = self.insert_cell(
+            taper_cell, taper_trans_1)
+        self._produce_waveguide([
+            taper_ref1['port_b'],
+            taper_ref1['port_b'] + pya.DPoint(100, -100)
+        ],
+        a = self.a/2,
+        b = self.b/2,
+        term2 = self.b)
+        
+        # S2
+        self._produce_waveguide([
+            self.launchers['4'][0],
+            pya.DPoint(self.launchers['4'][0].x - 300, self.launchers['4'][0].y),
+            pya.DPoint(self.launchers['4'][0].x - 300, self.launchers['4'][0].y - 400),
+            pya.DPoint(self.launchers['4'][0].x - 1800, self.launchers['4'][0].y - 1900),
+            pya.DPoint(self.launchers['4'][0].x - 1800, self.launchers['4'][0].y - 2400),
+            pya.DPoint(self.launchers['4'][0].x - 2100, self.launchers['4'][0].y - 2700),
+            # pya.DPoint(self.launchers['4'][0].x - 2100, self.launchers['4'][0].y - 200),
+        ])
+        taper_trans_2 = pya.DCplxTrans(1, -135, False, pya.DPoint(self.launchers['4'][0].x - 2100, self.launchers['4'][0].y - 2700),)
+        _, taper_ref2 = self.insert_cell(
+            taper_cell, taper_trans_2)
+        self._produce_waveguide([
+            taper_ref2['port_b'],
+            pya.DPoint(taper_ref2['port_b'].x - 100, taper_ref2['port_b'].y - 100)
+        ],
+        a = self.a/2,
+        b = self.b/2,
+        term2 = self.b)
+
+        # A1
+        self._produce_waveguide([
+            self.launchers['2'][0],
+            pya.DPoint(self.launchers['2'][0].x, self.launchers['2'][0].y - 1300)
+        ])
+        taper_trans_3 = pya.DCplxTrans(1, -90, False, pya.DPoint(self.launchers['2'][0].x, self.launchers['2'][0].y - 1300))
+        _, taper_ref3 = self.insert_cell(
+            taper_cell, taper_trans_3)
+        self._produce_waveguide([
+            taper_ref3['port_b'],
+            pya.DPoint(taper_ref3['port_b'].x, taper_ref3['port_b'].y - 100)
+        ],
+        a = self.a/2,
+        b = self.b/2,
+        term2 = self.b)
+        self._driveline_terminations.append(pya.DPoint(taper_ref1['port_b'].x + 100, taper_ref1['port_b'].y - 100))
+        self._driveline_terminations.append(pya.DPoint(taper_ref2['port_b'].x - 100, taper_ref2['port_b'].y - 100))
+        self._driveline_terminations.append(pya.DPoint(taper_ref3['port_b'].x, taper_ref3['port_b'].y - 100))
+
+    def _produce_fluxlines(self):
+        self._produce_waveguide([
+            self.launchers["8"][0],
+            self.launchers["8"][0] + pya.DPoint(0, 400),
+            self.launchers["8"][0] + pya.DPoint(-400, 400),
+            pya.DPoint(self.launchers["8"][0].x - 400, self._qubits_refpoints[0]["port_flux"].y),
+            self._qubits_refpoints[0]['port_flux']
+        ])
+
+        self._produce_waveguide([
+            self.launchers["5"][0],
+            self.launchers["5"][0] + pya.DPoint(-300, 0),
+            pya.DPoint(self.launchers["5"][0].x - 300, self._qubits_refpoints[1]["port_flux"].y),
+            self._qubits_refpoints[1]["port_flux"]
+        ])
+
+        self._produce_waveguide([
+            self.launchers["3"][0],
+            self.launchers["3"][0] + pya.DPoint(0, -600),
+            self.launchers["3"][0] + pya.DPoint(-400, -1000),
+            pya.DPoint(self.launchers["3"][0].x - 400, self._qubits_refpoints[2]["port_flux"].y),
+            # pya.DPoint(self.launchers["3"][0].x - 300, self._qubits_refpoints[1]["port_flux"].y),
+            self._qubits_refpoints[2]["port_flux"]
+        ])
+
+    def _produce_couplers(self):
+        wg1 = self._produce_waveguide(
+            [
+                self._qubits_refpoints[0]["port_0"],
+                self._qubits_refpoints[0]["port_0"] + pya.DPoint(0, 200),
+                self._qubits_refpoints[0]["port_0"] + pya.DPoint(400, 200),
+                self._qubits_refpoints[0]["port_0"] + pya.DPoint(400, 400)
+            ]
+        )
+
+        wg1_2 = self._produce_waveguide(
+            [
+                self._qubits_refpoints[0]["port_0"] + pya.DPoint(400, 1800),
+                self._qubits_refpoints[0]["port_0"] + pya.DPoint(400, 1900),
+                self._qubits_refpoints[0]["port_0"] + pya.DPoint(800, 1900),
+                pya.DPoint(self._qubits_refpoints[0]["port_0"].x + 800, self._qubits_refpoints[2]["port_4"].y),
+                self._qubits_refpoints[2]["port_4"]
+            ]
+        )
+
+        meander_start = self._qubits_refpoints[0]["port_0"] + pya.DPoint(400, 400)
+        meander_end = self._qubits_refpoints[0]["port_0"] + pya.DPoint(400, 1800)
+        w = 1000
+        meander_length = float(self.coupler_res_length[0]) - wg1.length() - wg1_2.length()
+        num_meanders = _get_num_meanders(meander_length, 50, w)
+        self.insert_cell(
+            Meander,
+            start_point=meander_start,
+            end_point=meander_end,
+            length=meander_length,
+            meanders=num_meanders,
+            r=50,)
+        
+
+        wg2 = self._produce_waveguide(
+            [
+                self._qubits_refpoints[1]["port_0"],
+                self._qubits_refpoints[1]["port_0"] + pya.DPoint(0, 200),
+                self._qubits_refpoints[1]["port_0"] + pya.DPoint(-400, 200),
+                self._qubits_refpoints[1]["port_0"] + pya.DPoint(-400, 400)
+            ]
+        )
+
+        wg2_2 = self._produce_waveguide(
+            [
+                self._qubits_refpoints[1]["port_0"] + pya.DPoint(-400, 1800),
+                self._qubits_refpoints[1]["port_0"] + pya.DPoint(-400, 1900),
+                self._qubits_refpoints[1]["port_0"] + pya.DPoint(-800, 1900),
+                pya.DPoint(self._qubits_refpoints[2]["port_3"].x , self._qubits_refpoints[1]["port_0"].y + 1900),
+                self._qubits_refpoints[2]["port_3"]
+            ]
+        )
+
+        meander_start = self._qubits_refpoints[1]["port_0"] + pya.DPoint(-400, 400)
+        meander_end = self._qubits_refpoints[1]["port_0"] + pya.DPoint(-400, 1800)
+        w = 1000
+        meander_length = float(self.coupler_res_length[1]) - wg2.length() - wg2_2.length()
         num_meanders = _get_num_meanders(meander_length, 50, w)
         self.insert_cell(
             Meander,

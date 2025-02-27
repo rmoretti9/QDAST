@@ -37,7 +37,7 @@ class TwoClockmonsDrivelineDecay(Simulation):
         self.cell.insert(pya.DCellInstArray(chip.cell_index(), pya.DTrans(0, False, 0, 0)))
         _, refpoints = self.insert_cell(chip)
         # self.ports.append(InternalPort(2, *self.etched_line(refpoints["qb_0_port_island1_signal"], refpoints["qb_0_port_island1_ground"])))
-        self.ports.append(InternalPort(3, *self.etched_line(refpoints["qb_0_port_island2_signal"], refpoints["qb_0_port_island2_ground"])))
+        self.ports.append(InternalPort(2, *self.etched_line(refpoints["qb_0_port_island2_signal"], refpoints["qb_0_port_island2_ground"])))
 
 # Prepare output directory
 dir_path = create_or_empty_tmp_directory(Path(__file__).stem + "2_output")

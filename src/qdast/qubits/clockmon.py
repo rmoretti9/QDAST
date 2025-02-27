@@ -11,10 +11,10 @@ from kqcircuits.qubits.qubit import Qubit
 from kqcircuits.pya_resolver import pya
 from kqcircuits.util.refpoints import WaveguideToSimPort, JunctionSimPort
 from kqcircuits.util.geometry_helper import arc_points
-
-
+from qdast.elements.fluxlines.fluxline_tapered import FluxlineTapered
+ 
 @add_parameters_from(Squid, junction_type="Manhattan Single Junction Centered")
-@add_parameters_from(ManhattanSingleJunctionCentered)
+@add_parameters_from(ManhattanSingleJunctionCentered) 
 class Clockmon(Qubit):
     """A two-island qubit, consisting of two rounded rectangles shunted by a junction, with one capacitive coupler.
 
@@ -59,6 +59,9 @@ class Clockmon(Qubit):
     lead_height_untapered = Param(pdt.TypeDouble, "Height of the untapered lead", 19.25, unit="μm")
     lead_height_tapered = Param(pdt.TypeDouble, "Height of the tapered lead", 12, unit="μm")
     taper_width = Param(pdt.TypeDouble, "Base lead width", 10, unit="μm")
+    width_tapered = Param(pdt.TypeDouble, "Tapered lead width", 8, unit = "μm")
+    width_untapered = Param(pdt.TypeDouble, "Untapered lead width", 12, unit = "μm")
+
     clock_diameter = Param(pdt.TypeDouble, "Junction space allocation", 100, unit="μm")
     with_squid = Param(pdt.TypeBoolean, "Boolean whether to include the squid", True)
     bending_angle = Param(pdt.TypeDouble, "Leads bending angle", 45, unit="degrees")
@@ -183,6 +186,8 @@ class Clockmon(Qubit):
             ),
         )
 
+        self.produce_fluxline()
+
     def _build_coupler(self, coupler_id, trans, trans_refp):
         width = float(self.coupler_widths[coupler_id])
         height = float(self.coupler_heights[coupler_id])
@@ -280,8 +285,8 @@ class Clockmon(Qubit):
         return island_region
 
     def _build_leads(self, mirrored, x_offset):
-        self._width_untapered = 12
-        self._width_tapered = 8
+        # self._width_untapered = 12
+        # self._width_tapered = 8
         # self.lead_height_untapered = 19.25
         # self.lead_height_tapered = 12
         # self.bent_section_length = 9
@@ -292,18 +297,18 @@ class Clockmon(Qubit):
         )
         bending_angle = self.bending_angle if mirrored else -self.bending_angle
         lead_points = [
-            pya.DPoint(self._width_untapered / 2 + self.taper_width, y_offset),
-            pya.DPoint(-self._width_untapered / 2 - self.taper_width, y_offset),
-            pya.DPoint(-self._width_untapered / 2, y_offset - self.lead_height_untapered),
+            pya.DPoint(self.width_untapered / 2 + self.taper_width, y_offset),
+            pya.DPoint(-self.width_untapered / 2 - self.taper_width, y_offset),
+            pya.DPoint(-self.width_untapered / 2, y_offset - self.lead_height_untapered),
             pya.DPoint(
-                -self._width_tapered / 2,
+                -self.width_tapered / 2,
                 y_offset - self.lead_height_untapered - self.lead_height_tapered,
             ),
             pya.DPoint(
-                self._width_tapered / 2,
+                self.width_tapered / 2,
                 y_offset - self.lead_height_untapered - self.lead_height_tapered,
             ),
-            pya.DPoint(self._width_untapered / 2, y_offset - self.lead_height_untapered),
+            pya.DPoint(self.width_untapered / 2, y_offset - self.lead_height_untapered),
         ]
         lead_polygon = pya.DCplxTrans(1, 0, False, pya.DPoint(x_offset, 0))*pya.DPolygon(lead_points)
         straight_lead_region = pya.Region(
@@ -311,18 +316,18 @@ class Clockmon(Qubit):
         )
         bent_lead_polygon = pya.DPolygon(
             [
-                pya.DPoint(-self._width_tapered / 2, 0),
-                pya.DPoint(-self._width_tapered / 2, -self.bent_section_length),
-                pya.DPoint(self._width_tapered / 2, -self.bent_section_length),
-                pya.DPoint(self._width_tapered / 2, 0),
+                pya.DPoint(-self.width_tapered / 2, 0),
+                pya.DPoint(-self.width_tapered / 2, -self.bent_section_length),
+                pya.DPoint(self.width_tapered / 2, -self.bent_section_length),
+                pya.DPoint(self.width_tapered / 2, 0),
             ]
         )
         angle_patch_polygon = pya.DPolygon(
             [
-                pya.DPoint(-self._width_tapered / 2, 0),
+                pya.DPoint(-self.width_tapered / 2, 0),
                 pya.DPoint(
-                    -self._width_tapered / 2 * math.cos(math.radians(bending_angle)),
-                    -self._width_tapered / 2 * math.sin(math.radians(bending_angle)),
+                    -self.width_tapered / 2 * math.cos(math.radians(bending_angle)),
+                    -self.width_tapered / 2 * math.sin(math.radians(bending_angle)),
                 ),
                 pya.DPoint(0, 0),
             ]
@@ -350,24 +355,24 @@ class Clockmon(Qubit):
         )
         bent_lead_region = pya.Region(bent_lead_polygon.to_itype(self.layout.dbu))
 
-        external_lead_points = [pya.DPoint(- self.taper_width - self._width_untapered/2 + x_offset, y_offset + 10),
-            pya.DPoint(-self.taper_width - self._width_untapered/2 + x_offset, y_offset),
-            pya.DPoint(self.taper_width + self._width_untapered/2 + x_offset, y_offset),]
+        external_lead_points = [pya.DPoint(- self.taper_width - self.width_untapered/2 + x_offset, y_offset + 10),
+            pya.DPoint(-self.taper_width - self.width_untapered/2 + x_offset, y_offset),
+            pya.DPoint(self.taper_width + self.width_untapered/2 + x_offset, y_offset),]
         external_lead_points += arc_points(
                         10,
                         start=2*math.pi/2,
                         stop=math.pi/2,
-                        origin=pya.DPoint(self.taper_width + self._width_untapered/2 + x_offset+ 10, y_offset),
+                        origin=pya.DPoint(self.taper_width + self.width_untapered/2 + x_offset+ 10, y_offset),
                     )
-        external_lead_points += [pya.DPoint(self.taper_width + self._width_untapered/2, y_offset + 10),
-                                 pya.DPoint(0, y_offset + 10 + 2*self.taper_width + self._width_untapered),
-                                 pya.DPoint(self.taper_width + self._width_untapered/2 + x_offset + 10, y_offset + 10 + 2*self.taper_width + self._width_untapered)
+        external_lead_points += [pya.DPoint(self.taper_width + self.width_untapered/2, y_offset + 10),
+                                 pya.DPoint(0, y_offset + 10 + 2*self.taper_width + self.width_untapered),
+                                 pya.DPoint(self.taper_width + self.width_untapered/2 + x_offset + 10, y_offset + 10 + 2*self.taper_width + self.width_untapered)
                                  ]
         external_lead_points += arc_points(
-                        10 + 2*self.taper_width + self._width_untapered,
+                        10 + 2*self.taper_width + self.width_untapered,
                         start=math.pi/2,
                         stop=math.pi,
-                        origin=pya.DPoint(self.taper_width + self._width_untapered/2 + x_offset + 10, y_offset),
+                        origin=pya.DPoint(self.taper_width + self.width_untapered/2 + x_offset + 10, y_offset),
                     )
         lead_extension = pya.Region(pya.DPolygon(external_lead_points).to_itype(self.layout.dbu))
         lead_region = straight_lead_region + bent_lead_region + angle_patch_region + lead_extension
@@ -420,28 +425,49 @@ class Clockmon(Qubit):
                 )
 
         elif self.sim_tool == "eig":
-            port_polygon = pya.DBox(0, 0, 8, 4)
+            port_polygon = pya.DBox(0, 0, self.width_tapered, 4)
             # Eigenmode ports
             leads_length = (
                 self.lead_height_untapered
                 + self.lead_height_tapered
                 + self.bent_section_length
             )
-            translations = [
-                pya.DPoint(-4, (self.clock_diameter) / 2 - leads_length),
-                pya.DPoint(-4, -(self.clock_diameter / 2 - leads_length + 4)),
-            ]
+            if self.clock_diameter > self.island_to_island_distance:
+                translations = [
+                    pya.DPoint(-self.width_tapered/2 + self.external_leads_offset, - leads_length + self.clock_diameter/2),
+                    pya.DPoint(-self.width_tapered/2 + self.external_leads_offset, + leads_length - 4 - self.clock_diameter/2),
+                ]
+            else:
+                translations = [
+                    pya.DPoint(-self.width_tapered/2 + self.external_leads_offset, - leads_length + self.island_to_island_distance/2),
+                    pya.DPoint(-self.width_tapered/2 + self.external_leads_offset, + leads_length - 4 - self.island_to_island_distance/2),
+                ]  
             port_names = ["island1", "island2"]
             for i, (trans, name) in enumerate(zip(translations, port_names)):
                 port_poly = pya.DCplxTrans(1, 0, False, trans) * port_polygon
                 port_regions += pya.Region(port_poly.to_itype(self.layout.dbu))
                 self.add_port(
                     name,
-                    trans + pya.DPoint(4, 4 * (i % 2)),
+                    trans + pya.DPoint(self.width_tapered/2, 4 * (i % 2)),
                     pya.DVector(0, 2 * (i % 2) - 1),
                 )
 
         return port_regions
+
+    def produce_fluxline(self):
+        if self.fluxline_type == "none":
+            return
+
+        cell = self.add_element(FluxlineTapered)
+
+        refpoints_so_far = self.get_refpoints(self.cell)
+        if self.external_leads_offset > 0: 
+            trans = pya.DCplxTrans(1, 90, False, self.external_leads_offset + 30, -10)
+        else:
+            trans = pya.DCplxTrans(1, -90, False, self.external_leads_offset - 30, -10)
+        cell_inst, _ = self.insert_cell(cell, trans)
+        self.copy_port("flux", cell_inst)
+
 
     @classmethod
     def get_sim_ports(cls, simulation):
