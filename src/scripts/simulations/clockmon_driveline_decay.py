@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 from qdast.qubits.clockmon import Clockmon
-from kqcircuits.simulations.export.ansys.ansys_solution import AnsysCurrentSolution, AnsysHfssSolution
+from kqcircuits.simulations.export.ansys.ansys_solution import AnsysCurrentSolution, AnsysHfssSolution, AnsysEigenmodeSolution
 from kqcircuits.simulations.port import InternalPort
 from kqcircuits.simulations.post_process import PostProcess
 from kqcircuits.simulations.simulation import Simulation
@@ -30,13 +30,13 @@ class TwoClockmonsDrivelineDecay(Simulation):
     def build(self):
         chip = self.add_element(
                     TwoClockmons00,
-                    sim_tool = "q3d",
+                    sim_tool = "eig",
                     with_squid = True,
                     n = 32          
                 )
         self.cell.insert(pya.DCellInstArray(chip.cell_index(), pya.DTrans(0, False, 0, 0)))
         _, refpoints = self.insert_cell(chip)
-        self.ports.append(InternalPort(2, *self.etched_line(refpoints["qb_1_port_island1_signal"], refpoints["qb_1_port_island1_ground"])))
+        # self.ports.append(InternalPort(2, *self.etched_line(refpoints["qb_1_port_island1_signal"], refpoints["qb_1_port_island1_ground"])))
         # self.ports.append(InternalPort(3, *self.etched_line(refpoints["qb_0_port_island2_signal"], refpoints["qb_0_port_island2_ground"])))
 
 # Prepare output directory
@@ -56,8 +56,15 @@ layout = get_active_or_new_layout()
 # Sweep simulation and solution type
 simulations = [
     (
-        sim_class(layout, **sim_parameters, name="fluxline_decay", flux_simulation=False),
-        AnsysHfssSolution(max_delta_s=0.005, frequency=4.5, maximum_passes=20, sweep_enabled=False),
+        sim_class(layout, **sim_parameters),
+        AnsysEigenmodeSolution(
+            name="_eigenmode",
+            max_delta_f=0.1,
+            n_modes=1,
+            min_frequency=1.0,
+            maximum_passes=20,
+            integrate_energies=False,
+        ),
     ),
 ]
 

@@ -126,7 +126,7 @@ class SingleClockmons(QDASTChip):
             WaveguideCoplanar,
             path=pya.DPath(path, 1),
             r=turn_radius,
-            term2=term2,
+            term2=term2, 
         )
         self.insert_cell(waveguide)
         self._readout_structure_info["feedline"].append(waveguide.length())

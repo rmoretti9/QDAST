@@ -109,7 +109,7 @@ class DetectionDevice2s1a(QDASTChip):
             r=turn_radius,
             term2=term2,
             a = a,
-            b = b
+            b = b,
         )
         self.insert_cell(waveguide)
         if object == "feedline":
@@ -644,4 +644,5 @@ class DetectionDevice2s1a(QDASTChip):
             end_point=meander_end,
             length=meander_length,
             meanders=num_meanders,
-            r=50,)
+            r=50,
+            )
