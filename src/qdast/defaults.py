@@ -3,7 +3,6 @@ from pathlib import Path
 
 from kqcircuits import defaults
 from kqcircuits.pya_resolver import pya
-from kqcircuits.util.import_helper import module_from_file
 
 SRC_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
 # workaround for Windows because os.path.realpath doesn't work there before Python 3.8
@@ -19,8 +18,6 @@ defaults.TMP_PATH = (
     else defaults.ROOT_PATH.joinpath("tmp")
 )
 defaults.TMP_PATH.mkdir(exist_ok=True)
-defaults.SCRIPTS_PATH = defaults.ROOT_PATH.joinpath("scripts")
-defaults.DRC_PATH = defaults.ROOT_PATH.joinpath("drc")
 defaults.ANSYS_SCRIPT_PATHS += [
     defaults.SCRIPTS_PATH.joinpath("simulations").joinpath("ansys")
 ]
@@ -28,7 +25,6 @@ defaults.ELMER_SCRIPT_PATHS += [
     defaults.SCRIPTS_PATH.joinpath("simulations").joinpath("elmer")
 ]
 defaults.VERSION_PATHS["QDAST"] = defaults.ROOT_PATH
-defaults.default_drc_runset = "qdast_drc.lydrc"
 
 default_sampleholders = {
     "SquareNSWE_5x5": {
@@ -62,15 +58,3 @@ default_sampleholders = {
         "chip_box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(10000, 10000)),
     },
 }
-
-
-    # "SMA8": {
-    #     "n": 8,
-    #     "launcher_type": "RF",
-    #     "launcher_width": 300,
-    #     "launcher_gap": 260,
-    #     "launcher_indent": 800,
-    #     "launcher_frame_gap": 180,
-    #     "pad_pitch": 4400,
-    #     "chip_box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(10000, 10000)),
-    # },

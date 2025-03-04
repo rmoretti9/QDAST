@@ -1,7 +1,4 @@
-import skrf as rf
 from math import pi
-from skrf.media.cpw import CPW
-import pandas as pd
 import numpy as np
 from scipy.special import ellipk
 
