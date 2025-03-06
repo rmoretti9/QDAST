@@ -71,6 +71,11 @@ class DetectionDevice2s1a(QDASTChip):
         "Readout resonator lengths",
         [10000, 8100, 8200],
     )
+    feedline_meander_lengths = Param(
+        pdt.TypeList,
+        "Feedline meander length [non-tail, tail]",
+        [1000, 500],
+    )
     n_fingers = Param(
         pdt.TypeList,
         "Number of fingers for readout resonator couplers",
@@ -82,6 +87,8 @@ class DetectionDevice2s1a(QDASTChip):
         [4, 4.3, 4.4],
     )
     def build(self):
+        self._readout_structure_info = {}
+
         self.launchers = self.produce_launchers(
             "12-ports-10x10", launcher_assignments={}
         )
@@ -112,8 +119,6 @@ class DetectionDevice2s1a(QDASTChip):
             b = b,
         )
         self.insert_cell(waveguide)
-        if object == "feedline":
-            self._readout_structure_info["feedline"].append(waveguide.length())
         return waveguide
 
     def _produce_qubits(self):
@@ -231,7 +236,8 @@ class DetectionDevice2s1a(QDASTChip):
         else:
             tee_port_1 = 'port_right'
             tee_port_2 = 'port_left'
-        self._produce_waveguide(
+        # Launchpad to split point
+        w1 = self._produce_waveguide(
             [
                 self.launchers[l2_id][0],
                 pya.DPoint(
@@ -240,7 +246,8 @@ class DetectionDevice2s1a(QDASTChip):
                 ),
             ]
         )
-        self._produce_waveguide(
+        # split to non-tail meander start
+        w2 = self._produce_waveguide(
             [
                 feedline_tee_refp[tee_port_2],
                 pya.DPoint(
@@ -248,7 +255,8 @@ class DetectionDevice2s1a(QDASTChip):
                     feedline_tee_refp[tee_port_2].y,
                 ),
             ])
-        self._produce_waveguide(
+        # non-tail meander end to readout coupler
+        w3 = self._produce_waveguide(
             [   
                 pya.DPoint(
                     feedline_tee_refp[tee_port_2].x + mirror_x*750,
@@ -279,6 +287,8 @@ class DetectionDevice2s1a(QDASTChip):
         resonator_tee, resonator_tee_refp = self.insert_cell(cell_cross, resonator_tee_trans)
 
         # feedline capacitor
+        # if isinstance(self.feedline_capacitor_n_fingers, tuple):
+        #     self.feedline_capacitor_n_fingers = self.feedline_capacitor_n_fingers[0]
         cplr_params = cap_params(
             float(self.feedline_capacitor_n_fingers[id]), 0, "smooth", finger_gap = self.b
         )
@@ -313,7 +323,9 @@ class DetectionDevice2s1a(QDASTChip):
             cplr_res, cplr_res_dtrans, rec_levels=None
         )
         self._cplr_res_refpoints.append(cplr_res_refpoints)
-        self._produce_waveguide(
+
+        # readout coupler to input capacitance
+        w4 = self._produce_waveguide(
             [
                 resonator_tee_refp[tee_port_1],
                 pya.DPoint(
@@ -327,7 +339,8 @@ class DetectionDevice2s1a(QDASTChip):
             ]
         )
 
-        self._produce_waveguide([
+        # input capacitance to launchpad
+        w5 = self._produce_waveguide([
                 pya.DPoint(
                     self.launchers[l1_id][0].x,
                     cplr_refpoints['port_a'].y,
@@ -335,7 +348,8 @@ class DetectionDevice2s1a(QDASTChip):
                 self.launchers[l1_id][0]
         ])
 
-        self._produce_waveguide([
+        # split point to tail meander start
+        w6 = self._produce_waveguide([
                 feedline_tee_refp['port_bottom'],
                 pya.DPoint(
                     feedline_tee_refp['port_bottom'].x,
@@ -353,7 +367,7 @@ class DetectionDevice2s1a(QDASTChip):
                     self.launchers[l2_id][0].y - mirror_y*750,
                 )
         w = 300
-        meander_length = 500
+        meander_length = float(self.feedline_meander_lengths[1])
         num_meanders = _get_num_meanders(meander_length, 50, w)
         self.insert_cell(
             Meander,
@@ -374,7 +388,7 @@ class DetectionDevice2s1a(QDASTChip):
                     feedline_tee_refp[tee_port_2].y,
                 )
         w = 300
-        meander_length = 1200
+        meander_length = float(self.feedline_meander_lengths[0])
         num_meanders = _get_num_meanders(meander_length, 50, w)
         self.insert_cell(
             Meander,
@@ -383,6 +397,9 @@ class DetectionDevice2s1a(QDASTChip):
             length=meander_length,
             meanders=num_meanders,
             r=50,)
+        
+        self._readout_structure_info["feedline_" + str(id)] = w5.length(), w4.length(),  w3.length(), float(self.feedline_meander_lengths[0]), w2.length(), w1.length(), w6.length(), float(self.feedline_meander_lengths[1])
+
     def _produce_readout_reasonators(self):
         wg_0 = self._produce_waveguide([
             self._cplr_res_refpoints[0]['port_b'],
@@ -437,7 +454,7 @@ class DetectionDevice2s1a(QDASTChip):
             ),
             pya.DPoint(
                 self._cplr_res_refpoints[1]['port_b'].x - 800,
-                self._cplr_res_refpoints[0]['port_b'].y - 200,
+                self._cplr_res_refpoints[1]['port_b'].y - 200,
             ),
             pya.DPoint(
                 self._qubits_refpoints[1]['port_3'].x,
