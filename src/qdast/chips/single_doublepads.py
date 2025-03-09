@@ -227,16 +227,18 @@ class SingleDoublepads(QDASTChip):
         )
         _, tee_refpoints = self.insert_cell(cell_cross, cross_trans1)
 
+        tee_port_1 = "port_right" if res_idx % 2 else "port_left"
+        tee_port_2 = "port_left" if res_idx % 2 else "port_right"
         wg_1 = self._produce_waveguide(
             [
                 capacitor_pos,
-                pya.DPoint(capacitor_pos.x, tee_refpoints["port_left"].y),
+                pya.DPoint(capacitor_pos.x, tee_refpoints[tee_port_1].y),
 
             ]
         )
         wg_2 = self._produce_waveguide(
             [
-                tee_refpoints["port_right"],
+                tee_refpoints[tee_port_2],
                 pya.DPoint(qubit_refp["port_0"].x, qubit_refp["port_0"].y + flip*300),
                 pya.DPoint(qubit_refp["port_0"].x, qubit_refp["port_0"].y ),
             ]

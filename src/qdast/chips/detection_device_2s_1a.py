@@ -71,9 +71,19 @@ class DetectionDevice2s1a(QDASTChip):
         "Readout resonator lengths",
         [10000, 8100, 8200],
     )
-    feedline_meander_lengths = Param(
+    feedline_meander_lengths_s1 = Param(
         pdt.TypeList,
-        "Feedline meander length [non-tail, tail]",
+        "Feedline S1 meander length [non-tail, tail]",
+        [1000, 500],
+    )
+    feedline_meander_lengths_s2 = Param(
+        pdt.TypeList,
+        "Feedline S2 meander length [non-tail, tail]",
+        [1000, 500],
+    )
+    feedline_meander_lengths_a = Param(
+        pdt.TypeList,
+        "Feedline A meander length [non-tail, tail]",
         [1000, 500],
     )
     n_fingers = Param(
@@ -228,6 +238,15 @@ class DetectionDevice2s1a(QDASTChip):
         feedline_tee_trans = pya.DCplxTrans(
             1, rot_tee, False, self.launchers[l2_id][0].x + mirror_x*250, self.launchers[l2_id][0].y
         )
+        if id == 0:
+            meander_1_length = float(self.feedline_meander_lengths_s1[0])
+            meander_2_length = float(self.feedline_meander_lengths_s1[1])
+        elif id == 1:
+            meander_1_length = float(self.feedline_meander_lengths_s2[0])
+            meander_2_length = float(self.feedline_meander_lengths_s2[1])
+        elif id == 2:
+            meander_1_length = float(self.feedline_meander_lengths_a[0])
+            meander_2_length = float(self.feedline_meander_lengths_a[1])
 
         _, feedline_tee_refp = self.insert_cell(cell_cross, feedline_tee_trans)
         if mirror_x == 1 and mirror_y == 1:
@@ -259,16 +278,16 @@ class DetectionDevice2s1a(QDASTChip):
         w3 = self._produce_waveguide(
             [   
                 pya.DPoint(
-                    feedline_tee_refp[tee_port_2].x + mirror_x*750,
+                    feedline_tee_refp[tee_port_2].x + mirror_x*650,
                     feedline_tee_refp[tee_port_2].y,
                 ),
                 pya.DPoint(
-                    self.launchers[l1_id][0].x - mirror_x*500,
+                    self.launchers[l1_id][0].x - mirror_x*650,
                     self.launchers[l2_id][0].y,
                 ),
                 pya.DPoint(
-                    self.launchers[l1_id][0].x + mirror_x*(- 250 - (self.a/2 + self.b)*sqrt(2)/2),
-                    self.launchers[l2_id][0].y + mirror_y*(- 250 + (self.a/2 + self.b)*sqrt(2)/2),
+                    self.launchers[l1_id][0].x + mirror_x*(- 150 - (self.a/2 + self.b)*sqrt(2)/2),
+                    self.launchers[l2_id][0].y + mirror_y*(- 500 + (self.a/2 + self.b)*sqrt(2)/2),
                 )
             ]
         )
@@ -280,8 +299,8 @@ class DetectionDevice2s1a(QDASTChip):
             rot_tee = 45
         resonator_tee_trans = pya.DCplxTrans(
             1, rot_tee, False, pya.DPoint(
-                    self.launchers[l1_id][0].x - mirror_x*250,
-                    self.launchers[l2_id][0].y - mirror_y*250,
+                    self.launchers[l1_id][0].x - mirror_x*150,
+                    self.launchers[l2_id][0].y - mirror_y*500,
                 )
         )
         resonator_tee, resonator_tee_refp = self.insert_cell(cell_cross, resonator_tee_trans)
@@ -299,7 +318,7 @@ class DetectionDevice2s1a(QDASTChip):
             rot_cplr = 90
         if mirror_x == 1 and mirror_y == -1:
             rot_cplr = -90
-        cplr_dtrans = pya.DCplxTrans(1, rot_cplr, False, self.launchers[l1_id][0].x, self.launchers[l1_id][0].y + mirror_y*300)
+        cplr_dtrans = pya.DCplxTrans(1, rot_cplr, False, self.launchers[l1_id][0].x, self.launchers[l1_id][0].y + mirror_y*800)
         _, cplr_refpoints = self.insert_cell(
             cplr, cplr_dtrans, rec_levels=None
         )
@@ -330,7 +349,7 @@ class DetectionDevice2s1a(QDASTChip):
                 resonator_tee_refp[tee_port_1],
                 pya.DPoint(
                     self.launchers[l1_id][0].x,
-                    self.launchers[l2_id][0].y- mirror_y*500,
+                    self.launchers[l2_id][0].y- mirror_y*650,
                 ),
                 pya.DPoint(
                     self.launchers[l1_id][0].x,
@@ -353,27 +372,26 @@ class DetectionDevice2s1a(QDASTChip):
                 feedline_tee_refp['port_bottom'],
                 pya.DPoint(
                     feedline_tee_refp['port_bottom'].x,
-                    self.launchers[l2_id][0].y - mirror_y*500,
+                    self.launchers[l2_id][0].y - mirror_y*100,
                 ),
         ])
 
         # meander for tail
         meander_start = pya.DPoint(
                     feedline_tee_refp['port_bottom'].x,
-                    self.launchers[l2_id][0].y - mirror_y*500,
+                    self.launchers[l2_id][0].y - mirror_y*100,
                 )
         meander_end = pya.DPoint(
                     feedline_tee_refp['port_bottom'].x,
-                    self.launchers[l2_id][0].y - mirror_y*750,
+                    self.launchers[l2_id][0].y - mirror_y*350,
                 )
         w = 300
-        meander_length = float(self.feedline_meander_lengths[1])
-        num_meanders = _get_num_meanders(meander_length, 50, w)
+        num_meanders = _get_num_meanders(meander_2_length, 50, w)
         self.insert_cell(
             Meander,
             start_point=meander_start,
             end_point=meander_end,
-            length=meander_length,
+            length=meander_2_length,
             meanders=num_meanders,
             r=50,)
         
@@ -384,21 +402,20 @@ class DetectionDevice2s1a(QDASTChip):
                     feedline_tee_refp[tee_port_2].y,
                 )
         meander_end = pya.DPoint(
-                    feedline_tee_refp[tee_port_2].x + mirror_x*750,
+                    feedline_tee_refp[tee_port_2].x + mirror_x*650,
                     feedline_tee_refp[tee_port_2].y,
                 )
         w = 300
-        meander_length = float(self.feedline_meander_lengths[0])
-        num_meanders = _get_num_meanders(meander_length, 50, w)
+        num_meanders = _get_num_meanders(meander_1_length, 50, w)
         self.insert_cell(
             Meander,
             start_point=meander_start,
             end_point=meander_end,
-            length=meander_length,
+            length=meander_1_length,
             meanders=num_meanders,
             r=50,)
         
-        self._readout_structure_info["feedline_" + str(id)] = w5.length(), w4.length(),  w3.length(), float(self.feedline_meander_lengths[0]), w2.length(), w1.length(), w6.length(), float(self.feedline_meander_lengths[1])
+        self._readout_structure_info["feedline_" + str(id)] = w5.length(), w4.length(),  w3.length(), meander_1_length, w2.length(), w1.length(), w6.length(), meander_2_length
 
     def _produce_readout_reasonators(self):
         wg_0 = self._produce_waveguide([

@@ -24,8 +24,11 @@ def digit_tee_ck_to_ground(deembed = [300, 200]):
     library = interpolate.interp1d(CMatrix[:, 0, 1], CMatrix[:, 1, 1], axis = 0)
     return library
 
-def get_ck(deembed = [300, 200]):
-    filename = os.path.join(dir_name, "digittee_capacitance_library_sim_q3d_results.csv")
+def get_ck(deembed = [300, 200], type = "digittee"):
+    if type == "digittee":
+        filename = os.path.join(dir_name, "digittee_capacitance_library_sim_q3d_results.csv")
+    elif type == "smooth_capacitor":
+        filename = os.path.join(dir_name, "smooth_capacitor_capacitance_library_sim_output_results.csv")
     df = pd.read_csv(filename)
     finger_control = df["finger_control"].values
     CMatrix = get_cmatrices(filename, deembed)

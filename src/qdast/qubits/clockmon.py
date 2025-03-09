@@ -12,7 +12,8 @@ from kqcircuits.pya_resolver import pya
 from kqcircuits.util.refpoints import WaveguideToSimPort, JunctionSimPort
 from kqcircuits.util.geometry_helper import arc_points
 from qdast.elements.fluxlines.fluxline_tapered import FluxlineTapered
- 
+from kqcircuits.elements.fluxlines.fluxline import Fluxline
+
 @add_parameters_from(Squid, junction_type="Manhattan Single Junction Centered")
 @add_parameters_from(ManhattanSingleJunctionCentered) 
 class Clockmon(Qubit):
@@ -455,16 +456,16 @@ class Clockmon(Qubit):
         return port_regions
 
     def produce_fluxline(self):
-        if self.fluxline_type == "none":
-            return
+        # if self.fluxline_type == "none":
+        #     return
 
         cell = self.add_element(FluxlineTapered)
 
         refpoints_so_far = self.get_refpoints(self.cell)
         if self.external_leads_offset > 0: 
-            trans = pya.DCplxTrans(1, 90, False, self.external_leads_offset + 30, -10)
+            trans = pya.DCplxTrans(1, 90, False, self.external_leads_offset + 20, -13)
         else:
-            trans = pya.DCplxTrans(1, -90, False, self.external_leads_offset - 30, -10)
+            trans = pya.DCplxTrans(1, -90, False, self.external_leads_offset - 20, -13)
         cell_inst, _ = self.insert_cell(cell, trans)
         self.copy_port("flux", cell_inst)
 

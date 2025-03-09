@@ -19,23 +19,46 @@ from kqcircuits.util.export_helper import (
     open_with_klayout_or_default_application,
 )
 from kqcircuits.simulations.post_process import PostProcess
+from kqcircuits.simulations.simulation import Simulation
 
 sim_tool = "q3d"
+class ClockmonFluxlineSim(Simulation):
+
+    def build(self):
+        chip = self.add_element(
+                    Clockmon,
+                    sim_tool = "q3d",
+                    with_squid = False,
+                    n = 32,
+                    ground_gap=[630, 690], 
+                    a=10,
+                    b=6,
+                    island_extent=[540, 240],
+                    coupler_widths=[0, 0, 0, 0, 0, 0],
+                    island_to_island_distance=50,
+                    coupler_offsets=[0, 0, 0, 0, 0, 0],
+                    clock_diameter=0,
+                    bending_angle=0,
+                    junction_type="Manhattan Single Junction Centered", 
+                    taper_width = 0,
+                    width_tapered = 4,
+                    width_untapered = 4,
+                    drive_position = [0, 0],
+                    external_leads_offset = 305,
+                    bent_section_length = 6,
+                    lead_height_tapered = 4,
+                    lead_height_untapered = 4,
+                    fluxline_type = "Fluxline Tapered"
+                    
+                        
+                )
+        self.cell.insert(pya.DCellInstArray(chip.cell_index(), pya.DTrans(0, False, 0, 0)))
+        _, refpoints = self.insert_cell(chip)
+        self.produce_waveguide_to_port(refpoints["port_flux"], refpoints["port_flux_corner"], 1, use_internal_ports="at_edge")
+
 
 # Simulation parameters
-sim_class = get_single_element_sim_class(
-    Clockmon, ignore_ports=["port_drive", "port_island1", "port_island2", "port_1", "port_2", "port_4", "port_5"]
-)  # pylint: disable=invalid-name
-sim_parameters = {
-    "name": "clockmon",
-    # "use_internal_ports": True,
-    # "use_ports": True,
-    "with_squid": False,
-    "face_stack": ["1t1"],
-    "box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(1500, 1500)),
-    # "separate_island_internal_ports": sim_tool != "eigenmode",  # DoublePads specific
-    "waveguide_length": 0,
-}
+sim_class = ClockmonFluxlineSim
 
 dir_path = create_or_empty_tmp_directory(Path(__file__).stem + f"_{sim_tool}")
 
@@ -44,7 +67,7 @@ dir_path = create_or_empty_tmp_directory(Path(__file__).stem + f"_{sim_tool}")
 export_parameters_ansys = {
     "ansys_tool": sim_tool,
     "path": dir_path,
-    "exit_after_run": True,
+    "exit_after_run": False,
     'percent_error': 0.03,
     'maximum_passes': 25,
     'minimum_passes': 2,
@@ -58,34 +81,10 @@ layout = get_active_or_new_layout()
 
 simulations = []
 
-name = sim_parameters["name"]
 simulations = [
     sim_class(
         layout,
-        **{
-            **sim_parameters,
-            "ground_gap":[630, 690], 
-            "a":10,
-            "b":6,
-            "island_extent":[540, 240],
-            "coupler_widths":[110, 0, 0, 110, 0, 0],
-            "island_to_island_distance":50,
-            "coupler_offsets":[295, 0, 0, 295, 0, 0],
-            "clock_diameter":0,
-            "bending_angle":0,
-            "sim_tool" : "q3d",
-            "with_squid" : False,
-            "pad_width" : 6,
-            "taper_width" : 0,
-            "bent_section_length": 6,
-            "lead_height_untapered": 4,
-            "lead_height_tapered": 4,
-            "drive_position": [0, -405],
-            "external_leads_offset": 305,
-            "width_tapered": 4,
-            "width_untapered": 6,
-            "fluxline_type": "tapered"
-        },
+        box= pya.DBox(pya.DPoint(-1000,-1000), pya.DPoint(1000, 1000)),
     )
 ]
 

@@ -11,9 +11,9 @@ class FluxlineTapered(Fluxline):
         # shorthands
         a = self.a  # waveguide center width
         b = self.b  # waveguide gap width
-        taper_length = 50
-        a2 = 5
-        b2 = 20
+        taper_length = 100
+        a2 = 4
+        b2 = 25
         right_gap = pya.DPolygon(
             [
                 pya.DPoint(a/2, -50 - taper_length),
