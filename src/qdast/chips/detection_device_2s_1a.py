@@ -96,6 +96,7 @@ class DetectionDevice2s1a(QDASTChip):
         "Number of fingers for feedline couplers",
         [4, 4.3, 4.4],
     )
+
     def build(self):
         self._readout_structure_info = {}
 
@@ -169,7 +170,7 @@ class DetectionDevice2s1a(QDASTChip):
             a=10,
             b=6,
             island_extent=[540, 240],
-            coupler_widths=[135, 0, 0, 80, 0, 0],
+            coupler_widths=[float(self.sensing_2_coupler_widths[0]), 0, 0, float(self.sensing_2_coupler_widths[1]), 0, 0],
             island_to_island_distance=50,
             coupler_offsets=[295, 0, 0, 295, 0, 0],
             clock_diameter=0,
@@ -200,7 +201,7 @@ class DetectionDevice2s1a(QDASTChip):
             a=10,
             b=6,
             island_extent=[535, 200],
-            coupler_widths=[0, 0, 0, 115, 110, 80],
+            coupler_widths=[0, 0, 0, float(self.ancilla_coupler_widths[0]), float(self.ancilla_coupler_widths[1]), float(self.ancilla_coupler_widths[2])],
             island_to_island_distance=50,
             coupler_offsets=[0, 0, 0, 255, 288, 288],
             clock_diameter=0,
@@ -526,8 +527,9 @@ class DetectionDevice2s1a(QDASTChip):
         # S1
         self._produce_waveguide([
             self.launchers['11'][0],
-            pya.DPoint(self.launchers['11'][0].x + 1900, self.launchers['11'][0].y),
-            pya.DPoint(self.launchers['11'][0].x + 2100, self.launchers['11'][0].y - 200),
+            pya.DPoint(self.launchers['11'][0].x + 1500, self.launchers['11'][0].y),
+            pya.DPoint(self.launchers['11'][0].x + 1500, self.launchers['11'][0].y - 600),
+            pya.DPoint(self.launchers['11'][0].x + 2000, self.launchers['11'][0].y - 600),
         ])
         taper_cell, _ = WaveguideCoplanarTaper.create_with_refpoints(
             self.layout,
@@ -538,12 +540,12 @@ class DetectionDevice2s1a(QDASTChip):
             b2=self.b/2,
             taper_length=80,
         )
-        taper_trans_1 = pya.DCplxTrans(1, -45, False, pya.DPoint(self.launchers['11'][0].x + 2100, self.launchers['11'][0].y - 200))
+        taper_trans_1 = pya.DCplxTrans(1, 0, False, pya.DPoint(self.launchers['11'][0].x + 2000, self.launchers['11'][0].y - 600))
         _, taper_ref1 = self.insert_cell(
             taper_cell, taper_trans_1)
         self._produce_waveguide([
             taper_ref1['port_b'],
-            taper_ref1['port_b'] + pya.DPoint(100, -100)
+            taper_ref1['port_b'] + pya.DPoint(200, 0)
         ],
         a = self.a/2,
         b = self.b/2,
@@ -554,12 +556,12 @@ class DetectionDevice2s1a(QDASTChip):
             self.launchers['4'][0],
             pya.DPoint(self.launchers['4'][0].x - 300, self.launchers['4'][0].y),
             pya.DPoint(self.launchers['4'][0].x - 300, self.launchers['4'][0].y - 400),
-            pya.DPoint(self.launchers['4'][0].x - 1800, self.launchers['4'][0].y - 1900),
-            pya.DPoint(self.launchers['4'][0].x - 1800, self.launchers['4'][0].y - 2400),
-            pya.DPoint(self.launchers['4'][0].x - 2100, self.launchers['4'][0].y - 2700),
+            pya.DPoint(self.launchers['4'][0].x - 1850, self.launchers['4'][0].y - 1900),
+            pya.DPoint(self.launchers['4'][0].x - 1850, self.launchers['4'][0].y - 2600),
+            pya.DPoint(self.launchers['4'][0].x - 2150, self.launchers['4'][0].y - 2900),
             # pya.DPoint(self.launchers['4'][0].x - 2100, self.launchers['4'][0].y - 200),
         ])
-        taper_trans_2 = pya.DCplxTrans(1, -135, False, pya.DPoint(self.launchers['4'][0].x - 2100, self.launchers['4'][0].y - 2700),)
+        taper_trans_2 = pya.DCplxTrans(1, -135, False, pya.DPoint(self.launchers['4'][0].x - 2150, self.launchers['4'][0].y - 2900),)
         _, taper_ref2 = self.insert_cell(
             taper_cell, taper_trans_2)
         self._produce_waveguide([
@@ -573,21 +575,21 @@ class DetectionDevice2s1a(QDASTChip):
         # A1
         self._produce_waveguide([
             self.launchers['2'][0],
-            pya.DPoint(self.launchers['2'][0].x, self.launchers['2'][0].y - 1300)
+            pya.DPoint(self.launchers['2'][0].x, self.launchers['2'][0].y - 1400)
         ])
-        taper_trans_3 = pya.DCplxTrans(1, -90, False, pya.DPoint(self.launchers['2'][0].x, self.launchers['2'][0].y - 1300))
+        taper_trans_3 = pya.DCplxTrans(1, -90, False, pya.DPoint(self.launchers['2'][0].x, self.launchers['2'][0].y - 1400))
         _, taper_ref3 = self.insert_cell(
             taper_cell, taper_trans_3)
         self._produce_waveguide([
             taper_ref3['port_b'],
-            pya.DPoint(taper_ref3['port_b'].x, taper_ref3['port_b'].y - 100)
+            pya.DPoint(taper_ref3['port_b'].x, taper_ref3['port_b'].y - 200)
         ],
         a = self.a/2,
         b = self.b/2,
         term2 = self.b)
-        self._driveline_terminations.append(pya.DPoint(taper_ref1['port_b'].x + 100, taper_ref1['port_b'].y - 100))
+        self._driveline_terminations.append(pya.DPoint(taper_ref1['port_b'].x + 200, taper_ref1['port_b'].y))
         self._driveline_terminations.append(pya.DPoint(taper_ref2['port_b'].x - 100, taper_ref2['port_b'].y - 100))
-        self._driveline_terminations.append(pya.DPoint(taper_ref3['port_b'].x, taper_ref3['port_b'].y - 100))
+        self._driveline_terminations.append(pya.DPoint(taper_ref3['port_b'].x, taper_ref3['port_b'].y - 200))
 
     def _produce_fluxlines(self):
         self._produce_waveguide([
