@@ -295,11 +295,14 @@ def T1_Purcell_estimation_network_coupled_qubits(options):
 
     qubit_checked = options["qubit_to_estimate"]
     if qubit_checked == 0:
-        port_qubit_1 = rf.Circuit.Port(freq, 'port_qubit_1', z0=50)
-        port_qubit_2 = rf.Circuit.SeriesImpedance(freq, 50, 'port_qubit_2', z0=50)
+        port_qubit = rf.Circuit.Port(freq, 'port_qubit_1', z0=50)
+        qubit_c = capacitor(options["qubit_c"][1], name='qb_c_2')
+        qubit_l = inductor(options["qubit_l"][1], name='qb_l_2')
+
     elif qubit_checked == 1:
-        port_qubit_1 = rf.Circuit.SeriesImpedance(freq, 50, 'port_qubit_1', z0=50)
-        port_qubit_2 = rf.Circuit.Port(freq, 'port_qubit_2', z0=50)
+        port_qubit = rf.Circuit.Port(freq, 'port_qubit_2', z0=50)
+        qubit_c = capacitor(options["qubit_c"][0], name='qb_c_1')
+        qubit_l = inductor(options["qubit_l"][0], name='qb_l_1')
 
     tl = []
     cplr = []
@@ -331,24 +334,40 @@ def T1_Purcell_estimation_network_coupled_qubits(options):
     coupler_res_l = inductor(options["coupler_res_l"], name = 'cp_res_l')
     # gnd.append(rf.Circuit.Ground(freq, name='gnd_coupler'))
 
-    cnx = [
-            [(port1, 0), (tl[0], 0)],
-            [(tl[0], 1), (tl[1], 0), (cplr[0], 0)],
-            [(tl[1], 1), (tl[2], 0), (cplr[1], 0)],
-            [(tl[2], 1), (port2, 0)],
+    if qubit_checked == 0:
+        cnx = [
+                [(port1, 0), (tl[0], 0)],
+                [(tl[0], 1), (tl[1], 0), (cplr[0], 0)],
+                [(tl[1], 1), (tl[2], 0), (cplr[1], 0)],
+                [(tl[2], 1), (port2, 0)],
 
+                [(cplr[0], 1), (readout_res_c[0], 0), (readout_res_l[0], 0), (qplr[0], 0)], 
+                [(qplr[0], 1), (port_qubit, 0), (ccplr_0, 0)],
+                [(readout_res_c[0], 1), (readout_res_l[0], 1), (gnd[0], 0)],
 
+                [(ccplr_0, 1), (coupler_res_c, 0), (coupler_res_l, 0), (ccplr_1, 1)],
+                [(coupler_res_c, 1), (coupler_res_l, 1), (gnd[2], 0)],
 
-            [(cplr[0], 1), (readout_res_c[0], 0), (readout_res_l[0], 0), (qplr[0], 0)], 
-            # [(qplr[0], 1), (qubit_c[0], 0), (qubit_l[0], 0), (ccplr_0, 0)],
-            [(qplr[0], 1), (port_qubit_1, 0), (ccplr_0, 0)],
-            [(readout_res_c[0], 1), (readout_res_l[0], 1), (gnd[0], 0)],
+                [(cplr[1], 1), (readout_res_c[1], 0), (readout_res_l[1], 0), (qplr[1], 0)], 
+                [(qplr[1], 1), (qubit_c, 0), (qubit_l, 0), (ccplr_1, 0)],
+                [(readout_res_c[1], 1), (readout_res_l[1], 1), (qubit_c, 1), (qubit_l, 1), (gnd[1], 0)],
+                ]
+    elif qubit_checked == 1:
+            cnx = [
+                [(port1, 0), (tl[0], 0)],
+                [(tl[0], 1), (tl[1], 0), (cplr[0], 0)],
+                [(tl[1], 1), (tl[2], 0), (cplr[1], 0)],
+                [(tl[2], 1), (port2, 0)],
 
-            [(ccplr_0, 1), (coupler_res_c, 0), (coupler_res_l, 0), (ccplr_1, 1)],
-            [(coupler_res_c, 1), (coupler_res_l, 1), (gnd[2], 0)],
+                [(cplr[0], 1), (readout_res_c[0], 0), (readout_res_l[0], 0), (qplr[0], 0)], 
+                [(qplr[0], 1), (qubit_c, 0), (qubit_l, 0), (ccplr_0, 0)],
+                [(readout_res_c[0], 1), (readout_res_l[0], 1), (qubit_c, 1), (qubit_l, 1), (gnd[0], 0)],
 
-            [(cplr[1], 1), (readout_res_c[1], 0), (readout_res_l[1], 0), (qplr[1], 0)], 
-            [(qplr[1], 1), (port_qubit_2, 0), (ccplr_1, 0)],
-            [(readout_res_c[1], 1), (readout_res_l[1], 1), (gnd[1], 0)],
-            ]
+                [(ccplr_0, 1), (coupler_res_c, 0), (coupler_res_l, 0), (ccplr_1, 1)],
+                [(coupler_res_c, 1), (coupler_res_l, 1), (gnd[2], 0)],
+
+                [(cplr[1], 1), (readout_res_c[1], 0), (readout_res_l[1], 0), (qplr[1], 0)], 
+                [(qplr[1], 1), (port_qubit, 0), (ccplr_1, 0)],
+                [(readout_res_c[1], 1), (readout_res_l[1], 1), (gnd[1], 0)],
+                ]
     return cnx

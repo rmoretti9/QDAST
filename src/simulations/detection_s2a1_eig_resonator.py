@@ -37,7 +37,8 @@ dir_path = create_or_empty_tmp_directory(Path(__file__).stem + "_output")
 # Simulation parameters
 sim_class = DetectionDevice2s1a00Sim  # pylint: disable=invalid-name
 sim_parameters = {
-    "box": pya.DBox(pya.DPoint(200, 200), pya.DPoint(3000, 3000)),
+    "box": pya.DBox(pya.DPoint(1900, 1400), pya.DPoint(4400, 4900)), #s1
+    # "box": pya.DBox(pya.DPoint(2900, 3500), pya.DPoint(5800, 7800)), #s1-a
 }
 ansys_export_parameters = {
     "path": dir_path,
@@ -47,7 +48,7 @@ ansys_export_parameters.update(
     {
         "ansys_tool": "eigenmode",
         "max_delta_f": 0.1,  # quite tight
-        "maximum_passes": 3,
+        "maximum_passes": 25,
         "minimum_passes": 1,
         "minimum_converged_passes": 2,
         "n_modes": 1,

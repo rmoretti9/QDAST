@@ -7,16 +7,16 @@ import os
 @add_parameters_from(DetectionDevice2s1a)
 class DetectionDevice2s1a00(DetectionDevice2s1a):
     def build(self):
-        self.readout_res_lengths = [7779.16, 7974.87, 7537.61]
-        self.coupler_res_length = [8330.14, 8593.43]
+        self.readout_res_lengths = [7779.67, 7975.48, 7537.83]
+        self.coupler_res_length = [8273.20 , 8540.80]
         self.feedline_meander_lengths_s1 = [1980, 300]
-        self.feedline_meander_lengths_s2 = [1980, 300]
-        self.feedline_meander_lengths_a = [1980, 300]
+        self.feedline_meander_lengths_s2 = [2075, 300]
+        self.feedline_meander_lengths_a = [1895, 280]
         self.n_fingers = [2.1464, 2.1804, 2.1132]
-        self.sensing_1_coupler_widths = [110.38, 153.42]
-        self.sensing_2_coupler_widths = [124.41, 193.07]
-        self.ancilla_coupler_widths = [106.43, 108.41, 155.52]
-        self.feedline_capacitor_n_fingers =[3.4432, 4.3, 4]
+        self.sensing_1_coupler_widths = [155.68, 153.38]
+        self.sensing_2_coupler_widths = [173.90, 193.11]
+        self.ancilla_coupler_widths = [149.3, 154.43, 157.05]
+        self.feedline_capacitor_n_fingers =[3.4432, 3.4432, 3.4432]
         self.name_chip = "V00"
         self.name_copy = ""
         self.with_squid = False
