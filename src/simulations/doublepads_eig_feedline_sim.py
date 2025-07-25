@@ -17,14 +17,14 @@ from kqcircuits.util.export_helper import (
     get_active_or_new_layout,
     open_with_klayout_or_default_application,
 )
-from qdast.dimensioned_chips.single_doublepads_01 import SingleDoublepads01
+from qdast.dimensioned_chips.single_doublepads_04 import SingleDoublepads04
 
 
 class SingleDoublepadsSim(Simulation):
 
     def build(self):
         chip = self.add_element(
-                    SingleDoublepads01,
+                    SingleDoublepads04,
                     sim_tool = "q3d",
                     with_squid = False,
                     n = 32          
@@ -37,7 +37,7 @@ dir_path = create_or_empty_tmp_directory(Path(__file__).stem + "_output")
 # Simulation parameters
 sim_class = SingleDoublepadsSim  # pylint: disable=invalid-name
 sim_parameters = {
-    "box": pya.DBox(pya.DPoint(200, 3000), pya.DPoint(10000, 6500)),
+    "box": pya.DBox(pya.DPoint(200, 200), pya.DPoint(7500-200, 7300)),
 }
 ansys_export_parameters = {
     "path": dir_path,

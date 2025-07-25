@@ -1,0 +1,5 @@
+,0,1,2,3,4
+feedline,1966.0,578.0,1578.0,578.0,1166.0
+tees,10,10.0,20.0,,
+readout_res_lengths,8272.8,8066.6,7849.7,7644.0,
+readout_structure,simple,,,,

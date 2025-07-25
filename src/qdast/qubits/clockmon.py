@@ -68,6 +68,7 @@ class Clockmon(Qubit):
     bending_angle = Param(pdt.TypeDouble, "Leads bending angle", 45, unit="degrees")
     external_leads_offset = Param(pdt.TypeDouble, "Junction horizontal offset", 0, unit="μm")
     sim_tool = Param(pdt.TypeString, "Simulation tool", "none", choices=["none", "q3d", "eig"])
+    with_fluxline = Param(pdt.TypeDouble, "Boolean whether to include the fluxline", True)
 
     def build(self):
 
@@ -186,8 +187,8 @@ class Clockmon(Qubit):
                 float(self.drive_position[0]), float(self.drive_position[1])
             ),
         )
-
-        self.produce_fluxline()
+        if self.with_fluxline:
+            self.produce_fluxline()
 
     def _build_coupler(self, coupler_id, trans, trans_refp):
         width = float(self.coupler_widths[coupler_id])

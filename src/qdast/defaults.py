@@ -47,6 +47,17 @@ default_sampleholders = {
         "chip_box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(10000, 10000)),
     },
 
+
+    "4-ports-75x75": {
+        "n": 4,
+        "launcher_type": "RF",
+        "launcher_width": 200,
+        "launcher_gap": 153,
+        "launcher_indent": 773,
+        "pad_pitch": 1200,
+        "chip_box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(7500, 7500)),
+    },
+
     "12-ports-10x10": {
         "n": 12,
         "launcher_type": "RF",

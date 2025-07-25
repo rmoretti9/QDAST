@@ -80,7 +80,7 @@ def resonator_kappa(resonance_frequency, coupling_capacitance, z0):
 
     # Calculation of kappa
     omega_r = resonance_frequency * 2 * pi
-    kappa = (2 / pi) * (omega_r**3.0) * (coupling_capacitance**2.0) * (z0**2.0)
+    kappa = (1 / pi) * (omega_r**3.0) * (coupling_capacitance**2.0) * (z0**2.0)
     return kappa
 
 def cpw_kinetic_inductance(trace_width: float, gap_width: float, film_thickness: float, pen_depth: float):

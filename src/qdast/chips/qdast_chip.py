@@ -57,6 +57,9 @@ class QDASTChip(Chip):
         if sampleholder_type == "6-ports-10x10":
             return {}
 
+        # if sampleholder_type == "4-ports-75x75":
+        #     return {}
+
         if sampleholder_type in default_sampleholders:
             return self.produce_n_launchers(
                 **default_sampleholders[sampleholder_type],
