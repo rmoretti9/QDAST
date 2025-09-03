@@ -92,6 +92,8 @@ class SingleDoublepads7575(QDASTChip):
     )
     resonator_type = Param(pdt.TypeString, "Readout resonator type", "quarter", choices=["half", "quarter"])
     with_feedline_resonator = Param(pdt.TypeBoolean, "Enable feedline resonator", False)
+    alternate_drivelines = Param(pdt.TypeBoolean, "Alternating drivelines", False)
+    tail_variant = Param(pdt.TypeString, "Tail type", "1", choices=["1", "2"])
 
     def build(self):
         self.launchers = self.produce_launchers(
@@ -105,7 +107,10 @@ class SingleDoublepads7575(QDASTChip):
         else:
             self._produce_feedline_resonator()
         self._produce_readout_resonators()
-        self._produce_chargelines()
+        if not self.alternate_drivelines:
+            self._produce_chargelines()
+        else:
+            self._produce_chargelines_v2()
         # # self.get_readout_structure_info()
 
     def _produce_waveguide(self, path, term2=0, turn_radius=None, a = None, b = None, object = None):
@@ -163,8 +168,15 @@ class SingleDoublepads7575(QDASTChip):
         qubit_spacing_y = 3.75e3  # shortest y-distance between qubit centers on different sides of the feedline
         qubits_center_x = 3.75e3  # the x-coordinate around which qubits are centered
         # qubits above the feedline, from left to right
-        y_a = 3.75e3 + 1500
-        y_b = 3.75e3 - 1500
+
+        # doublepads up to V04 had this:
+        # y_a = 3.75e3 + 1500
+        # y_b = 3.75e3 - 1500
+
+        # from V05:
+        y_a = 3.75e3 + 1650
+        y_b = 3.75e3 - 1650
+
         qb0_refpoints = self._produce_qubit(
             float(self.coupler_widths[0]), qubits_center_x - qubit_spacing_x + 1200, y_b, 0, "qb_0"
         )
@@ -358,15 +370,26 @@ class SingleDoublepads7575(QDASTChip):
                 self.launchers["E"][0]
             ], object= "feedline"
         )
-        self._produce_waveguide(
-            [
-                feedline_tee_refp["port_bottom"],
-                pya.DPoint(feedline_tee_refp["port_bottom"].x, feedline_tee_refp["port_bottom"].y - 500),
-                pya.DPoint(feedline_tee_refp["port_bottom"].x + 100, feedline_tee_refp["port_bottom"].y - 500),
-                pya.DPoint(feedline_tee_refp["port_bottom"].x + 200, feedline_tee_refp["port_bottom"].y - 500),
-                pya.DPoint(feedline_tee_refp["port_bottom"].x + 200, feedline_tee_refp["port_bottom"].y - 1150),
-            ], object= "feedline"
-        )
+        if self.tail_variant=="1":
+            self._produce_waveguide(
+                [
+                    feedline_tee_refp["port_bottom"],
+                    pya.DPoint(feedline_tee_refp["port_bottom"].x, feedline_tee_refp["port_bottom"].y - 500),
+                    pya.DPoint(feedline_tee_refp["port_bottom"].x + 100, feedline_tee_refp["port_bottom"].y - 500),
+                    pya.DPoint(feedline_tee_refp["port_bottom"].x + 200, feedline_tee_refp["port_bottom"].y - 500),
+                    pya.DPoint(feedline_tee_refp["port_bottom"].x + 200, feedline_tee_refp["port_bottom"].y - 1150),
+                ], object= "feedline"
+            )
+        elif self.tail_variant == "2":
+            self._produce_waveguide(
+                [
+                    feedline_tee_refp["port_bottom"],
+                    pya.DPoint(feedline_tee_refp["port_bottom"].x, feedline_tee_refp["port_bottom"].y - 500),
+                    pya.DPoint(feedline_tee_refp["port_bottom"].x + 100, feedline_tee_refp["port_bottom"].y - 500),
+                    pya.DPoint(feedline_tee_refp["port_bottom"].x + 200, feedline_tee_refp["port_bottom"].y - 500),
+                    pya.DPoint(feedline_tee_refp["port_bottom"].x + 200, feedline_tee_refp["port_bottom"].y - 950),
+                ], object= "feedline"
+            )
 
     def _produce_readout_resonators(self):
         # Coupler
@@ -526,6 +549,71 @@ class SingleDoublepads7575(QDASTChip):
             [
                 pya.DPoint(self._qubit_refpoints[3]["port_drive"].x, tee_refpoints_1["port_right"].y - 480),
                 self._qubit_refpoints[3]["port_drive"]
+            ],
+            a = self.a/3,
+            b = self.b/3,
+            term2 = self.b
+        )
+
+    def _produce_chargelines_v2(self):
+        tee_refpoints_0_placeholder = pya.DPoint(self.launchers["S"][0].x, self.launchers["S"][0].y + 400 + self.b + self.a/2)
+        tee_refpoints_1_placeholder = pya.DPoint(self.launchers["N"][0].x, self.launchers["N"][0].y - 400 + self.b + self.a/2)
+        self._produce_waveguide(
+            [
+                self.launchers["S"][0],
+                tee_refpoints_0_placeholder,
+                pya.DPoint(self._qubit_refpoints[2]["port_drive"].x, tee_refpoints_0_placeholder.y),
+                pya.DPoint(self._qubit_refpoints[2]["port_drive"].x, tee_refpoints_0_placeholder.y + 100),
+                pya.DPoint(self._qubit_refpoints[2]["port_drive"].x, tee_refpoints_0_placeholder.y + 400)
+            ],
+            a = self.a,
+            b = self.b,
+        )
+
+        self._produce_waveguide(
+            [   self.launchers["N"][0],
+                tee_refpoints_1_placeholder,
+                pya.DPoint(self._qubit_refpoints[1]["port_drive"].x, tee_refpoints_1_placeholder.y),
+                pya.DPoint(self._qubit_refpoints[1]["port_drive"].x, tee_refpoints_1_placeholder.y - 100),
+                pya.DPoint(self._qubit_refpoints[1]["port_drive"].x, tee_refpoints_1_placeholder.y - 400)
+            ],
+            a = self.a,
+            b = self.b,
+        )
+
+
+        taper_cell, _ = WaveguideCoplanarTaper.create_with_refpoints(
+            self.layout,
+            self.LIBRARY_NAME,
+            a=self.a,
+            b=self.b,
+            a2=self.a/3,
+            b2=self.b/3,
+            taper_length=80,
+        )
+
+        self.insert_cell(
+            taper_cell, pya.CplxTrans(1, 90 + 180, False, pya.DPoint(self._qubit_refpoints[1]["port_drive"].x, tee_refpoints_1_placeholder.y - 400))
+        )
+
+        self._produce_waveguide(
+            [
+                pya.DPoint(self._qubit_refpoints[1]["port_drive"].x, tee_refpoints_1_placeholder.y - 480),
+                self._qubit_refpoints[1]["port_drive"]
+            ],
+            a = self.a/3,
+            b = self.b/3,
+            term2 = self.b
+        )
+
+        self.insert_cell(
+            taper_cell, pya.CplxTrans(1, 90, False, pya.DPoint(self._qubit_refpoints[2]["port_drive"].x, tee_refpoints_0_placeholder.y + 400))
+        )
+
+        self._produce_waveguide(
+            [
+                pya.DPoint(self._qubit_refpoints[2]["port_drive"].x, tee_refpoints_0_placeholder.y + 480),
+                self._qubit_refpoints[2]["port_drive"]
             ],
             a = self.a/3,
             b = self.b/3,
