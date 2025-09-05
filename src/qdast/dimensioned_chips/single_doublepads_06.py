@@ -9,7 +9,8 @@ class SingleDoublepads06(SingleDoublepads7575):
     def build(self):
         self.readout_res_lengths = [8272.8, 8066.6, 7849.7, 7644.0]
         self.n_fingers = [1.9282, 1.8949, 1.8631, 1.8327]
-        self.coupler_widths = [124.97, 117.67, 110.85, 104.54]
+        self.coupler_widths = [291.76, 276.6, 262.61, 249.69]
+        self.x_offset = [0, 0, -850, -850]
         self.with_feedline_resonator = True
         self.alternate_drivelines = True
         self.feedline_capacitor_n_fingers = 4.25267767

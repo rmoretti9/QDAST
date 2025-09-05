@@ -12,6 +12,7 @@ class SingleDoublepads05(SingleDoublepads7575):
         self.coupler_widths = [124.97, 117.67, 110.85, 104.54]
         self.with_feedline_resonator = False
         self.alternate_drivelines = True
+        self.x_offset = [0, 0, -850, -850]
         # self.feedline_capacitor_n_fingers = 4.25267767
         # self.feedline_meander_height = 1350
         self._readout_structure_info = {

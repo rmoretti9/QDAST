@@ -90,6 +90,11 @@ class SingleDoublepads7575(QDASTChip):
         "Length of fingers for readout resonator couplers",
         [30, 30, 30, 30],
     )
+    x_offset = Param(
+        pdt.TypeList,
+        "Readout coupler x-offset",
+        [0, 0, 0, 0],
+    )
     resonator_type = Param(pdt.TypeString, "Readout resonator type", "quarter", choices=["half", "quarter"])
     with_feedline_resonator = Param(pdt.TypeBoolean, "Enable feedline resonator", False)
     alternate_drivelines = Param(pdt.TypeBoolean, "Alternating drivelines", False)
@@ -261,22 +266,46 @@ class SingleDoublepads7575(QDASTChip):
     def _produce_half_readout_resonator(self, cplr, cplr_dtrans, i):
         total_length = float(self.readout_res_lengths[i])
         turn_radius = 50
-
         # non-meandering part of the resonator
-        meander_start = self.get_refpoints(cplr, cplr_dtrans)["port_a"]
+        cplr_pos = self.get_refpoints(cplr, cplr_dtrans)["port_a"]
+        
         meander_end = self._qubit_refpoints[i]["port_0"]
 
-        # meandering part of the resonator
-        w = 1000
-        num_meanders = _get_num_meanders(total_length, turn_radius, w)
-        self.insert_cell(
-            Meander,
-            start_point=meander_start,
-            end_point=meander_end,
-            length=total_length,
-            meanders=num_meanders,
-            r=turn_radius,
-        )
+        if self.x_offset[i] != 0:
+            flip = -1 if i %2 else 1
+            wg_1 = self._produce_waveguide(
+                [
+                    cplr_pos,
+                    pya.DPoint(cplr_pos.x, cplr_pos.y - flip*200),
+                    pya.DPoint(cplr_pos.x - self.x_offset[i], cplr_pos.y - flip*200),
+                    pya.DPoint(cplr_pos.x - self.x_offset[i], cplr_pos.y - flip*300),
+
+                ]
+            )
+            meander_start = pya.DPoint(cplr_pos.x - self.x_offset[i], cplr_pos.y - flip*300)
+            # meandering part of the resonator
+            w = 1000
+            num_meanders = _get_num_meanders(total_length - wg_1.length(), turn_radius, w)
+            self.insert_cell(
+                Meander,
+                start_point=meander_start,
+                end_point=meander_end,
+                length=total_length - wg_1.length(),
+                meanders=num_meanders,
+                r=turn_radius,
+            )
+        else:
+            # meandering part of the resonator
+            w = 1000
+            num_meanders = _get_num_meanders(total_length, turn_radius, w)
+            self.insert_cell(
+                Meander,
+                start_point=cplr_pos,
+                end_point=meander_end,
+                length=total_length,
+                meanders=num_meanders,
+                r=turn_radius,
+            )
         self._readout_structure_info["readout_res_lengths"].append(total_length)
 
     def _produce_feedline_resonator(self):
@@ -290,7 +319,7 @@ class SingleDoublepads7575(QDASTChip):
         tee_rotations = [0, 2, 0, 2]
         for i in range(4):
             cross_trans = pya.DTrans(
-                tee_rotations[i], False, self._qubit_refpoints[i]["port_0"].x, 3750
+                tee_rotations[i], False, self._qubit_refpoints[i]["port_0"].x + self.x_offset[i], 3750
             )
             inst_cross, _ = self.insert_cell(cell_cross, cross_trans)
             tee_refpoints.append(self.get_refpoints(cell_cross, inst_cross.dtrans))
@@ -631,7 +660,7 @@ class SingleDoublepads7575(QDASTChip):
         tee_rotations = [0, 2, 0, 2]
         for i in range(4):
             cross_trans = pya.DTrans(
-                tee_rotations[i], False, self._qubit_refpoints[i]["port_0"].x, 3.75e3
+                tee_rotations[i], False, self._qubit_refpoints[i]["port_0"].x + self.x_offset[i], 3.75e3
             )
             inst_cross, _ = self.insert_cell(cell_cross, cross_trans)
             tee_refpoints.append(self.get_refpoints(cell_cross, inst_cross.dtrans))
