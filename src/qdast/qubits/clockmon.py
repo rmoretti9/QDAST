@@ -213,10 +213,10 @@ class Clockmon(Qubit):
         
         if float(self.coupler_widths[coupler_id]) > 2* self.coupler_r:
             coupler_points +=arc_points(
-                self.coupler_r, start=3*math.pi/2, stop=math.pi, origin=pya.DPoint(self.a, offset + height + self.coupler_r)
+                self.a/2, start=3*math.pi/2, stop=math.pi, origin=pya.DPoint(self.a, offset + height + self.a/2)
             )
             coupler_points += arc_points(
-                self.coupler_r, start=0, stop=-math.pi/2, origin=pya.DPoint(-self.a, offset + height + self.coupler_r)
+                self.a/2, start=0, stop=-math.pi/2, origin=pya.DPoint(-self.a, offset + height + self.a/2)
             )
         waveguide_points = [
             pya.DPoint(-self.a / 2, offset + stem_height + height),
@@ -276,8 +276,8 @@ class Clockmon(Qubit):
                 pya.DPolygon(
                     arc_points(
                         self.clock_diameter / 2,
-                        start=math.pi - 0.3,
-                        stop=0.3,
+                        start=math.pi,
+                        stop=0,
                         origin=pya.DPoint(0, 0),
                     )
                 ).to_itype(self.layout.dbu)
