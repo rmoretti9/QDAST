@@ -4,20 +4,25 @@ from kqcircuits.util.parameters import Param, pdt, add_parameters_from
 import pandas as pd
 import os
  
+
+#  feedline_0,737.909,384.738,830.8050000000001,2190.0,50.0,239.0,69.0,300.0
+# feedline_1,737.909,384.738,830.8050000000001,2285.0,50.0,239.0,69.0,300.0
+# feedline_2,737.909,384.738,830.8050000000001,2120.0,50.0,239.0,69.0,280.0
+
 @add_parameters_from(DetectionDevice2s1a)
 class DetectionDevice2s1a00(DetectionDevice2s1a):
     def build(self):
-        self.readout_res_lengths = [7779.67, 7975.48, 7537.83]
-        self.coupler_res_length = [8273.20 , 8540.80]
-        self.feedline_meander_lengths_s1 = [1980, 300]
-        self.feedline_meander_lengths_s2 = [2075, 300]
-        self.feedline_meander_lengths_a = [1895, 280]
-        self.n_fingers = [2.1464, 2.1804, 2.1132]
-        self.sensing_1_coupler_widths = [155.68, 153.38]
-        self.sensing_2_coupler_widths = [173.90, 193.11]
-        self.ancilla_coupler_widths = [149.3, 154.43, 157.05]
+        self.readout_res_lengths = [8223.4, 8371.6, 7995.90]
+        self.coupler_res_length = [8720.8, 9023.1]
+        self.feedline_meander_lengths_s1 = [2190, 300]
+        self.feedline_meander_lengths_s2 = [2285, 300]
+        self.feedline_meander_lengths_a = [2120, 280]
+        self.n_fingers = [2.4528, 2.4787, 2.4278]
+        self.sensing_1_coupler_widths = [205.79, 172.58]
+        self.sensing_2_coupler_widths = [230.14, 233.44]
+        self.ancilla_coupler_widths = [198.37, 235.46, 198.45]
         self.feedline_capacitor_n_fingers =[3.4432, 3.4432, 3.4432]
-        self.name_chip = "V00"
+        self.name_chip = ""
         self.name_copy = ""
         self.with_squid = False
         self.margin = 120

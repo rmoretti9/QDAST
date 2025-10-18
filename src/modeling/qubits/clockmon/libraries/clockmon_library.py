@@ -30,7 +30,7 @@ def clockmon_library(deembed = 200):
     wg_lib = waveguide_library()
     CMatrix[:, 0, 0] -= wg_lib(deembed)
     library = interpolate.interp1d(coupler_widths, CMatrix, axis = 0)
-    return library
+    return library, coupler_widths, CMatrix
 
 
 def clockmon_coupling_libraries(deembed = 200):

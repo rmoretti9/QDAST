@@ -406,7 +406,7 @@ class DetectionDevice2s1a(QDASTChip):
                     feedline_tee_refp[tee_port_2].x + mirror_x*650,
                     feedline_tee_refp[tee_port_2].y,
                 )
-        w = 300
+        w = 400
         num_meanders = _get_num_meanders(meander_1_length, 50, w)
         self.insert_cell(
             Meander,

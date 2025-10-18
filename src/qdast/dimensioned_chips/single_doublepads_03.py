@@ -18,7 +18,7 @@ class SingleDoublepads03(SingleDoublepads7575):
             "tees": [],
             "readout_res_lengths": [],
         }
-        self.name_chip = "V03"
+        self.name_chip = ""
         self.name_copy = ""
         self.with_squid = False
         self.margin = 120

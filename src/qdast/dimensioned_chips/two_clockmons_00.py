@@ -13,7 +13,7 @@ class TwoClockmons00(TwoClockmons):
         self.readout_coupler_widths = [93.11, 90.02]
         self.qubit_coupler_widths = [195.2, 195.26]
         self.with_feedline_resonator = True,
-        self.name_chip = "V00"
+        self.name_chip = ""
         self.name_copy = ""
         self.with_squid = False
         self.margin = 120

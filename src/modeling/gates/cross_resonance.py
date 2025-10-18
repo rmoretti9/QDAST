@@ -23,7 +23,7 @@ sm2 = qt.tensor(qt.qeye(2), qt.sigmam())
 
 class CRModel():
     """Cross-resonance model."""
-    def __init__(self, w1, w2, wc, a1, a2, g1, g2, C1, C2, use_dressed_freq, mode_a, truncated_dim, crosstalk = 0):
+    def __init__(self, w1, w2, wc, a1, a2, g1, g2, C1, C2, use_dressed_freq, mode_a, truncated_dim, cancel_phase = 0, cancel_amp = 0, rotary_phase = 0, rotary_amp = 0, crosstalk = 0):
         self.w1 = w1
         self.w2 = w2
         self.wc = wc
@@ -34,6 +34,10 @@ class CRModel():
         self.C1 = C1
         self.C2 = C2
         self.truncated_dim = truncated_dim
+        self.cancel_phase = cancel_phase
+        self.cancel_amp = cancel_amp
+        self.rotary_phase = rotary_phase
+        self.rotary_amp = rotary_amp
 
         if not(use_dressed_freq == False and mode_a == "input"):
             self.diagonalize()
@@ -42,7 +46,7 @@ class CRModel():
         else:
             self.w1_use, self.w2_use = w1, w2
         if mode_a == "numeric_bare":
-            self.a1_use, self.a2_use = self.a1_bare, self.a1_bare
+            self.a1_use, self.a2_use = self.a1_bare, self.a2_bare
         elif mode_a == "numeric_dressed":
             self.a1_use, self.a2_use = self.a1_dressed, self.a2_dressed
         elif mode_a == "input":
@@ -87,7 +91,7 @@ class CRModel():
             EC = e_charge**2/(C)/2/planck_h * 1e-9
             tmon = scq.Transmon(EJ=x, EC=EC, ng=0, ncut=11, truncated_dim=self.truncated_dim)
             return abs(tmon.E01() - w)
-        EJ = fsolve(tune_frequency, 10, args=(self.C1))[0]
+        EJ = fsolve(tune_frequency, 10, args=(C))[0]
         EC = e_charge**2/(C)/2/planck_h * 1e-9
         tmon_tuned = scq.Transmon(EJ=EJ, EC=EC, ng=0, ncut=11, truncated_dim=self.truncated_dim)
         return tmon_tuned
@@ -140,8 +144,25 @@ class CRModel():
         op_list.extend((sx2, sy2, sz2))
         self.op_list = op_list
         D = self.w1_use - self.w2_use
+
         Hp = 2*np.pi*(D/2*sz1 + self.J*(sp1*sm2 + sm1*sp2) + drive_strength*sx1 + m2*drive_strength*sx2)
         Hm = 2*np.pi*(D/2*sz1 + self.J*(sp1*sm2 + sm1*sp2) - drive_strength*sx1 - m2*drive_strength*sx2)
+
+        phi_cancel = self.cancel_phase
+        cancel_term = self.cancel_amp*(np.cos(phi_cancel)*sx1 + np.sin(phi_cancel)*sy1)
+
+        phi_rot = self.rotary_phase
+        rotary_term = self.rotary_amp*(np.cos(phi_rot)*sx2 + np.sin(phi_rot)*sy2)
+
+        # control drive acts on qubit1 (you already use drive_strength*sx1)
+        # include cancellation + rotary in Hamiltonians Hp and Hm:
+        Hp = 2*np.pi*( D/2*sz1
+                    + self.J*(sp1*sm2 + sm1*sp2)
+                    + drive_strength*sx1
+                    + m2*drive_strength*(np.cos(0.0)*sx2 + np.sin(0.0)*sy2)  # if you want m2 phase too
+                    + cancel_term
+                    + rotary_term
+                    )
 
         if echo:
             num_operators = len(op_list)

@@ -37,9 +37,12 @@ class NetworkAnalysis:
         ntw = cir.network
         return ntw
     
-    def t1_purcell_readout(self, qb_frequency, c_sigma):
+    def t1_purcell_readout(self, qb_frequency, c_sigma, with_purcell_filter = True):
         options = self.options
-        options["type"] = "T1_Purcell_estimation"
+        if with_purcell_filter:
+            options["type"] = "T1_Purcell_estimation"
+        else:
+            options["type"] = "T1_Purcell_estimation_simple"
         options["frequency"] = [qb_frequency - 0.01, qb_frequency + 0.01]
         options["n_points"] = 51
         cnx = assemble_network(self.options)

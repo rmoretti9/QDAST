@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 from qdast.qubits.clockmon import Clockmon
-from kqcircuits.simulations.export.ansys.ansys_solution import AnsysCurrentSolution, AnsysHfssSolution
+from kqcircuits.simulations.export.ansys.ansys_solution import AnsysCurrentSolution, AnsysHfssSolution, AnsysEigenmodeSolution, AnsysQ3dSolution
 from kqcircuits.simulations.port import InternalPort
 from kqcircuits.simulations.post_process import PostProcess
 from kqcircuits.simulations.simulation import Simulation
@@ -22,31 +22,32 @@ from kqcircuits.util.export_helper import (
     get_active_or_new_layout,
     open_with_klayout_or_default_application,
 )
-from qdast.dimensioned_chips.single_doublepads_03 import SingleDoublepads03
+from qdast.dimensioned_chips.detection_device_2s_1a_00 import DetectionDevice2s1a00
 
 
 class TwoClockmonsDrivelineDecay(Simulation):
 
     def build(self):
         chip = self.add_element(
-                    SingleDoublepads03,
+                    DetectionDevice2s1a00,
                     sim_tool = "q3d",
                     with_squid = False,
                     n = 32          
                 )
         self.cell.insert(pya.DCellInstArray(chip.cell_index(), pya.DTrans(0, False, 0, 0)))
-        _, refpoints = self.insert_cell(chip)
-        # self.ports.append(InternalPort(2, *self.etched_line(refpoints["qb_0_port_island1_signal"], refpoints["qb_0_port_island1_ground"])))
-        self.ports.append(InternalPort(2, *self.etched_line(refpoints["qb_0_port_island2_signal"], refpoints["qb_0_port_island2_ground"])))
+        # _, refpoints = self.insert_cell(chip)
+        # self.ports.append(InternalPort(2, *self.etched_line(refpoints["qb_1_port_island1_signal"], refpoints["qb_1_port_island1_ground"])))
+        # self.ports.append(InternalPort(3, *self.etched_line(refpoints["qb_0_port_island2_signal"], refpoints["qb_0_port_island2_ground"])))
 
 # Prepare output directory
-dir_path = create_or_empty_tmp_directory(Path(__file__).stem + "2_output")
+dir_path = create_or_empty_tmp_directory(Path(__file__).stem + "_output")
 
 # Simulation parameters
 sim_class = TwoClockmonsDrivelineDecay  # pylint: disable=invalid-name
 sim_parameters = {
-    # "box": pya.DBox(pya.DPoint(0, 200), pya.DPoint(2900, 2200)), #qb1
-    "box": pya.DBox(pya.DPoint(1800, 2200), pya.DPoint(4500, 4300)), #qb2
+    # "box": pya.DBox(pya.DPoint(2000, 3000), pya.DPoint(4800, 5500)), #S1
+    # "box": pya.DBox(pya.DPoint(5300, 3000), pya.DPoint(8000, 5500)), #qb1
+    "box": pya.DBox(pya.DPoint(3500, 5500), pya.DPoint(6500, 9000)), #A
 }
 
 # Get layout
@@ -56,13 +57,19 @@ layout = get_active_or_new_layout()
 # Sweep simulation and solution type
 simulations = [
     (
-        sim_class(layout, **sim_parameters, name="fluxline_decay", flux_simulation=False),
-        AnsysHfssSolution(max_delta_s=0.005, frequency=4.5, maximum_passes=20, sweep_enabled=False),
+        sim_class(layout, **sim_parameters),
+        AnsysQ3dSolution(
+            name="_q3d",
+            percent_error=0.02,
+            maximum_passes=25,
+            minimum_converged_passes=2,
+            minimum_passes=2,
+        ),
     ),
 ]
 
 # Export simulation files
-export_ansys(simulations, path=dir_path, exit_after_run=False, post_process=PostProcess("calculate_q_from_s.py"))
+export_ansys(simulations, path=dir_path, exit_after_run=False)
 
 # Write and open oas file
 open_with_klayout_or_default_application(export_simulation_oas(simulations, dir_path))

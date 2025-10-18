@@ -6,12 +6,15 @@ from modeling.waveguides.libraries.waveguide_library import waveguide_library
 
 dir_name = os.path.dirname(os.path.abspath(__file__))
 
-def make_library(filename, deembed = [300, 200]):
+def make_library(filename, deembed = [300, 200], return_cmatrix = False):
     df = pd.read_csv(filename)
     finger_control = df["finger_control"].values
     CMatrix = get_cmatrices(filename, deembed)
     library = interpolate.interp1d(finger_control, CMatrix, axis = 0)
-    return library
+    if return_cmatrix:
+        return library, CMatrix
+    else:
+        return library
 
 def digit_tee_library(deembed = [300, 200]):
     filename = os.path.join(dir_name, "digittee_capacitance_library_sim_q3d_results.csv")
