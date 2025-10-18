@@ -95,7 +95,46 @@ class CRModel():
         EC = e_charge**2/(C)/2/planck_h * 1e-9
         tmon_tuned = scq.Transmon(EJ=EJ, EC=EC, ng=0, ncut=11, truncated_dim=self.truncated_dim)
         return tmon_tuned
-    
+    def iz_strength(self, drive_strength):
+        D = self.w1_use - self.w2_use
+        a1 = self.a1_use
+        a2 = self.a2_use
+        J = self.J
+        Omega = drive_strength
+
+        # IZ/2 coeff (transcribed term-by-term)
+        t1 = (a1**3 - 2*a1 * D**2 - 2 * D**3) / (a1 * D**2 * (a1 + D)**2 * (D - a2))
+        t2 = (a1**2 + D**2) / (D**2 * a2 * (a1 + D)**2)
+        t3 = (6*a1**5 + 48*a1**4*D - 6*a1**3*D**2 + 78*a1**2*D**3 + 126*a1*D**4 + 4*D**5) \
+            / (D**2 * (a1 + D)**2 * (2*a1 + D)**2 * (a1 + 2*D) * (3*a1 + 2*D))
+        t4 = 2.0 / (a1 * (a1 + D) * (a1 + D - a2))
+        t5 = 2.0 / ((a1 + D) * (a1 + D - a2)**2)
+        t6 = 1.0 / (D * (D - a2)**2)
+
+        self.iz = 0.5 * J**2 * Omega**2 * (t1 + t2 + t3 + t4 + t5 + t6)
+
+    def zi_strength(self, drive_strength):
+        D = self.w1_use - self.w2_use
+        a1 = self.a1_use
+        a2 = self.a2_use
+        J = self.J
+        Omega = drive_strength
+
+        # ZI/2 coeff: leading term plus J^2 Omega^2 corrections (transcribed literally)
+        lead = - a1 * Omega**2 / (2 * D * (a1 + D))
+
+        inner1 = 2 * (a1**2 + a1*D + D**2) * (a1 + D) / (a1 * D * (a2 - D))
+        inner2 = 0.5 * a1 * (48 * a1**2 / D**3 + 118 * a1 / D**2 + 36 * a1 / (2*a1 + D)**2)
+        inner3 = - 2.0 / (a1 + 2*D) - 6.0 / (3*a1 + 2*D) + 12.0 / D
+        inner4 = 2 * (a1 + D)**2 / (a1 * (a1 + D - a2))
+        inner5 = 2 * (a1 + D)**2 / (a1 + D - a2)**2
+        inner6 = - 2 * a1 * (a1 + D) / (D * a2)
+
+        corr = 0.5 * J**2 * Omega**2 / (a1 + D)**3 * (inner1 + inner2 + inner3 + inner4 + inner5 + inner6)
+
+        self.zi = lead + corr
+
+
     def get_coupled_system(self):
         self.tmon1 = self.get_transmon_object(self.w1, self.C1)
         self.tmon2 = self.get_transmon_object(self.w2, self.C2)
