@@ -40,24 +40,4 @@ link_map = (
     ("src/qdast", "python/qdast"),)
 
 setup_symlinks(qdast_root_path, configdir, link_map, args.unlink)
-
-# # TODO install required packages: kqcircuits
-
-# if (
-#     not args.unlink and os.name == "posix" and sys.platform == "darwin"
-# ):  # Install missing dependecy in MacOS
-#     cmd = "pip install requests>=2.27.1"
-#     td = get_klayout_packages_path(
-#         "/Applications/klayout.app/Contents/Frameworks/Python.framework/Versions"
-#     )
-#     if not os.path.exists(td):
-#         # Homebrew installs under /Applications/Klayout/klayout.app
-#         td = get_klayout_packages_path(
-#             "/Applications/KLayout/klayout.app/Contents/Frameworks/Python.framework/Versions"
-#         )
-#     # KLayout may use either its own site-packages or the system site-packages, depending on the build
-#     if os.path.exists(td):
-#         cmd += f' --target="{td}"'
-#     os.system(cmd)
-
 print("Finished setting up QDAST.")
