@@ -4,6 +4,7 @@ import pandas as pd
 import skrf as rf
 from modeling.utils.network import assemble_network
 import numpy as np
+from scipy.optimize import curve_fit
 
 def get_transmission_line_tee_points(filename, tee_a, tee_b, qubit_name = None):
 
@@ -78,3 +79,36 @@ class NetworkAnalysis:
 
         t1_purcell_coupler_only = (1/t1_purcell_overall - 1/t1_purcell_readout_only)**(-1)
         return t1_purcell_coupler_only
+
+
+def fit_resonance(freq, magnitude, Ql0, Qc0):
+    def S21_model(f, f0, Ql, Qc, phi, a0, a1, a2, a3):
+        """
+        f    : frequency array
+        f0   : resonator frequency
+        Ql   : loaded Q
+        Qc   : coupling Q (real, positive)
+        phi  : rotation angle of complex S21
+        a0-a3: cubic background coefficients (complex)
+        """
+        x = (f - f0)/f0
+        # Lorentzian in complex form
+        S21_res = 1 - (Ql/Qc) / (1 + 2j*Ql*x)
+        # Apply rotation
+        S21_res_rot = S21_res * np.exp(1j*phi)
+        # Add cubic background
+        bg = a0 + a1*x + a2*x**2 + a3*x**3
+        return np.abs(S21_res_rot + bg)
+
+    # Initial guess
+    f0_guess = freq[np.argmin(magnitude)]
+    phi_guess = 0.0
+    a0_guess, a1_guess, a2_guess, a3_guess = 0,0,0,0
+    p0 = [f0_guess, Ql0, Qc0, phi_guess, a0_guess, a1_guess, a2_guess, a3_guess]
+
+    # Fit magnitude
+    popt1, _ = curve_fit(S21_model, freq, magnitude, p0=p0)
+
+    # Extract fitted parameters
+    # f0_fit, Ql_fit, Qc_fit, phi_fit, a0_fit, a1_fit, a2_fit, a3_fit = popt1
+    return popt1

@@ -35,7 +35,7 @@ class ManhattanSingleJunctionCentered(Junction):
     pad_height = Param(pdt.TypeDouble, "Height of the junction pad.", 6.0, unit="μm")
     pad_width = Param(pdt.TypeDouble, "Width of the junction pad.", 12.0, unit="μm")
     pad_to_pad_separation = Param(pdt.TypeDouble, "Pad separation.", 6.0, unit="μm")
-    x_offset = Param(pdt.TypeDouble, "Horizontal junction offset.", 0, unit="μm")
+    hor_offset = Param(pdt.TypeDouble, "Horizontal junction offset.", 0, unit="μm")
     pad_rounding_radius = Param(
         pdt.TypeDouble, "Rounding radius of the junction pad.", 0.5, unit="μm"
     )
@@ -125,10 +125,10 @@ class ManhattanSingleJunctionCentered(Junction):
                 pya.DPoint(jx - fo - size, jy - fo),
             ]
 
-        finger_bottom = pya.DTrans(-jx, -jy + self.x_offset) * pya.DPolygon(
+        finger_bottom = pya.DTrans(-jx, -jy + self.hor_offset) * pya.DPolygon(
             finger_points(ddb)
         )
-        finger_top = pya.DTrans(-jx + self.x_offset, -jy) * pya.DPolygon(
+        finger_top = pya.DTrans(-jx + self.hor_offset, -jy) * pya.DPolygon(
             finger_points(ddt)
         )
 

@@ -62,7 +62,7 @@ from scipy.special import ellipk
 __all__ = ['kappa_in']
 
 
-def resonator_kappa(resonance_frequency, coupling_capacitance, z0):
+def resonator_kappa(resonance_frequency, coupling_capacitance, z0, lambda_half):
     """Key References:
 
     D. Schuster, Ph.D. Thesis, Yale University (2007)
@@ -81,6 +81,8 @@ def resonator_kappa(resonance_frequency, coupling_capacitance, z0):
     # Calculation of kappa
     omega_r = resonance_frequency * 2 * pi
     kappa = (1 / pi) * (omega_r**3.0) * (coupling_capacitance**2.0) * (z0**2.0)
+    if not lambda_half:
+        kappa = kappa*2
     return kappa
 
 def cpw_kinetic_inductance(trace_width: float, gap_width: float, film_thickness: float, pen_depth: float):

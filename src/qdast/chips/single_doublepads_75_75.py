@@ -660,7 +660,7 @@ class SingleDoublepads7575(QDASTChip):
         tee_rotations = [0, 2, 0, 2]
         for i in range(4):
             cross_trans = pya.DTrans(
-                tee_rotations[i], False, self._qubit_refpoints[i]["port_0"].x + self.x_offset[i], 3.75e3
+                tee_rotations[i], False, self._qubit_refpoints[i]["port_0"].x + float(self.x_offset[i]), 3.75e3
             )
             inst_cross, _ = self.insert_cell(cell_cross, cross_trans)
             tee_refpoints.append(self.get_refpoints(cell_cross, inst_cross.dtrans))

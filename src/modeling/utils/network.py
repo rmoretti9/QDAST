@@ -349,7 +349,6 @@ def two_coupled_qubits_network(options):
     return cnx
 
 def two_coupled_qubits_network_t1(options):
-    print("hihihi")
     f_min, f_max = options["frequency"]
     freq = rf.Frequency(start=f_min, stop=f_max, unit='GHz', npoints=options["n_points"])
     capacitor = rf.DefinedGammaZ0(freq, z0=50).capacitor
