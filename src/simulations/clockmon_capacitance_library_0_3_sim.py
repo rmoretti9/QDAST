@@ -11,8 +11,10 @@ from kqcircuits.simulations.single_element_simulation import (
 )
 from kqcircuits.pya_resolver import pya
 from kqcircuits.simulations.export.ansys.ansys_export import export_ansys
-from kqcircuits.simulations.export.elmer.elmer_export import export_elmer
-from kqcircuits.simulations.export.simulation_export import cross_sweep_simulation, export_simulation_oas
+from kqcircuits.simulations.export.simulation_export import (
+    cross_sweep_simulation,
+    export_simulation_oas,
+)
 from kqcircuits.util.export_helper import (
     create_or_empty_tmp_directory,
     get_active_or_new_layout,
@@ -24,7 +26,16 @@ sim_tool = "q3d"
 
 # Simulation parameters
 sim_class = get_single_element_sim_class(
-    Clockmon, ignore_ports=["port_drive", "port_island1", "port_island2", "port_1", "port_2", "port_4", "port_5"]
+    Clockmon,
+    ignore_ports=[
+        "port_drive",
+        "port_island1",
+        "port_island2",
+        "port_1",
+        "port_2",
+        "port_4",
+        "port_5",
+    ],
 )  # pylint: disable=invalid-name
 
 # Get layout
@@ -33,12 +44,9 @@ layout = get_active_or_new_layout()
 
 sim_parameters = {
     "name": "clockmon",
-    # "use_internal_ports": True,
-    # "use_ports": True,
     "with_squid": False,
     "face_stack": ["1t1"],
     "box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(1500, 1500)),
-    # "separate_island_internal_ports": sim_tool != "eigenmode",  # DoublePads specific
     "waveguide_length": 200,
     "ground_gap": [630, 610],
     "a": 10,
@@ -51,21 +59,20 @@ sim_parameters = {
     "bending_angle": 0,
     "sim_tool": "q3d",
     "pad_width": 6,
-    "taper_width": 95/7,
+    "taper_width": 95 / 7,
 }
 
 dir_path = create_or_empty_tmp_directory(Path(__file__).stem + f"_{sim_tool}")
 
-# Add eigenmode and Q3D specific settings
-# fmt: off
+# Add Q3D specific settings
 export_parameters_ansys = {
     "ansys_tool": sim_tool,
     "path": dir_path,
     "exit_after_run": True,
-    'percent_error': 0.2,
-    'maximum_passes': 25,
-    'minimum_passes': 2,
-    'minimum_converged_passes': 2,
+    "percent_error": 0.2,
+    "maximum_passes": 25,
+    "minimum_passes": 2,
+    "minimum_converged_passes": 2,
     "post_process": PostProcess("produce_cmatrix_table.py"),
 }
 
@@ -77,13 +84,9 @@ coupler_width_set = []
 for cp_w_0 in coupler_widths_0:
     for cp_w_3 in coupler_widths_3:
         coupler_width_set.append([cp_w_0, 0, 0, cp_w_3, 0, 0])
-simulations +=cross_sweep_simulation(
-        layout,
-        sim_class,
-        sim_parameters,
-        {"coupler_widths": coupler_width_set}
-
-    )
+simulations += cross_sweep_simulation(
+    layout, sim_class, sim_parameters, {"coupler_widths": coupler_width_set}
+)
 
 # Create simulation
 oas = export_simulation_oas(simulations, dir_path)

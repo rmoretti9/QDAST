@@ -3,11 +3,12 @@ from qdast.chips.qdast_chip import QDASTChip
 from kqcircuits.util.parameters import Param, pdt, add_parameters_from
 import pandas as pd
 import os
- 
+
 
 #  feedline_0,737.909,384.738,830.8050000000001,2190.0,50.0,239.0,69.0,300.0
 # feedline_1,737.909,384.738,830.8050000000001,2285.0,50.0,239.0,69.0,300.0
 # feedline_2,737.909,384.738,830.8050000000001,2120.0,50.0,239.0,69.0,280.0
+
 
 @add_parameters_from(DetectionDevice2s1a)
 class DetectionDevice2s1a00(DetectionDevice2s1a):
@@ -21,7 +22,7 @@ class DetectionDevice2s1a00(DetectionDevice2s1a):
         self.sensing_1_coupler_widths = [205.79, 172.58]
         self.sensing_2_coupler_widths = [230.14, 233.44]
         self.ancilla_coupler_widths = [198.37, 235.46, 198.45]
-        self.feedline_capacitor_n_fingers =[3.4432, 3.4432, 3.4432]
+        self.feedline_capacitor_n_fingers = [3.4432, 3.4432, 3.4432]
         self.name_chip = ""
         self.name_copy = ""
         self.with_squid = False
@@ -32,7 +33,7 @@ class DetectionDevice2s1a00(DetectionDevice2s1a):
     def get_readout_structure_info(self):
         self._readout_structure_info["readout_structure"] = ["feedline_resonator"]
 
-        df = pd.DataFrame.from_dict(self._readout_structure_info, orient = "index")
+        df = pd.DataFrame.from_dict(self._readout_structure_info, orient="index")
         current_directory = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(current_directory, 'detection_device_2s_1a_00.csv')
-        df.to_csv(file_path, mode='w')
+        file_path = os.path.join(current_directory, "detection_device_2s_1a_00.csv")
+        df.to_csv(file_path, mode="w")

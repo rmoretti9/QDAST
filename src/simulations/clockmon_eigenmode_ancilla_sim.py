@@ -29,14 +29,8 @@ from kqcircuits.simulations.export.xsection.xsection_export import (
     separate_signal_layer_shapes,
     visualise_xsection_cut_on_original_layout,
 )
-from kqcircuits.simulations.export.xsection.xsection_export import (
-    create_xsections_from_simulations,
-    separate_signal_layer_shapes,
-    visualise_xsection_cut_on_original_layout,
-)
 
 sim_tools = ["elmer", "eigenmode"]
-# sim_tools = ["eigenmode"]
 Lj = 1.4348926834765362e-08
 
 flip_chip = False
@@ -54,14 +48,22 @@ center = (1000, 1000)
 # Simulation parameters
 sim_class = get_single_element_sim_class(
     Clockmon,
-    ignore_ports=["port_drive", "port_0", "port_1", "port_2", "port_3", "port_4", "port_5", "port_island1_signal", "port_island2_signal"],
+    ignore_ports=[
+        "port_drive",
+        "port_0",
+        "port_1",
+        "port_2",
+        "port_3",
+        "port_4",
+        "port_5",
+        "port_island1_signal",
+        "port_island2_signal",
+    ],
 )
-sim_class.junction_inductance = Lj # Manually adjusting Lj
+sim_class.junction_inductance = Lj  # Manually adjusting Lj
 sim_class.sim_tool = "eig"
 sim_parameters = {
     "name": f"clockmon_ancilla",
-    # 'use_internal_ports': True,
-    # 'use_ports': True,
     "qubit_face": ["1t1"],
     "face_stack": ["1t1"],
     "with_squid": False,

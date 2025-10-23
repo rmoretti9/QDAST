@@ -11,10 +11,10 @@ from kqcircuits.util.export_helper import (
 )
 from kqcircuits.simulations.simulation import Simulation
 
-import ast
 import logging
 import sys
 from qdast.simulations.coupled_clockmons_eig_sim import TwoClockmonsEigSim
+
 Lj = [1.272239314e-08, 1.372239314e-08]
 # Simulation parameters
 sim_class = TwoClockmonsEigSim
@@ -22,7 +22,6 @@ sim_class = TwoClockmonsEigSim
 sim_parameters = {
     "name": "coupled_clockmon_chip",
     "use_internal_ports": True,
-    
     "use_ports": True,
     "qubit_face": ["1t1"],
     "face_stack": ["1t1"],
@@ -32,9 +31,11 @@ sim_parameters = {
     "box": pya.DBox(pya.DPoint(1800, 2300), pya.DPoint(4200, 4800)),
     "tls_sheet_approximation": True,
 }
-sim_class.junction_inductance = Lj # Manually adjusting Lj
+sim_class.junction_inductance = Lj  # Manually adjusting Lj
 
-dir_path = create_or_empty_tmp_directory(f"{sim_parameters['name']}_{sim_parameters['sim_tool']}")
+dir_path = create_or_empty_tmp_directory(
+    f"{sim_parameters['name']}_{sim_parameters['sim_tool']}"
+)
 
 #######################
 # SIMULATION SETTINGS #
@@ -54,7 +55,6 @@ ansys_export_parameters.update(
         "minimum_converged_passes": 2,
         "n_modes": 1,
         "min_frequency": 5,  # minimum allowed frequency
-        # mer_correction_path is not portable! TODO: make relative path
         "post_process": PostProcess(
             "produce_epr_table.py",
         ),

@@ -3,9 +3,7 @@ from kqcircuits.elements.fluxlines.fluxline import Fluxline
 
 
 class FluxlineTapered(Fluxline):
-    """Fluxline variant "tapered".
-    """
-
+    """Fluxline variant "tapered"."""
 
     def build(self):
         # shorthands
@@ -16,22 +14,22 @@ class FluxlineTapered(Fluxline):
         b2 = 25
         right_gap = pya.DPolygon(
             [
-                pya.DPoint(a/2, -50 - taper_length),
-                pya.DPoint(a/2 + b, -50 - taper_length),
-                pya.DPoint(a/2 + b, -taper_length),
-                pya.DPoint(a2/2 + b2, 0),
-                pya.DPoint(a2/2, 0),
-                pya.DPoint(a/2, -taper_length)
+                pya.DPoint(a / 2, -50 - taper_length),
+                pya.DPoint(a / 2 + b, -50 - taper_length),
+                pya.DPoint(a / 2 + b, -taper_length),
+                pya.DPoint(a2 / 2 + b2, 0),
+                pya.DPoint(a2 / 2, 0),
+                pya.DPoint(a / 2, -taper_length),
             ]
         )
         left_gap = pya.DPolygon(
             [
-                pya.DPoint(-a/2, -50 - taper_length),
-                pya.DPoint(-a/2 - b, -50 - taper_length),
-                pya.DPoint(-a/2 - b, -taper_length),
-                pya.DPoint(-a2/2 - b2, 0),
-                pya.DPoint(-a2/2, 0),
-                pya.DPoint(-a/2, -taper_length)
+                pya.DPoint(-a / 2, -50 - taper_length),
+                pya.DPoint(-a / 2 - b, -50 - taper_length),
+                pya.DPoint(-a / 2 - b, -taper_length),
+                pya.DPoint(-a2 / 2 - b2, 0),
+                pya.DPoint(-a2 / 2, 0),
+                pya.DPoint(-a / 2, -taper_length),
             ]
         )
 

@@ -11,7 +11,6 @@ from kqcircuits.simulations.single_element_simulation import (
 )
 from kqcircuits.pya_resolver import pya
 from kqcircuits.simulations.export.ansys.ansys_export import export_ansys
-from kqcircuits.simulations.export.elmer.elmer_export import export_elmer
 from kqcircuits.simulations.export.simulation_export import export_simulation_oas
 from kqcircuits.util.export_helper import (
     create_or_empty_tmp_directory,
@@ -24,31 +23,38 @@ sim_tool = "q3d"
 
 # Simulation parameters
 sim_class = get_single_element_sim_class(
-    Clockmon, ignore_ports=["port_drive", "port_island1", "port_island2", "port_0", "port_1", "port_2", "port_3", "port_4", "port_5"]
-)  # pylint: disable=invalid-name
+    Clockmon,
+    ignore_ports=[
+        "port_drive",
+        "port_island1",
+        "port_island2",
+        "port_0",
+        "port_1",
+        "port_2",
+        "port_3",
+        "port_4",
+        "port_5",
+    ],
+)
 sim_parameters = {
     "name": "clockmon",
-    # "use_internal_ports": True,
-    # "use_ports": True,
     "with_squid": False,
     "face_stack": ["1t1"],
     "box": pya.DBox(pya.DPoint(0, 0), pya.DPoint(1500, 1500)),
-    # "separate_island_internal_ports": sim_tool != "eigenmode",  # DoublePads specific
     "waveguide_length": 0,
 }
 
 dir_path = create_or_empty_tmp_directory(Path(__file__).stem + f"_{sim_tool}")
 
-# Add eigenmode and Q3D specific settings
-# fmt: off
+# Add Q3D specific settings
 export_parameters_ansys = {
     "ansys_tool": sim_tool,
     "path": dir_path,
     "exit_after_run": True,
-    'percent_error': 0.05,
-    'maximum_passes': 25,
-    'minimum_passes': 2,
-    'minimum_converged_passes': 2,
+    "percent_error": 0.05,
+    "maximum_passes": 25,
+    "minimum_passes": 2,
+    "minimum_converged_passes": 2,
     "post_process": PostProcess("produce_cmatrix_table.py"),
 }
 
@@ -64,27 +70,27 @@ simulations = [
         layout,
         **{
             **sim_parameters,
-            "ground_gap":[630, 610], 
-            "a":10,
-            "b":6,
-            "island_extent":[535, 200],
-            "coupler_widths":[0, 0, 0, 0, 0, 0],
-            "island_to_island_distance":50,
-            "coupler_offsets":[0, 0, 0, 0, 0, 0],
-            "clock_diameter":50,
-            "bending_angle":0,
-            "sim_tool" : "q3d",
-            "with_squid" : False,
-            "pad_width" : 6,
-            "taper_width" : 95/7,
+            "ground_gap": [630, 610],
+            "a": 10,
+            "b": 6,
+            "island_extent": [535, 200],
+            "coupler_widths": [0, 0, 0, 0, 0, 0],
+            "island_to_island_distance": 50,
+            "coupler_offsets": [0, 0, 0, 0, 0, 0],
+            "clock_diameter": 50,
+            "bending_angle": 0,
+            "sim_tool": "q3d",
+            "with_squid": False,
+            "pad_width": 6,
+            "taper_width": 95 / 7,
             "bent_section_length": 8,
             "lead_height_untapered": 4,
             "lead_height_tapered": 8,
-            "drive_position": [0, -405]
+            "drive_position": [0, -405],
         },
     )
 ]
- 
+
 # Create simulation
 oas = export_simulation_oas(simulations, dir_path)
 

@@ -12,12 +12,12 @@ from kqcircuits.util.export_helper import (
     create_or_empty_tmp_directory,
     get_active_or_new_layout,
     open_with_klayout_or_default_application,
-    get_simulation_directory,
 )
 from kqcircuits.simulations.simulation import Simulation
 from qdast.qubits.clockmon import Clockmon
 
 from qdast.simulations.single_clockmons_sim import SingleClockmonsSim
+
 sim_tool = "eigenmode"
 Lj = 1.43580331e-8
 
@@ -34,7 +34,6 @@ sim_class = SingleClockmonsSim
 sim_parameters = {
     "name": "clockmon_chip",
     "use_internal_ports": True,
-    
     "use_ports": True,
     "qubit_face": ["1t1"],
     "face_stack": ["1t1"],
@@ -56,9 +55,8 @@ sim_parameters = {
         "oxideMS": {"permittivity": 11.4},
         "oxideSA": {"permittivity": 4},
     },
-    
 }
-sim_class.junction_inductance = Lj # Manually adjusting Lj
+sim_class.junction_inductance = Lj  # Manually adjusting Lj
 sim_class.sim_tool = "eig"
 
 dir_path = create_or_empty_tmp_directory(f"{sim_parameters['name']}_{sim_tool}")
@@ -75,17 +73,16 @@ ansys_export_parameters = {
 ansys_export_parameters.update(
     {
         "ansys_tool": "eigenmode",
-        "max_delta_f": 0.1,  # quite tight
+        "max_delta_f": 0.1,
         "maximum_passes": 25,
         "minimum_passes": 1,
         "minimum_converged_passes": 2,
         "n_modes": 2,
-        "min_frequency": 1,  # minimum allowed frequency
+        "min_frequency": 1,
         # "mesh_size": {
         #     "1t1_substratemer": 30,
         #     "1t1_vacuummer": 30,
         # },
-        # mer_correction_path is not portable! TODO: make relative path
         "post_process": PostProcess(
             "produce_epr_table.py",
             sheet_approximations={
@@ -130,7 +127,7 @@ sweep_parameters_list = [
 ]
 
 # Sweep simulations
-simulations = []  # [sim_class(layout, **sim_parameters)]
+simulations = []
 simulations += [
     sim_class(layout, **{**sim_parameters, **sweep_parameters})
     for sweep_parameters in sweep_parameters_list

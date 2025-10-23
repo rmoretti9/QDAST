@@ -2,12 +2,8 @@ import logging
 import sys
 from pathlib import Path
 
-from qdast.qubits.clockmon import Clockmon
-from kqcircuits.simulations.export.ansys.ansys_solution import AnsysCurrentSolution, AnsysEigenmodeSolution
-from kqcircuits.simulations.port import InternalPort
 from kqcircuits.simulations.post_process import PostProcess
 from kqcircuits.simulations.simulation import Simulation
-from kqcircuits.util.parameters import add_parameters_from, Param, pdt
 
 from kqcircuits.pya_resolver import pya
 from kqcircuits.simulations.export.ansys.ansys_export import export_ansys
@@ -24,12 +20,12 @@ class SingleDoublepadsSim(Simulation):
 
     def build(self):
         chip = self.add_element(
-                    SingleDoublepads04,
-                    sim_tool = "q3d",
-                    with_squid = False,
-                    n = 32          
-                )
-        self.cell.insert(pya.DCellInstArray(chip.cell_index(), pya.DTrans(0, False, 0, 0)))
+            SingleDoublepads04, sim_tool="q3d", with_squid=False, n=32
+        )
+        self.cell.insert(
+            pya.DCellInstArray(chip.cell_index(), pya.DTrans(0, False, 0, 0))
+        )
+
 
 # Prepare output directory
 dir_path = create_or_empty_tmp_directory(Path(__file__).stem + "_output")
@@ -37,7 +33,7 @@ dir_path = create_or_empty_tmp_directory(Path(__file__).stem + "_output")
 # Simulation parameters
 sim_class = SingleDoublepadsSim  # pylint: disable=invalid-name
 sim_parameters = {
-    "box": pya.DBox(pya.DPoint(200, 200), pya.DPoint(7500-200, 7300)),
+    "box": pya.DBox(pya.DPoint(200, 200), pya.DPoint(7500 - 200, 7300)),
 }
 ansys_export_parameters = {
     "path": dir_path,
@@ -46,13 +42,12 @@ ansys_export_parameters = {
 ansys_export_parameters.update(
     {
         "ansys_tool": "eigenmode",
-        "max_delta_f": 0.1,  # quite tight
+        "max_delta_f": 0.1,
         "maximum_passes": 3,
         "minimum_passes": 1,
         "minimum_converged_passes": 2,
         "n_modes": 1,
-        "min_frequency": 3,  # minimum allowed frequency
-        # mer_correction_path is not portable! TODO: make relative path
+        "min_frequency": 3,
         "post_process": PostProcess(
             "produce_epr_table.py",
         ),

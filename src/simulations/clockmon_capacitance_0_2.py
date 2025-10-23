@@ -24,7 +24,16 @@ sim_tool = "q3d"
 
 # Simulation parameters
 sim_class = get_single_element_sim_class(
-    Clockmon, ignore_ports=["port_drive", "port_island1", "port_island2", "port_1", "port_3", "port_4", "port_5"]
+    Clockmon,
+    ignore_ports=[
+        "port_drive",
+        "port_island1",
+        "port_island2",
+        "port_1",
+        "port_3",
+        "port_4",
+        "port_5",
+    ],
 )  # pylint: disable=invalid-name
 sim_parameters = {
     "name": "clockmon_0_2",

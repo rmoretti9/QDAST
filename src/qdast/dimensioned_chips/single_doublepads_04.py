@@ -3,7 +3,8 @@ from qdast.chips.qdast_chip import QDASTChip
 from kqcircuits.util.parameters import Param, pdt, add_parameters_from
 import pandas as pd
 import os
- 
+
+
 @add_parameters_from(SingleDoublepads7575)
 class SingleDoublepads04(SingleDoublepads7575):
     def build(self):
@@ -31,7 +32,7 @@ class SingleDoublepads04(SingleDoublepads7575):
         else:
             self._readout_structure_info["readout_structure"] = ["simple"]
 
-        df = pd.DataFrame.from_dict(self._readout_structure_info, orient = "index")
+        df = pd.DataFrame.from_dict(self._readout_structure_info, orient="index")
         current_directory = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(current_directory, 'single_doublepads_04.csv')
-        df.to_csv(file_path, mode='w')
+        file_path = os.path.join(current_directory, "single_doublepads_04.csv")
+        df.to_csv(file_path, mode="w")

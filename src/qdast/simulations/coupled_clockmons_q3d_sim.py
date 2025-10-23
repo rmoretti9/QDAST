@@ -8,15 +8,11 @@ from kqcircuits.simulations.port import InternalPort
 from kqcircuits.elements.fluxlines.fluxline import Fluxline
 from kqcircuits.junctions.junction import Junction
 
+
 class TwoClockmonsQ3DSim(Simulation):
 
     def build(self):
-        chip = self.add_element(
-                    TwoClockmons,
-                    sim_tool = "q3d",
-                    with_squid = False,
-                    n = 24          
-                )
+        chip = self.add_element(TwoClockmons, sim_tool="q3d", with_squid=False, n=24)
         # self.cell.insert(pya.DCellInstArray(chip.cell_index(), pya.DTrans(0, False, 0, 0)))
         _, refpoints = self.insert_cell(chip)
         # self.ports.extend(

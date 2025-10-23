@@ -4,7 +4,7 @@ import numpy as np
 from scipy.optimize import least_squares
 
 
-class ResFit():
+class ResFit:
     """
     Resonator fitter with cubic complex background and improved numerics & init.
 
@@ -21,7 +21,9 @@ class ResFit():
     `plot_resonance()` to visualise.
     """
 
-    def __init__(self, freqs, s21, id_min, id_max, ideal=False, fit_type="S21", poly_noise=True):
+    def __init__(
+        self, freqs, s21, id_min, id_max, ideal=False, fit_type="S21", poly_noise=True
+    ):
         self.raw_freqs = np.asarray(freqs)[id_min:id_max]
         self.raw_s21 = np.asarray(s21)[id_min:id_max]
         self.fit_type = fit_type
@@ -57,7 +59,7 @@ class ResFit():
     # ----------------------- Circle fit utilities -----------------------
     def _algebraic_circle_fit(self, x, y):
         A = np.column_stack([x, y, np.ones_like(x)])
-        b = x ** 2 + y ** 2
+        b = x**2 + y**2
         params, *_ = np.linalg.lstsq(A, b, rcond=None)
         D, E, F = params
         xc = D / 2.0
@@ -67,7 +69,9 @@ class ResFit():
 
     def fit_circle(self, use_subset=0.6):
         if not self.is_complex:
-            raise ValueError("Circle fit requires complex S21 data. Provide complex S21.")
+            raise ValueError(
+                "Circle fit requires complex S21 data. Provide complex S21."
+            )
 
         f = self.raw_freqs
         S = self.s21_complex
@@ -94,7 +98,7 @@ class ResFit():
         x = (f - f0_guess)/f0_guess. Returns complex coefficients a0..a3.
         """
         x = (f - f0_guess) / f0_guess
-        X = np.vstack([np.ones_like(x), x, x ** 2, x ** 3]).T
+        X = np.vstack([np.ones_like(x), x, x**2, x**3]).T
         coeffs_real, *_ = np.linalg.lstsq(X, S.real, rcond=None)
         coeffs_imag, *_ = np.linalg.lstsq(X, S.imag, rcond=None)
         a0 = coeffs_real[0] + 1j * coeffs_imag[0]
@@ -124,7 +128,7 @@ class ResFit():
         # find left crossing
         left_idx = np.argmax(mags[:idx_min] > half_level) if idx_min > 0 else 0
         # find right crossing
-        right_candidates = np.where(mags[idx_min + 1:] > half_level)[0]
+        right_candidates = np.where(mags[idx_min + 1 :] > half_level)[0]
         if right_candidates.size:
             right_idx = idx_min + 1 + right_candidates[0]
         else:
@@ -139,14 +143,15 @@ class ResFit():
 
     # ------------------- Complex resonator model fit (with cubic bg, normalized x) --------------------
     @staticmethod
-    def _resonator_model_complex_cubic_norm(f, f0, Ql, Qc, phi,
-                                           a0_r, a0_i, a1_r, a1_i, a2_r, a2_i, a3_r, a3_i):
+    def _resonator_model_complex_cubic_norm(
+        f, f0, Ql, Qc, phi, a0_r, a0_i, a1_r, a1_i, a2_r, a2_i, a3_r, a3_i
+    ):
         a0 = a0_r + 1j * a0_i
         a1 = a1_r + 1j * a1_i
         a2 = a2_r + 1j * a2_i
         a3 = a3_r + 1j * a3_i
         x = (f - f0) / f0
-        P = a0 + a1 * x + a2 * x ** 2 + a3 * x ** 3
+        P = a0 + a1 * x + a2 * x**2 + a3 * x**3
         denom = 1.0 + 2j * Ql * (x)
         S_res = 1.0 - (Ql / Qc) * np.exp(1j * phi) / denom
         S = P * S_res
@@ -154,7 +159,9 @@ class ResFit():
 
     def fit_resonance_complex(self, initial_params=None, bounds=None, maxfev=int(1e6)):
         if not self.is_complex:
-            raise ValueError("Complex resonance fit requires complex S21 data. Provide complex S21.")
+            raise ValueError(
+                "Complex resonance fit requires complex S21 data. Provide complex S21."
+            )
 
         f = self.raw_freqs
         S = self.s21_complex
@@ -172,8 +179,20 @@ class ResFit():
 
         if initial_params is None:
             phi_0 = 0.0
-            p0 = [f0_0, Ql_0, Qc_0, phi_0,
-                  a0.real, a0.imag, a1.real, a1.imag, a2.real, a2.imag, a3.real, a3.imag]
+            p0 = [
+                f0_0,
+                Ql_0,
+                Qc_0,
+                phi_0,
+                a0.real,
+                a0.imag,
+                a1.real,
+                a1.imag,
+                a2.real,
+                a2.imag,
+                a3.real,
+                a3.imag,
+            ]
         else:
             p0 = initial_params
 
@@ -183,15 +202,19 @@ class ResFit():
             upper = [max(f) * 1.1, 1e9, 1e9, np.pi] + [np.inf] * 8
             bounds = (lower, upper)
 
-        def fitfun_concat(f_in, f0, Ql, Qc, phi,
-                          a0_r, a0_i, a1_r, a1_i, a2_r, a2_i, a3_r, a3_i):
-            S_fit = ResFit._resonator_model_complex_cubic_norm(f_in, f0, Ql, Qc, phi,
-                                                              a0_r, a0_i, a1_r, a1_i, a2_r, a2_i, a3_r, a3_i)
+        def fitfun_concat(
+            f_in, f0, Ql, Qc, phi, a0_r, a0_i, a1_r, a1_i, a2_r, a2_i, a3_r, a3_i
+        ):
+            S_fit = ResFit._resonator_model_complex_cubic_norm(
+                f_in, f0, Ql, Qc, phi, a0_r, a0_i, a1_r, a1_i, a2_r, a2_i, a3_r, a3_i
+            )
             return np.concatenate([np.real(S_fit), np.imag(S_fit)])
 
         ydata = np.concatenate([S.real, S.imag])
 
-        popt, pcov = curve_fit(fitfun_concat, f, ydata, p0=p0, bounds=bounds, maxfev=maxfev)
+        popt, pcov = curve_fit(
+            fitfun_concat, f, ydata, p0=p0, bounds=bounds, maxfev=maxfev
+        )
 
         self.popt = popt
         self.pcov = pcov
@@ -211,15 +234,15 @@ class ResFit():
         a3_fit = popt[10] + 1j * popt[11]
 
         self.fit_results = {
-            'f0': f0,
-            'Ql': Ql,
-            'Qc': Qc,
-            'Qi': Qi,
-            'phi': phi,
-            'a0': a0_fit,
-            'a1': a1_fit,
-            'a2': a2_fit,
-            'a3': a3_fit
+            "f0": f0,
+            "Ql": Ql,
+            "Qc": Qc,
+            "Qi": Qi,
+            "phi": phi,
+            "a0": a0_fit,
+            "a1": a1_fit,
+            "a2": a2_fit,
+            "a3": a3_fit,
         }
 
         print(f"Resonant frequency f0: {f0:.6e} Hz")
@@ -237,27 +260,40 @@ class ResFit():
 
         S = self.s21_complex
         plt.figure()
-        plt.scatter(S.real, S.imag, s=8, label='Measured IQ')
+        plt.scatter(S.real, S.imag, s=8, label="Measured IQ")
 
         if self.circle_center is not None and self.circle_radius is not None:
             cc = self.circle_center
             r = self.circle_radius
             theta = np.linspace(0, 2 * np.pi, 400)
             circle = cc + r * (np.cos(theta) + 1j * np.sin(theta))
-            plt.plot(circle.real, circle.imag, '-', label='Algebraic circle fit')
+            plt.plot(circle.real, circle.imag, "-", label="Algebraic circle fit")
 
-        if hasattr(self, 'fit_results'):
+        if hasattr(self, "fit_results"):
             fgrid = np.linspace(self.raw_freqs.min(), self.raw_freqs.max(), nsamples)
             p = self.popt
-            Sfit = ResFit._resonator_model_complex_cubic_norm(fgrid, p[0], p[1], p[2], p[3],
-                                                              p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11])
-            plt.plot(Sfit.real, Sfit.imag, '-', label='Model fit')
+            Sfit = ResFit._resonator_model_complex_cubic_norm(
+                fgrid,
+                p[0],
+                p[1],
+                p[2],
+                p[3],
+                p[4],
+                p[5],
+                p[6],
+                p[7],
+                p[8],
+                p[9],
+                p[10],
+                p[11],
+            )
+            plt.plot(Sfit.real, Sfit.imag, "-", label="Model fit")
 
-        plt.xlabel('Re(S21)')
-        plt.ylabel('Im(S21)')
-        plt.axis('equal')
+        plt.xlabel("Re(S21)")
+        plt.ylabel("Im(S21)")
+        plt.axis("equal")
         plt.legend()
-        plt.title('IQ plane')
+        plt.title("IQ plane")
         plt.grid(True)
 
     def plot_resonance(self, params=None, show_dB=True):
@@ -266,31 +302,46 @@ class ResFit():
 
         f = self.raw_freqs
         plt.figure()
-        plt.plot(f * 1e-9, self.s21_db, label='Measured')
+        plt.plot(f * 1e-9, self.s21_db, label="Measured")
 
-        if params is None and hasattr(self, 'popt'):
+        if params is None and hasattr(self, "popt"):
             params = self.popt
         if params is not None:
             p = params
-            Sfit = ResFit._resonator_model_complex_cubic_norm(f, p[0], p[1], p[2], p[3],
-                                                              p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11])
+            Sfit = ResFit._resonator_model_complex_cubic_norm(
+                f,
+                p[0],
+                p[1],
+                p[2],
+                p[3],
+                p[4],
+                p[5],
+                p[6],
+                p[7],
+                p[8],
+                p[9],
+                p[10],
+                p[11],
+            )
             mag_db = 20 * np.log10(np.abs(Sfit))
-            plt.plot(f * 1e-9, mag_db, label='Fit')
+            plt.plot(f * 1e-9, mag_db, label="Fit")
 
-        plt.xlabel('Frequency [GHz]')
-        plt.ylabel('S21 [dB]')
+        plt.xlabel("Frequency [GHz]")
+        plt.ylabel("S21 [dB]")
         plt.legend()
         plt.grid(True)
 
     from scipy.optimize import least_squares
 
-    def robust_fit_resonance(self,
-                            n_starts=6,
-                            loss='soft_l1',
-                            f_tol=1e-9,
-                            max_nfev=20000,
-                            outlier_sigma=4.0,
-                            do_outlier_rejection=True):
+    def robust_fit_resonance(
+        self,
+        n_starts=6,
+        loss="soft_l1",
+        f_tol=1e-9,
+        max_nfev=20000,
+        outlier_sigma=4.0,
+        do_outlier_rejection=True,
+    ):
         """
         Robust fit using least_squares with multiple starts and log-QL/QC parameterization.
 
@@ -321,9 +372,15 @@ class ResFit():
             half_level = min_val + depth / 2.0
             mid = np.argmin(mags)
             # find crossings by simple index search
-            left_idx = np.max(np.where(mags[:mid] > half_level)[0]) if mid>0 and np.any(mags[:mid] > half_level) else 0
-            right_candidates = np.where(mags[mid+1:] > half_level)[0]
-            right_idx = mid + 1 + right_candidates[0] if right_candidates.size else n-1
+            left_idx = (
+                np.max(np.where(mags[:mid] > half_level)[0])
+                if mid > 0 and np.any(mags[:mid] > half_level)
+                else 0
+            )
+            right_candidates = np.where(mags[mid + 1 :] > half_level)[0]
+            right_idx = (
+                mid + 1 + right_candidates[0] if right_candidates.size else n - 1
+            )
             width = max(1e-12, f[right_idx] - f[left_idx])
             return float(np.clip(abs(f0_guess / width), 10.0, 1e8))
 
@@ -337,10 +394,18 @@ class ResFit():
         coef_real, *_ = np.linalg.lstsq(Xmat, S.real, rcond=None)
         coef_imag, *_ = np.linalg.lstsq(Xmat, S.imag, rcond=None)
         # a0..a3 initial
-        a_init = np.array([coef_real[0], coef_imag[0],
-                        coef_real[1], coef_imag[1],
-                        coef_real[2], coef_imag[2],
-                        coef_real[3], coef_imag[3]])
+        a_init = np.array(
+            [
+                coef_real[0],
+                coef_imag[0],
+                coef_real[1],
+                coef_imag[1],
+                coef_real[2],
+                coef_imag[2],
+                coef_real[3],
+                coef_imag[3],
+            ]
+        )
 
         # model builder: params = [f0, log_Ql, log_Qc, phi, a0_r, a0_i, a1_r, a1_i, a2_r, a2_i, a3_r, a3_i]
         def model_complex(params, freqs):
@@ -361,7 +426,7 @@ class ResFit():
         # residual function (real+imag concatenated). We can weight by magnitude (optional)
         def residuals(params, freqs, data, weights=None):
             Sfit = model_complex(params, freqs)
-            res = np.concatenate([ (Sfit.real - data.real), (Sfit.imag - data.imag) ])
+            res = np.concatenate([(Sfit.real - data.real), (Sfit.imag - data.imag)])
             if weights is not None:
                 return res * np.concatenate([weights, weights])
             return res
@@ -369,17 +434,19 @@ class ResFit():
         # bounds: keep f0 inside measured window with a small margin, logs of Q bounded
         f_min, f_max = f.min(), f.max()
         f_margin = 0.02 * (f_max - f_min)
-        lower = [f_min + f_margin, np.log(1.0), np.log(1.0), -np.pi] + [-np.inf]*8
-        upper = [f_max - f_margin, np.log(1e9), np.log(1e9), np.pi] + [np.inf]*8
+        lower = [f_min + f_margin, np.log(1.0), np.log(1.0), -np.pi] + [-np.inf] * 8
+        upper = [f_max - f_margin, np.log(1e9), np.log(1e9), np.pi] + [np.inf] * 8
 
         # create multiple starting guesses: scale Ql by factors
         q_factors = np.geomspace(0.25, 4.0, n_starts)
         starts = []
         for qf in q_factors:
-            p0 = [f0_guess,
+            p0 = [
+                f0_guess,
                 np.log(Ql_guess0 * qf),
                 np.log(Qc_guess0 * qf),
-                phi_guess0] + list(a_init)
+                phi_guess0,
+            ] + list(a_init)
             starts.append(np.array(p0, dtype=float))
 
         best = None
@@ -391,17 +458,33 @@ class ResFit():
         mid_idx = np.argmin(mags)
         idx = np.arange(len(self.raw_freqs))
         dist = np.abs(idx - mid_idx).astype(float) + 1.0
-        weights = 1.0 / np.sqrt(dist)   # heuristic
+        weights = 1.0 / np.sqrt(dist)  # heuristic
         weights /= np.mean(weights)
 
         for p0 in starts:
             try:
-                res = least_squares(residuals, p0, args=(f, S, weights), loss=loss,
-                                    bounds=(lower, upper), max_nfev=max_nfev, xtol=1e-12, ftol=1e-12)
+                res = least_squares(
+                    residuals,
+                    p0,
+                    args=(f, S, weights),
+                    loss=loss,
+                    bounds=(lower, upper),
+                    max_nfev=max_nfev,
+                    xtol=1e-12,
+                    ftol=1e-12,
+                )
             except Exception as e:
                 # try without weights as fallback
-                res = least_squares(residuals, p0, args=(f, S, None), loss=loss,
-                                    bounds=(lower, upper), max_nfev=max_nfev, xtol=1e-12, ftol=1e-12)
+                res = least_squares(
+                    residuals,
+                    p0,
+                    args=(f, S, None),
+                    loss=loss,
+                    bounds=(lower, upper),
+                    max_nfev=max_nfev,
+                    xtol=1e-12,
+                    ftol=1e-12,
+                )
             if res.cost < best_cost and res.success:
                 best = res
                 best_cost = res.cost
@@ -409,15 +492,21 @@ class ResFit():
         if best is None:
             # final fallback: run single start without weights with looser tolerances
             p0 = starts[0]
-            best = least_squares(residuals, p0, args=(f, S, None), loss=loss, bounds=(lower, upper),
-                                max_nfev=max_nfev)
+            best = least_squares(
+                residuals,
+                p0,
+                args=(f, S, None),
+                loss=loss,
+                bounds=(lower, upper),
+                max_nfev=max_nfev,
+            )
 
         # optional outlier rejection & re-fit
         if do_outlier_rejection:
             rvec = residuals(best.x, f, S)
             # compute per-sample complex residual norm (sqrt(re^2+im^2))
-            re = rvec[:len(f)]
-            im = rvec[len(f):]
+            re = rvec[: len(f)]
+            im = rvec[len(f) :]
             res_norm = np.sqrt(re**2 + im**2)
             sigma = np.std(res_norm)
             mask = res_norm <= outlier_sigma * sigma
@@ -427,8 +516,14 @@ class ResFit():
                     f_mask = f[mask]
                     S_mask = S[mask]
                     # re-init with best.x
-                    best2 = least_squares(residuals, best.x, args=(f_mask, S_mask, None),
-                                        loss=loss, bounds=(lower, upper), max_nfev=max_nfev)
+                    best2 = least_squares(
+                        residuals,
+                        best.x,
+                        args=(f_mask, S_mask, None),
+                        loss=loss,
+                        bounds=(lower, upper),
+                        max_nfev=max_nfev,
+                    )
                     # accept if improved
                     if best2.cost < best.cost:
                         best = best2
@@ -467,14 +562,20 @@ class ResFit():
             Qi = 1.0 / (1.0 / Ql - 1.0 / Qc)
         except Exception:
             Qi = np.nan
-        self.fit_results = dict(f0=f0, Ql=Ql, Qc=Qc, Qi=Qi, phi=phi, a0=a0, a1=a1, a2=a2, a3=a3)
+        self.fit_results = dict(
+            f0=f0, Ql=Ql, Qc=Qc, Qi=Qi, phi=phi, a0=a0, a1=a1, a2=a2, a3=a3
+        )
 
         # return a summary
-        return {'popt': popt_full, 'cost': best.cost, 'success': best.success,
-                'message': best.message, 'pcov_approx': pcov}
+        return {
+            "popt": popt_full,
+            "cost": best.cost,
+            "success": best.success,
+            "message": best.message,
+            "pcov_approx": pcov,
+        }
 
-
-# Replace / add the following methods in your ResFit class
+    # Replace / add the following methods in your ResFit class
 
     # ------------------- Phase unwrap and delay estimation --------------------
     def _estimate_delay_from_phase(self, f, S):
@@ -498,8 +599,9 @@ class ResFit():
 
     # ------------------- Complex resonator model fit (with cubic bg, normalized x) --------------------
     @staticmethod
-    def _resonator_model_complex_cubic_norm(f, f0, Ql, Qc, phi, tau,
-                                           a0_r, a0_i, a1_r, a1_i, a2_r, a2_i, a3_r, a3_i):
+    def _resonator_model_complex_cubic_norm(
+        f, f0, Ql, Qc, phi, tau, a0_r, a0_i, a1_r, a1_i, a2_r, a2_i, a3_r, a3_i
+    ):
         """
         Complex resonator model extended with time delay 'tau' (seconds).
         Model: S(f) = P(x) * S_res(f) * exp(-1j*2*pi*f*tau)
@@ -510,7 +612,7 @@ class ResFit():
         a2 = a2_r + 1j * a2_i
         a3 = a3_r + 1j * a3_i
         x = (f - f0) / f0
-        P = a0 + a1 * x + a2 * x ** 2 + a3 * x ** 3
+        P = a0 + a1 * x + a2 * x**2 + a3 * x**3
         denom = 1.0 + 2j * Ql * (x)
         S_res = 1.0 - (Ql / Qc) * np.exp(1j * phi) / denom
         delay_factor = np.exp(-1j * 2.0 * np.pi * f * tau)
@@ -519,7 +621,9 @@ class ResFit():
 
     def fit_resonance_complex(self, initial_params=None, bounds=None, maxfev=int(1e6)):
         if not self.is_complex:
-            raise ValueError("Complex resonance fit requires complex S21 data. Provide complex S21.")
+            raise ValueError(
+                "Complex resonance fit requires complex S21 data. Provide complex S21."
+            )
 
         f = self.raw_freqs
         S = self.s21_complex
@@ -540,8 +644,21 @@ class ResFit():
         if initial_params is None:
             phi_0 = 0.0
             # New param order: f0, Ql, Qc, phi, tau, a0_r, a0_i, a1_r, a1_i, a2_r, a2_i, a3_r, a3_i
-            p0 = [f0_0, Ql_0, Qc_0, phi_0, tau_0,
-                  a0.real, a0.imag, a1.real, a1.imag, a2.real, a2.imag, a3.real, a3.imag]
+            p0 = [
+                f0_0,
+                Ql_0,
+                Qc_0,
+                phi_0,
+                tau_0,
+                a0.real,
+                a0.imag,
+                a1.real,
+                a1.imag,
+                a2.real,
+                a2.imag,
+                a3.real,
+                a3.imag,
+            ]
         else:
             p0 = initial_params
 
@@ -552,15 +669,32 @@ class ResFit():
             upper = [max(f) * 1.1, 1e9, 1e9, np.pi, 1e-6] + [np.inf] * 8
             bounds = (lower, upper)
 
-        def fitfun_concat(f_in, f0, Ql, Qc, phi, tau,
-                          a0_r, a0_i, a1_r, a1_i, a2_r, a2_i, a3_r, a3_i):
-            S_fit = ResFit._resonator_model_complex_cubic_norm(f_in, f0, Ql, Qc, phi, tau,
-                                                              a0_r, a0_i, a1_r, a1_i, a2_r, a2_i, a3_r, a3_i)
+        def fitfun_concat(
+            f_in, f0, Ql, Qc, phi, tau, a0_r, a0_i, a1_r, a1_i, a2_r, a2_i, a3_r, a3_i
+        ):
+            S_fit = ResFit._resonator_model_complex_cubic_norm(
+                f_in,
+                f0,
+                Ql,
+                Qc,
+                phi,
+                tau,
+                a0_r,
+                a0_i,
+                a1_r,
+                a1_i,
+                a2_r,
+                a2_i,
+                a3_r,
+                a3_i,
+            )
             return np.concatenate([np.real(S_fit), np.imag(S_fit)])
 
         ydata = np.concatenate([S.real, S.imag])
 
-        popt, pcov = curve_fit(fitfun_concat, f, ydata, p0=p0, bounds=bounds, maxfev=maxfev)
+        popt, pcov = curve_fit(
+            fitfun_concat, f, ydata, p0=p0, bounds=bounds, maxfev=maxfev
+        )
 
         self.popt = popt
         self.pcov = pcov
@@ -582,16 +716,16 @@ class ResFit():
         a3_fit = popt[11] + 1j * popt[12]
 
         self.fit_results = {
-            'f0': f0,
-            'Ql': Ql,
-            'Qc': Qc,
-            'Qi': Qi,
-            'phi': phi,
-            'tau': tau,
-            'a0': a0_fit,
-            'a1': a1_fit,
-            'a2': a2_fit,
-            'a3': a3_fit
+            "f0": f0,
+            "Ql": Ql,
+            "Qc": Qc,
+            "Qi": Qi,
+            "phi": phi,
+            "tau": tau,
+            "a0": a0_fit,
+            "a1": a1_fit,
+            "a2": a2_fit,
+            "a3": a3_fit,
         }
 
         print(f"Resonant frequency f0: {f0:.6e} Hz")
@@ -604,13 +738,15 @@ class ResFit():
         return popt, pcov
 
     # ---------------------------- robust_fit_resonance (least_squares) ------------------------------
-    def robust_fit_resonance(self,
-                            n_starts=6,
-                            loss='soft_l1',
-                            f_tol=1e-9,
-                            max_nfev=20000,
-                            outlier_sigma=4.0,
-                            do_outlier_rejection=True):
+    def robust_fit_resonance(
+        self,
+        n_starts=6,
+        loss="soft_l1",
+        f_tol=1e-9,
+        max_nfev=20000,
+        outlier_sigma=4.0,
+        do_outlier_rejection=True,
+    ):
         """
         Robust fit using least_squares with multiple starts and log-QL/QC parameterization.
         Extended to include time delay 'tau' with auto initial guess via phase unwrapping.
@@ -636,9 +772,15 @@ class ResFit():
                 return 1e4
             half_level = min_val + depth / 2.0
             mid = np.argmin(mags)
-            left_idx = np.max(np.where(mags[:mid] > half_level)[0]) if mid>0 and np.any(mags[:mid] > half_level) else 0
-            right_candidates = np.where(mags[mid+1:] > half_level)[0]
-            right_idx = mid + 1 + right_candidates[0] if right_candidates.size else n-1
+            left_idx = (
+                np.max(np.where(mags[:mid] > half_level)[0])
+                if mid > 0 and np.any(mags[:mid] > half_level)
+                else 0
+            )
+            right_candidates = np.where(mags[mid + 1 :] > half_level)[0]
+            right_idx = (
+                mid + 1 + right_candidates[0] if right_candidates.size else n - 1
+            )
             width = max(1e-12, f[right_idx] - f[left_idx])
             return float(np.clip(abs(f0_guess / width), 10.0, 1e8))
 
@@ -652,10 +794,18 @@ class ResFit():
         Xmat = np.vstack([np.ones_like(x_norm), x_norm, x_norm**2, x_norm**3]).T
         coef_real, *_ = np.linalg.lstsq(Xmat, S.real, rcond=None)
         coef_imag, *_ = np.linalg.lstsq(Xmat, S.imag, rcond=None)
-        a_init = np.array([coef_real[0], coef_imag[0],
-                           coef_real[1], coef_imag[1],
-                           coef_real[2], coef_imag[2],
-                           coef_real[3], coef_imag[3]])
+        a_init = np.array(
+            [
+                coef_real[0],
+                coef_imag[0],
+                coef_real[1],
+                coef_imag[1],
+                coef_real[2],
+                coef_imag[2],
+                coef_real[3],
+                coef_imag[3],
+            ]
+        )
 
         # model builder: params = [f0, log_Ql, log_Qc, phi, tau, a0_r, a0_i, a1_r, a1_i, a2_r, a2_i, a3_r, a3_i]
         def model_complex(params, freqs):
@@ -677,7 +827,7 @@ class ResFit():
 
         def residuals(params, freqs, data, weights=None):
             Sfit = model_complex(params, freqs)
-            res = np.concatenate([ (Sfit.real - data.real), (Sfit.imag - data.imag) ])
+            res = np.concatenate([(Sfit.real - data.real), (Sfit.imag - data.imag)])
             if weights is not None:
                 return res * np.concatenate([weights, weights])
             return res
@@ -685,17 +835,21 @@ class ResFit():
         # bounds and starts
         f_min, f_max = f.min(), f.max()
         f_margin = 0.02 * (f_max - f_min)
-        lower = [f_min + f_margin, np.log(1.0), np.log(1.0), -np.pi, -1e-6] + [-np.inf]*8
-        upper = [f_max - f_margin, np.log(1e9), np.log(1e9), np.pi, 1e-6] + [np.inf]*8
+        lower = [f_min + f_margin, np.log(1.0), np.log(1.0), -np.pi, -1e-6] + [
+            -np.inf
+        ] * 8
+        upper = [f_max - f_margin, np.log(1e9), np.log(1e9), np.pi, 1e-6] + [np.inf] * 8
 
         q_factors = np.geomspace(0.25, 4.0, n_starts)
         starts = []
         for qf in q_factors:
-            p0 = [f0_guess,
-                  np.log(Ql_guess0 * qf),
-                  np.log(Qc_guess0 * qf),
-                  phi_guess0,
-                  tau_guess0] + list(a_init)
+            p0 = [
+                f0_guess,
+                np.log(Ql_guess0 * qf),
+                np.log(Qc_guess0 * qf),
+                phi_guess0,
+                tau_guess0,
+            ] + list(a_init)
             starts.append(np.array(p0, dtype=float))
 
         best = None
@@ -711,25 +865,47 @@ class ResFit():
 
         for p0 in starts:
             try:
-                res = least_squares(residuals, p0, args=(f, S, weights), loss=loss,
-                                    bounds=(lower, upper), max_nfev=max_nfev, xtol=1e-12, ftol=1e-12)
+                res = least_squares(
+                    residuals,
+                    p0,
+                    args=(f, S, weights),
+                    loss=loss,
+                    bounds=(lower, upper),
+                    max_nfev=max_nfev,
+                    xtol=1e-12,
+                    ftol=1e-12,
+                )
             except Exception:
-                res = least_squares(residuals, p0, args=(f, S, None), loss=loss,
-                                    bounds=(lower, upper), max_nfev=max_nfev, xtol=1e-12, ftol=1e-12)
+                res = least_squares(
+                    residuals,
+                    p0,
+                    args=(f, S, None),
+                    loss=loss,
+                    bounds=(lower, upper),
+                    max_nfev=max_nfev,
+                    xtol=1e-12,
+                    ftol=1e-12,
+                )
             if res.cost < best_cost and res.success:
                 best = res
                 best_cost = res.cost
 
         if best is None:
             p0 = starts[0]
-            best = least_squares(residuals, p0, args=(f, S, None), loss=loss, bounds=(lower, upper),
-                                max_nfev=max_nfev)
+            best = least_squares(
+                residuals,
+                p0,
+                args=(f, S, None),
+                loss=loss,
+                bounds=(lower, upper),
+                max_nfev=max_nfev,
+            )
 
         # outlier rejection & re-fit (unchanged, but model has tau now)
         if do_outlier_rejection:
             rvec = residuals(best.x, f, S)
-            re = rvec[:len(f)]
-            im = rvec[len(f):]
+            re = rvec[: len(f)]
+            im = rvec[len(f) :]
             res_norm = np.sqrt(re**2 + im**2)
             sigma = np.std(res_norm)
             mask = res_norm <= outlier_sigma * sigma
@@ -737,8 +913,14 @@ class ResFit():
                 try:
                     f_mask = f[mask]
                     S_mask = S[mask]
-                    best2 = least_squares(residuals, best.x, args=(f_mask, S_mask, None),
-                                        loss=loss, bounds=(lower, upper), max_nfev=max_nfev)
+                    best2 = least_squares(
+                        residuals,
+                        best.x,
+                        args=(f_mask, S_mask, None),
+                        loss=loss,
+                        bounds=(lower, upper),
+                        max_nfev=max_nfev,
+                    )
                     if best2.cost < best.cost:
                         best = best2
                 except Exception:
@@ -774,7 +956,14 @@ class ResFit():
             Qi = 1.0 / (1.0 / Ql - 1.0 / Qc)
         except Exception:
             Qi = np.nan
-        self.fit_results = dict(f0=f0, Ql=Ql, Qc=Qc, Qi=Qi, phi=phi, tau=tau, a0=a0, a1=a1, a2=a2, a3=a3)
+        self.fit_results = dict(
+            f0=f0, Ql=Ql, Qc=Qc, Qi=Qi, phi=phi, tau=tau, a0=a0, a1=a1, a2=a2, a3=a3
+        )
 
-        return {'popt': popt_full, 'cost': best.cost, 'success': best.success,
-                'message': best.message, 'pcov_approx': pcov}
+        return {
+            "popt": popt_full,
+            "cost": best.cost,
+            "success": best.success,
+            "message": best.message,
+            "pcov_approx": pcov,
+        }

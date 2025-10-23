@@ -22,12 +22,13 @@ from kqcircuits.simulations.export.simulation_export import (
     cross_sweep_simulation,
     export_simulation_oas,
 )
+
 sim_tool = "q3d"
 
 # Simulation parameters
 sim_class = get_single_element_sim_class(
-    DigitTee, #ignore_ports=["port_0", "port_1"]
-)  # pylint: disable=invalid-name
+    DigitTee,  # ignore_ports=["port_0", "port_1"]
+)
 sim_parameters = {
     "name": "digittee",
     "use_internal_ports": True,
@@ -40,7 +41,6 @@ sim_parameters = {
     "a": 10,
     "b": 6,
     "finger_gap": 6,
-    
 }
 
 dir_path = create_or_empty_tmp_directory(Path(__file__).stem + f"_{sim_tool}")

@@ -1,14 +1,10 @@
-# This paper has an interesting formula to link the Y matrix to the Q-factor, and is consistent with im(Y)/re(Y)
-# https://arxiv.org/pdf/2202.06202
-# Other ref: https://arxiv.org/pdf/1504.04353
-# https://journals.aps.org/prxquantum/pdf/10.1103/PRXQuantum.2.040202
-
 import logging
 import sys
 from pathlib import Path
 
-from qdast.qubits.clockmon import Clockmon
-from kqcircuits.simulations.export.ansys.ansys_solution import AnsysCurrentSolution, AnsysHfssSolution, AnsysEigenmodeSolution, AnsysQ3dSolution
+from kqcircuits.simulations.export.ansys.ansys_solution import (
+    AnsysQ3dSolution,
+)
 from kqcircuits.simulations.port import InternalPort
 from kqcircuits.simulations.post_process import PostProcess
 from kqcircuits.simulations.simulation import Simulation
@@ -29,15 +25,12 @@ class TwoClockmonsDrivelineDecay(Simulation):
 
     def build(self):
         chip = self.add_element(
-                    DetectionDevice2s1a00,
-                    sim_tool = "q3d",
-                    with_squid = False,
-                    n = 32          
-                )
-        self.cell.insert(pya.DCellInstArray(chip.cell_index(), pya.DTrans(0, False, 0, 0)))
-        # _, refpoints = self.insert_cell(chip)
-        # self.ports.append(InternalPort(2, *self.etched_line(refpoints["qb_1_port_island1_signal"], refpoints["qb_1_port_island1_ground"])))
-        # self.ports.append(InternalPort(3, *self.etched_line(refpoints["qb_0_port_island2_signal"], refpoints["qb_0_port_island2_ground"])))
+            DetectionDevice2s1a00, sim_tool="q3d", with_squid=False, n=32
+        )
+        self.cell.insert(
+            pya.DCellInstArray(chip.cell_index(), pya.DTrans(0, False, 0, 0))
+        )
+
 
 # Prepare output directory
 dir_path = create_or_empty_tmp_directory(Path(__file__).stem + "_output")
@@ -47,7 +40,7 @@ sim_class = TwoClockmonsDrivelineDecay  # pylint: disable=invalid-name
 sim_parameters = {
     # "box": pya.DBox(pya.DPoint(2000, 3000), pya.DPoint(4800, 5500)), #S1
     # "box": pya.DBox(pya.DPoint(5300, 3000), pya.DPoint(8000, 5500)), #qb1
-    "box": pya.DBox(pya.DPoint(3500, 5500), pya.DPoint(6500, 9000)), #A
+    "box": pya.DBox(pya.DPoint(3500, 5500), pya.DPoint(6500, 9000)),  # A
 }
 
 # Get layout

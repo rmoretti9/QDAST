@@ -36,8 +36,7 @@ from setup_helper import setup_symlinks
 qdast_root_path = os.path.dirname(os.path.abspath(__file__))
 
 # create symlink between KLayout python folder and qdast folder
-link_map = (
-    ("src/qdast", "python/qdast"),)
+link_map = (("src/qdast", "python/qdast"),)
 
 setup_symlinks(qdast_root_path, configdir, link_map, args.unlink)
 print("Finished setting up QDAST.")

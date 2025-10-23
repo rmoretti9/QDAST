@@ -6,34 +6,16 @@ from qdast import defaults
 from kqcircuits import defaults
 from kqcircuits.pya_resolver import pya
 from kqcircuits.simulations.export.ansys.ansys_export import export_ansys
-from kqcircuits.simulations.export.elmer.elmer_export import export_elmer
-from kqcircuits.simulations.export.xsection.xsection_export import (
-    create_xsections_from_simulations,
-    separate_signal_layer_shapes,
-)
-from kqcircuits.simulations.export.simulation_export import export_simulation_oas
+
 from kqcircuits.simulations.post_process import PostProcess
 from kqcircuits.util.export_helper import (
     create_or_empty_tmp_directory,
     get_active_or_new_layout,
-    open_with_klayout_or_default_application,
-    get_simulation_directory,
 )
-from kqcircuits.simulations.simulation import Simulation
 from kqcircuits.simulations.single_element_simulation import (
     get_single_element_sim_class,
 )
 from qdast.qubits.clockmon import Clockmon
-from kqcircuits.simulations.export.xsection.xsection_export import (
-    create_xsections_from_simulations,
-    separate_signal_layer_shapes,
-    visualise_xsection_cut_on_original_layout,
-)
-from kqcircuits.simulations.export.xsection.xsection_export import (
-    create_xsections_from_simulations,
-    separate_signal_layer_shapes,
-    visualise_xsection_cut_on_original_layout,
-)
 
 # sim_tools = ["elmer", "eigenmode"] # eigenmode
 sim_tool = "eigenmode"
@@ -42,12 +24,21 @@ Lj = 1.4348926834765362e-08
 # Simulation parameters
 sim_class = get_single_element_sim_class(
     Clockmon,
-    ignore_ports=["port_drive", "port_1", "port_2", "port_3", "port_4", "port_5", "port_island1_signal", "port_island2_signal"],
+    ignore_ports=[
+        "port_drive",
+        "port_1",
+        "port_2",
+        "port_3",
+        "port_4",
+        "port_5",
+        "port_island1_signal",
+        "port_island2_signal",
+    ],
 )
-sim_class.junction_inductance = Lj # Manually adjusting Lj
+sim_class.junction_inductance = Lj  # Manually adjusting Lj
 sim_class.sim_tool = "eig"
 sim_parameters = {
-    "name": f"clockmon",
+    "name": f"clockmon_simplified_2",
     # 'use_internal_ports': True,
     # 'use_ports': True,
     "qubit_face": ["1t1"],
@@ -60,21 +51,25 @@ sim_parameters = {
     "a": 10,
     "b": 6,
     "coupler_widths": [150, 0, 0, 0, 0, 0],
-    "island_extent": [535, 200], 
+    "island_extent": [535, 200],
     "island_to_island_distance": 50,
     "coupler_offsets": [255, 0, 0, 0, 0, 0],
-    "clock_diameter": 90,
+    "clock_diameter": 50,
     "sim_tool": "eig",
     "bending_angle": 0,
+    "pad_width": 6,
+    "taper_width": 95 / 7,
+    "bent_section_length": 8,
+    "lead_height_untapered": 4,
+    "lead_height_tapered": 8,
 }
-
 
 
 dir_path = create_or_empty_tmp_directory(f"{sim_parameters['name']}_{sim_tool}")
 
-    #######################
-    # SIMULATION SETTINGS #
-    #######################
+#######################
+# SIMULATION SETTINGS #
+#######################
 
 ansys_export_parameters = {
     "path": dir_path,
@@ -101,21 +96,20 @@ ansys_export_parameters.update(
     }
 )
 
-   
-    #####################
-    # GEOMETRY SETTINGS #
-    #####################
+
+#####################
+# GEOMETRY SETTINGS #
+#####################
 
 # Get layout
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 layout = get_active_or_new_layout()
-    # layout.dbu = 1e-5  # need finer DBU for SA-interface
+# layout.dbu = 1e-5  # need finer DBU for SA-interface
 
 metal_edge_region_x = 40.0
 sweep_parameters_list = [
     {
         "name": "clockmon",  # required when specifying sims manually
-
     }
 ]
 
@@ -126,6 +120,5 @@ simulations += [
     for sweep_parameters in sweep_parameters_list
 ]
 
-    
-export_ansys(simulations, **ansys_export_parameters, skip_errors=True)
 
+export_ansys(simulations, **ansys_export_parameters, skip_errors=True)

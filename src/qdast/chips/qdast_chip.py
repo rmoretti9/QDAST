@@ -21,6 +21,7 @@ from kqcircuits.pya_resolver import pya
 )
 class QDASTChip(Chip):
     """Wrapper of KQCircuits Chip for further customization."""
+
     def produce_launchers(
         self, sampleholder_type, launcher_assignments=None, enabled=None, face_id=0
     ):
@@ -56,9 +57,6 @@ class QDASTChip(Chip):
 
         if sampleholder_type == "6-ports-10x10":
             return {}
-
-        # if sampleholder_type == "4-ports-75x75":
-        #     return {}
 
         if sampleholder_type in default_sampleholders:
             return self.produce_n_launchers(

@@ -9,6 +9,7 @@ from kqcircuits.defaults import default_chip_label_face_prefixes
 
 class QDASTChipFrame(ChipFrame):
     """Wrapper of KQCircuits ChipFrame to further customize labeling."""
+
     produce_labels = Param(pdt.TypeBoolean, "Produce chip labels", True)
     label_offset = Param(pdt.TypeDouble, "Chip label symmetric offset", 0)
 
