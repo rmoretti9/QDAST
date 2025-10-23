@@ -445,8 +445,8 @@ class DetectionDevice2s1a(QDASTChip):
         num_meanders = _get_num_meanders(meander_2_length, 50, w)
         self.insert_cell(
             Meander,
-            start_point=meander_start,
-            end_point=meander_end,
+            start=meander_start,
+            end=meander_end,
             length=meander_2_length,
             meanders=num_meanders,
             r=50,
@@ -465,8 +465,8 @@ class DetectionDevice2s1a(QDASTChip):
         num_meanders = _get_num_meanders(meander_1_length, 50, w)
         self.insert_cell(
             Meander,
-            start_point=meander_start,
-            end_point=meander_end,
+            start=meander_start,
+            end=meander_end,
             length=meander_1_length,
             meanders=num_meanders,
             r=50,
@@ -519,8 +519,8 @@ class DetectionDevice2s1a(QDASTChip):
         num_meanders = _get_num_meanders(meander_length, 50, w)
         self.insert_cell(
             Meander,
-            start_point=meander_start,
-            end_point=meander_end,
+            start=meander_start,
+            end=meander_end,
             length=meander_length,
             meanders=num_meanders,
             r=50,
@@ -561,8 +561,8 @@ class DetectionDevice2s1a(QDASTChip):
         num_meanders = _get_num_meanders(meander_length, 50, w)
         self.insert_cell(
             Meander,
-            start_point=meander_start,
-            end_point=meander_end,
+            start=meander_start,
+            end=meander_end,
             length=meander_length,
             meanders=num_meanders,
             r=50,
@@ -612,8 +612,8 @@ class DetectionDevice2s1a(QDASTChip):
         num_meanders = _get_num_meanders(meander_length, 50, w)
         self.insert_cell(
             Meander,
-            start_point=meander_start,
-            end_point=meander_end,
+            start=meander_start,
+            end=meander_end,
             length=meander_length,
             meanders=num_meanders,
             r=50,
@@ -803,8 +803,8 @@ class DetectionDevice2s1a(QDASTChip):
         num_meanders = _get_num_meanders(meander_length, 50, w)
         self.insert_cell(
             Meander,
-            start_point=meander_start,
-            end_point=meander_end,
+            start=meander_start,
+            end=meander_end,
             length=meander_length,
             meanders=num_meanders,
             r=50,
@@ -841,8 +841,8 @@ class DetectionDevice2s1a(QDASTChip):
         num_meanders = _get_num_meanders(meander_length, 50, w)
         self.insert_cell(
             Meander,
-            start_point=meander_start,
-            end_point=meander_end,
+            start=meander_start,
+            end=meander_end,
             length=meander_length,
             meanders=num_meanders,
             r=50,

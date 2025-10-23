@@ -120,7 +120,7 @@ for sim_tool in sim_tools:
             "minimum_passes": 1,
             "minimum_converged_passes": 2,
             "n_modes": 1,
-            "min_frequency": 1,  # minimum allowed frequency
+            "frequency": 1,  # minimum allowed frequency
             "mesh_size": {
                 "1t1_substratemer": 20,
                 "1t1_vacuummer": 20,

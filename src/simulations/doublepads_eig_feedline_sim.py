@@ -47,7 +47,7 @@ ansys_export_parameters.update(
         "minimum_passes": 1,
         "minimum_converged_passes": 2,
         "n_modes": 1,
-        "min_frequency": 3,
+        "frequency": 3,
         "post_process": PostProcess(
             "produce_epr_table.py",
         ),

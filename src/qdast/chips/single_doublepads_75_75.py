@@ -311,11 +311,11 @@ class SingleDoublepads7575(QDASTChip):
         num_meanders = _get_num_meanders(meander_length, turn_radius, w)
         self.insert_cell(
             Meander,
-            start_point=pya.DPoint(
+            start=pya.DPoint(
                 tee_refpoints["port_bottom"].x - 500,
                 tee_refpoints["port_bottom"].y - flip * 100,
             ),
-            end_point=pya.DPoint(
+            end=pya.DPoint(
                 tee_refpoints["port_bottom"].x - 500,
                 tee_refpoints["port_bottom"].y - flip * 750,
             ),
@@ -355,8 +355,8 @@ class SingleDoublepads7575(QDASTChip):
             )
             self.insert_cell(
                 Meander,
-                start_point=meander_start,
-                end_point=meander_end,
+                start=meander_start,
+                end=meander_end,
                 length=total_length - wg_1.length(),
                 meanders=num_meanders,
                 r=turn_radius,
@@ -366,8 +366,8 @@ class SingleDoublepads7575(QDASTChip):
             num_meanders = _get_num_meanders(total_length, turn_radius, w)
             self.insert_cell(
                 Meander,
-                start_point=cplr_pos,
-                end_point=meander_end,
+                start=cplr_pos,
+                end=meander_end,
                 length=total_length,
                 meanders=num_meanders,
                 r=turn_radius,

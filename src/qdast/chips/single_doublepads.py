@@ -191,6 +191,8 @@ class SingleDoublepads(QDASTChip):
             lead_height_untapered=4,
             lead_height_tapered=8,
             drive_position=[0, -355],
+            with_fluxline=False,
+
         )
         qubit_trans = pya.DTrans(rotation, False, center_x, center_y)
         _, refpoints_abs = self.insert_cell(qubit, qubit_trans, name, rec_levels=None)
@@ -330,11 +332,11 @@ class SingleDoublepads(QDASTChip):
         num_meanders = _get_num_meanders(meander_length, turn_radius, w)
         self.insert_cell(
             Meander,
-            start_point=pya.DPoint(
+            start=pya.DPoint(
                 tee_refpoints["port_bottom"].x - 500,
                 tee_refpoints["port_bottom"].y - flip * 100,
             ),
-            end_point=pya.DPoint(
+            end=pya.DPoint(
                 tee_refpoints["port_bottom"].x - 500,
                 tee_refpoints["port_bottom"].y - flip * 750,
             ),

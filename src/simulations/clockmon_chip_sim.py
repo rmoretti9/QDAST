@@ -78,7 +78,7 @@ ansys_export_parameters.update(
         "minimum_passes": 1,
         "minimum_converged_passes": 2,
         "n_modes": 2,
-        "min_frequency": 1,
+        "frequency": 1,
         # "mesh_size": {
         #     "1t1_substratemer": 30,
         #     "1t1_vacuummer": 30,

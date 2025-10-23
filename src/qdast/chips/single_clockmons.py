@@ -144,6 +144,7 @@ class SingleClockmons(QDASTChip):
             with_squid=self.with_squid,
             pad_width=6,
             taper_width=95 / 7,
+            with_fluxline=False,
         )
         qubit_trans = pya.DTrans(rotation, False, center_x, center_y)
         _, refpoints_abs = self.insert_cell(qubit, qubit_trans, name, rec_levels=None)
@@ -221,8 +222,8 @@ class SingleClockmons(QDASTChip):
         num_meanders = _get_num_meanders(total_length, turn_radius, w)
         self.insert_cell(
             Meander,
-            start_point=meander_start,
-            end_point=meander_end,
+            start=meander_start,
+            end=meander_end,
             length=total_length,
             meanders=num_meanders,
             r=turn_radius,
