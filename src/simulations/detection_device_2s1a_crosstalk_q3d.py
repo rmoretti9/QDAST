@@ -20,8 +20,6 @@ class DetectionDevice2S1ASim(Simulation):
             DetectionDevice2s1a, sim_tool="q3d", with_squid=False, n=24
         )
         # self.cell.insert(pya.DCellInstArray(chip.cell_index(), pya.DTrans(0, False, 0, 0)))
-        _, refpoints = self.insert_cell(chip)
-
 
 sim_tool = "q3d"
 # Simulation parameters

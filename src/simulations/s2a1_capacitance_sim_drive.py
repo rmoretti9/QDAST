@@ -42,8 +42,8 @@ dir_path = create_or_empty_tmp_directory(Path(__file__).stem + "_output")
 # Simulation parameters
 sim_class = TwoClockmonsDrivelineDecay  # pylint: disable=invalid-name
 sim_parameters = {
-    # "box": pya.DBox(pya.DPoint(2000, 3000), pya.DPoint(4800, 5500)), #S1
-    # "box": pya.DBox(pya.DPoint(5300, 3000), pya.DPoint(8000, 5500)), #qb1
+    # "box": pya.DBox(pya.DPoint(2000, 3000), pya.DPoint(4800, 5500)), # S1
+    # "box": pya.DBox(pya.DPoint(5300, 3000), pya.DPoint(8000, 5500)), # S2
     "box": pya.DBox(pya.DPoint(3500, 5500), pya.DPoint(6500, 9000)),  # A
 }
 
