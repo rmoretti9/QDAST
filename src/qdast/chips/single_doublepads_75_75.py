@@ -8,6 +8,8 @@ from math import pi
 from qdast.chips.qdast_chip import QDASTChip
 from kqcircuits.elements.meander import Meander
 from qdast.qubits.clockmon import Clockmon
+from qdast.qubits.emptymon import Emptymon
+
 from kqcircuits.elements.waveguide_coplanar import WaveguideCoplanar
 
 from kqcircuits.elements.waveguide_coplanar_splitter import (
@@ -106,6 +108,7 @@ class SingleDoublepads7575(QDASTChip):
     with_feedline_resonator = Param(pdt.TypeBoolean, "Enable feedline resonator", False)
     alternate_drivelines = Param(pdt.TypeBoolean, "Alternating drivelines", False)
     tail_variant = Param(pdt.TypeString, "Tail type", "1", choices=["1", "2"])
+    use_emptymon = Param(pdt.TypeBoolean, "Replace the qubit with just gap and coupler", False)
 
     def build(self):
         """High-level build sequence invoked by the PCell framework.
@@ -161,28 +164,40 @@ class SingleDoublepads7575(QDASTChip):
 
         Returns the absolute reference points produced by the insertion.
         """
-        qubit = self.add_element(
-            Clockmon,
-            ground_gap=[630, 610],
-            a=10,
-            b=6,
-            island_extent=[535, 200],
-            coupler_widths=[coupler_width, 0, 0, 0, 0, 0],
-            island_to_island_distance=50,
-            coupler_offsets=[255, 0, 0, 0, 0, 0],
-            clock_diameter=50,
-            bending_angle=0,
-            junction_type="Manhattan Single Junction Centered",
-            sim_tool=self.sim_tool,
-            with_squid=self.with_squid,
-            pad_width=6,
-            taper_width=95 / 7,
-            bent_section_length=8,
-            lead_height_untapered=4,
-            lead_height_tapered=8,
-            drive_position=[0, -355],
-            with_fluxline=False,
-        )
+        if self.use_emptymon:
+            qubit = self.add_element(
+                Emptymon,
+                ground_gap = [1000, 900],
+                ground_gap_r = 100,
+                a = 10,
+                b = 6,
+                coupler_width = coupler_width,
+                coupler_offset = 255,
+                drive_position=[0, -355],
+            )
+        else:
+            qubit = self.add_element(
+                Clockmon,
+                ground_gap=[630, 610],
+                a=10,
+                b=6,
+                island_extent=[535, 200],
+                coupler_widths=[coupler_width, 0, 0, 0, 0, 0],
+                island_to_island_distance=50,
+                coupler_offsets=[255, 0, 0, 0, 0, 0],
+                clock_diameter=50,
+                bending_angle=0,
+                junction_type="Manhattan Single Junction Centered",
+                sim_tool=self.sim_tool,
+                with_squid=self.with_squid,
+                pad_width=6,
+                taper_width=95 / 7,
+                bent_section_length=8,
+                lead_height_untapered=4,
+                lead_height_tapered=8,
+                drive_position=[0, -355],
+                with_fluxline=False,
+            )
         qubit_trans = pya.DTrans(rotation, False, center_x, center_y)
         _, refpoints_abs = self.insert_cell(qubit, qubit_trans, name, rec_levels=None)
         return refpoints_abs
@@ -342,12 +357,12 @@ class SingleDoublepads7575(QDASTChip):
                 [
                     cplr_pos,
                     pya.DPoint(cplr_pos.x, cplr_pos.y - flip * 200),
-                    pya.DPoint(cplr_pos.x - self.x_offset[i], cplr_pos.y - flip * 200),
-                    pya.DPoint(cplr_pos.x - self.x_offset[i], cplr_pos.y - flip * 300),
+                    pya.DPoint(cplr_pos.x - float(self.x_offset[i]), cplr_pos.y - flip * 200),
+                    pya.DPoint(cplr_pos.x - float(self.x_offset[i]), cplr_pos.y - flip * 300),
                 ]
             )
             meander_start = pya.DPoint(
-                cplr_pos.x - self.x_offset[i], cplr_pos.y - flip * 300
+                cplr_pos.x - float(self.x_offset[i]), cplr_pos.y - flip * 300
             )
             w = 1000
             num_meanders = _get_num_meanders(
@@ -392,7 +407,7 @@ class SingleDoublepads7575(QDASTChip):
             cross_trans = pya.DTrans(
                 tee_rotations[i],
                 False,
-                self._qubit_refpoints[i]["port_0"].x + self.x_offset[i],
+                self._qubit_refpoints[i]["port_0"].x + float(self.x_offset[i]),
                 3750,
             )
             inst_cross, _ = self.insert_cell(cell_cross, cross_trans)
