@@ -8,11 +8,11 @@ import os
 @add_parameters_from(SingleDoublepads7575)
 class SingleDoublepads07(SingleDoublepads7575):
     def build(self):
-        self.readout_res_lengths = [8272.8, 8066.6, 7849.7, 7644.0]
-        self.n_fingers = [1.9282, 1.8949, 1.8631, 1.8327]
-        self.coupler_widths = [291.76, 276.6, 262.61, 249.69]
+        self.readout_res_lengths = [8262.0, 8088.8, 7922.6, 7769.8]
+        self.n_fingers = [2.3479, 2.324, 2.2997, 2.2759]
+        self.coupler_widths = [160.25, 158.19, 156.18, 144.66]
         self.x_offset = [0, 0, -850, -850]
-        self.use_emptymon = True
+        self.qubit_type = "doublepad_qdast"
         self.with_feedline_resonator = True
         self.alternate_drivelines = True
         self.feedline_capacitor_n_fingers = 4.25267767
@@ -22,7 +22,7 @@ class SingleDoublepads07(SingleDoublepads7575):
             "tees": [],
             "readout_res_lengths": [],
         }
-        self.name_chip = "V06"
+        self.name_chip = "V07"
         self.name_copy = ""
         self.with_squid = False
         self.margin = 120

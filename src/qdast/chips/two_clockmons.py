@@ -98,7 +98,7 @@ class TwoClockmons(QDASTChip):
         self._produce_feedline()
         self._produce_readout_resonators()
         self._produce_coupler()
-        self._produce_chargelines()
+        # self._produce_chargelines()
 
     def _produce_waveguide(self, path, term2=0, turn_radius=None, a=None, b=None):
         """Add a WaveguideCoplanar element that follows ``path`` and insert it.

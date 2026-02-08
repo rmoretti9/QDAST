@@ -27,7 +27,7 @@ _PATTERN = re.compile(r"[-+]?\d*\.\d+|\d+")
 _DEFAULT_FILENAME = "sweeps/clockmon_capacitance_library_sim_q3d_results.csv"
 
 
-def _load_csv_and_parse(file_path: str) -> Tuple[np.ndarray, np.ndarray]:
+def _load_csv_and_parse(file_path: str, sweep_variable: str = "coupler_extent") -> Tuple[np.ndarray, np.ndarray]:
     """Load the CSV file and return (coupler_widths, CMatrix).
 
     Parameters
@@ -47,7 +47,7 @@ def _load_csv_and_parse(file_path: str) -> Tuple[np.ndarray, np.ndarray]:
     df = pd.read_csv(file_path)
 
     # Parse the textual width column using the compiled regex
-    coupler_widths_str = df["coupler_extent"].values
+    coupler_widths_str = df[sweep_variable].values
     coupler_widths = []
     for s in coupler_widths_str:
         m = _PATTERN.search(str(s))
@@ -61,7 +61,7 @@ def _load_csv_and_parse(file_path: str) -> Tuple[np.ndarray, np.ndarray]:
     return coupler_widths, CMatrix
 
 
-def clockmon_library(deembed: int = 200):
+def clockmon_library(deembed: int = 200, sweep_variable: str = "coupler_extent", file_path: str | None = None):
     """Return an interpolant mapping coupler width -> deembedded capacitance matrix.
 
     The CSV file is loaded from the same directory as this module under the
@@ -82,9 +82,10 @@ def clockmon_library(deembed: int = 200):
         - CMatrix: ndarray shape (N,3,3) of the deembedded capacitance matrices
     """
     base = Path(__file__).parent
-    file_path = base / _DEFAULT_FILENAME
+    if file_path is None:
+        file_path = base / _DEFAULT_FILENAME
 
-    coupler_widths, CMatrix = _load_csv_and_parse(str(file_path))
+    coupler_widths, CMatrix = _load_csv_and_parse(str(file_path), sweep_variable)
 
     wg_lib = waveguide_library()
     CMatrix = CMatrix.copy()
@@ -94,7 +95,7 @@ def clockmon_library(deembed: int = 200):
     return library, coupler_widths, CMatrix
 
 
-def clockmon_coupling_libraries(deembed: int = 200):
+def clockmon_coupling_libraries(deembed: int = 200, sweep_variable: str = "coupler_extent", file_path: str | None = None):
     """Build interpolants relating coupler width, c_sigma and c_qr.
 
     Returns two interp1d objects:
@@ -102,9 +103,10 @@ def clockmon_coupling_libraries(deembed: int = 200):
     - c_sigma_given_coupler_width: coupler_width -> c_sigma
     """
     base = Path(__file__).parent
-    file_path = base / _DEFAULT_FILENAME
+    if file_path is None:
+        file_path = base / _DEFAULT_FILENAME
 
-    coupler_widths, CMatrix = _load_csv_and_parse(str(file_path))
+    coupler_widths, CMatrix = _load_csv_and_parse(str(file_path), sweep_variable)
 
     CMatrix = CMatrix.copy()
     wg_lib = waveguide_library()
@@ -117,15 +119,16 @@ def clockmon_coupling_libraries(deembed: int = 200):
     return coupler_width_given_c_qr, c_sigma_given_coupler_width
 
 
-def clockmon_cqr_to_ground(deembed: int = 200):
+def clockmon_cqr_to_ground(deembed: int = 200, sweep_variable: str = "coupler_extent", file_path: str | None = None):
     """Return an interpolant mapping c_qr -> C11 (coupler-to-ground) after deembed.
 
     Useful when selecting a coupler geometry from a target c_qr value.
     """
     base = Path(__file__).parent
-    file_path = base / _DEFAULT_FILENAME
+    if file_path is None:
+        file_path = base / _DEFAULT_FILENAME
 
-    coupler_widths, CMatrix = _load_csv_and_parse(str(file_path))
+    coupler_widths, CMatrix = _load_csv_and_parse(str(file_path), sweep_variable)
     CMatrix = CMatrix.copy()
     wg_lib = waveguide_library()
     CMatrix[:, 0, 0] -= wg_lib(deembed)

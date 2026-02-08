@@ -1,7 +1,7 @@
 from kqcircuits.simulations.simulation import Simulation
 from kqcircuits.pya_resolver import pya
 from kqcircuits.util.parameters import Param, pdt, add_parameters_from
-from qdast.dimensioned_chips.single_doublepads_02 import SingleDoublepads02
+from qdast.dimensioned_chips.single_doublepads_03 import SingleDoublepads03
 from qdast.chips.single_clockmons import SingleClockmons
 
 from kqcircuits.simulations.port import InternalPort
@@ -13,7 +13,7 @@ class SingleDoublepadsSim(Simulation):
 
     def build(self):
         chip = self.add_element(
-            SingleDoublepads02, sim_tool="eig", with_squid=False, n=24
+            SingleDoublepads03, sim_tool="eig", with_squid=False, n=24
         )
         self.cell.insert(
             pya.DCellInstArray(chip.cell_index(), pya.DTrans(0, False, 0, 0))

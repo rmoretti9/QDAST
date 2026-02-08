@@ -13,20 +13,21 @@ from kqcircuits.util.export_helper import (
     get_active_or_new_layout,
     open_with_klayout_or_default_application,
 )
-from qdast.dimensioned_chips.single_doublepads_04 import SingleDoublepads04
+from qdast.dimensioned_chips.single_doublepads_03 import SingleDoublepads03
 
+from kqcircuits.simulations.single_element_simulation import get_single_element_sim_class
 
 class SingleDoublepadsSim(Simulation):
 
     def build(self):
         chip = self.add_element(
-            SingleDoublepads04, sim_tool="q3d", with_squid=False, n=32
+            SingleDoublepads03, sim_tool="eig", with_squid=False, n=32
         )
         self.cell.insert(
             pya.DCellInstArray(chip.cell_index(), pya.DTrans(0, False, 0, 0))
         )
 
-
+sim_class = get_single_element_sim_class(SingleDoublepads03) 
 # Prepare output directory
 dir_path = create_or_empty_tmp_directory(Path(__file__).stem + "_output")
 
