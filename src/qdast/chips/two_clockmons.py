@@ -98,7 +98,7 @@ class TwoClockmons(QDASTChip):
         self._produce_feedline()
         self._produce_readout_resonators()
         self._produce_coupler()
-        # self._produce_chargelines()
+        self._produce_chargelines()
 
     def _produce_waveguide(self, path, term2=0, turn_radius=None, a=None, b=None):
         """Add a WaveguideCoplanar element that follows ``path`` and insert it.
@@ -161,7 +161,7 @@ class TwoClockmons(QDASTChip):
             with_squid=self.with_squid,
             pad_width=6,
             taper_width=95 / 7,
-            drive_position=[-400, -550] if qubit_id == 0 else [450, -200],
+            drive_position=[-400, -400] if qubit_id == 0 else [400, -200],
             with_fluxline=False,
         )
         qubit_trans = pya.CplxTrans(1, rotation, False, center_x, center_y)
@@ -170,7 +170,7 @@ class TwoClockmons(QDASTChip):
 
     def _produce_qubits(self) -> Tuple[Dict, Dict]:
         """Create two Clockmon qubits at predefined positions and return their refpoints."""
-        qb0_refpoints = self._produce_qubit(0, 1600, 1600, 0, "qb_0")
+        qb0_refpoints = self._produce_qubit(0, 1300, 1600, 0, "qb_0")
         qb1_refpoints = self._produce_qubit(1, 3200, 3000, 0, "qb_1")
         self._qubit_refpoints = [qb0_refpoints, qb1_refpoints]
         return qb0_refpoints, qb1_refpoints
@@ -204,7 +204,7 @@ class TwoClockmons(QDASTChip):
                 [
                     wg_start,
                     pya.DPoint(
-                        self.qubits_refpoints[res_idx]["port_0"].x - self.a - 300,
+                        self.qubits_refpoints[res_idx]["port_0"].x - self.a - 200,
                         wg_start.y,
                     ),
                 ]
@@ -214,14 +214,14 @@ class TwoClockmons(QDASTChip):
                 0,
                 False,
                 pya.DPoint(
-                    self.qubits_refpoints[res_idx]["port_0"].x - 300, wg_start.y
+                    self.qubits_refpoints[res_idx]["port_0"].x - 200, wg_start.y
                 ),
             )
             _, tee_refpoints = self.insert_cell(cell_cross, cross_trans1)
             wg_2 = self._produce_waveguide(
                 [
                     tee_refpoints["port_bottom"],
-                    pya.DPoint(qubit_port.x - 300, qubit_port.y + 300),
+                    pya.DPoint(qubit_port.x - 200, qubit_port.y + 300),
                     pya.DPoint(qubit_port.x, qubit_port.y + 300),
                     pya.DPoint(qubit_port.x, qubit_port.y),
                 ]
@@ -457,7 +457,7 @@ class TwoClockmons(QDASTChip):
         )
 
         meander_length = self.coupler_length - wg_qb0.length() - wg_qb1.length()
-        turn_radius = 50
+        turn_radius = 75
         w = 1000
         num_meanders = _get_num_meanders(meander_length, turn_radius, w)
         self.insert_cell(
@@ -493,7 +493,7 @@ class TwoClockmons(QDASTChip):
                 ),
                 pya.DPoint(
                     self.qubits_refpoints[0]["port_drive"].x,
-                    self.launchers["DL-0"][0].y + 200,
+                    self.launchers["DL-0"][0].y + 300,
                 ),
             ]
         )
@@ -503,8 +503,8 @@ class TwoClockmons(QDASTChip):
             self.LIBRARY_NAME,
             a=self.a,
             b=self.b,
-            a2=self.a / 3,
-            b2=self.b / 3,
+            a2=self.a*0.33,
+            b2=self.b * 0.33,
             taper_length=80,
         )
         _, taper_ref0 = self.insert_cell(
@@ -515,15 +515,15 @@ class TwoClockmons(QDASTChip):
                 False,
                 pya.DPoint(
                     self.qubits_refpoints[0]["port_drive"].x,
-                    self.launchers["DL-0"][0].y + 200,
+                    self.launchers["DL-0"][0].y + 300,
                 ),
             ),
         )
         dl_0_tapered = self._produce_waveguide(
             [taper_ref0["port_b"], self.qubits_refpoints[0]["port_drive"]],
-            a=self.a / 3,
-            b=self.b / 3,
-            term2=self.b,
+            a=self.a *0.33,
+            b=self.b *0.33,
+            term2=self.b*0.33,
         )
 
         dl_1 = self._produce_waveguide(
@@ -537,7 +537,7 @@ class TwoClockmons(QDASTChip):
                     self.qubits_refpoints[1]["port_drive"].y,
                 ),
                 pya.DPoint(
-                    self.launchers["DL-1"][0].x - 250,
+                    self.launchers["DL-1"][0].x - 350,
                     self.qubits_refpoints[1]["port_drive"].y,
                 ),
             ]
@@ -549,15 +549,15 @@ class TwoClockmons(QDASTChip):
                 180,
                 False,
                 pya.DPoint(
-                    self.launchers["DL-1"][0].x - 250,
+                    self.launchers["DL-1"][0].x - 350,
                     self.qubits_refpoints[1]["port_drive"].y,
                 ),
             ),
         )
         dl_1_tapered = self._produce_waveguide(
             [taper_ref1["port_b"], self.qubits_refpoints[1]["port_drive"]],
-            a=self.a / 3,
-            b=self.b / 3,
+            a=self.a *0.33,
+            b=self.b *0.33,
             term2=self.b,
         )
 

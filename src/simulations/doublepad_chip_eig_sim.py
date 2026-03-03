@@ -28,7 +28,7 @@ sim_parameters = {
     "with_squid": False,
     "sim_tool": "eig",
     "junction_inductance": Lj,
-    "box": pya.DBox(pya.DPoint(200, 200), pya.DPoint(7300, 7300)),
+    "box": pya.DBox(pya.DPoint(3000, 0), pya.DPoint(6000, 4800)),
     # "tls_sheet_approximation": True,
 }
 sim_class.junction_inductance = Lj  # Manually adjusting Lj

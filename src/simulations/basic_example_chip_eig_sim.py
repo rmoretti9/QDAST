@@ -13,14 +13,14 @@ from kqcircuits.simulations.simulation import Simulation
 
 import logging
 import sys
-from qdast.simulations.coupled_clockmons_eig_sim import TwoClockmonsEigSim
+from qdast.simulations.basic_chip_sim import BasicExampleSim
 
-Lj = [1.272239314e-08, 1.372239314e-08]
+Lj = 1.272239314e-08
 # Simulation parameters
-sim_class = TwoClockmonsEigSim
+sim_class = BasicExampleSim
 
 sim_parameters = {
-    "name": "coupled_clockmon_chip",
+    "name": "basic_clockmon_chip",
     "use_internal_ports": True,
     "use_ports": True,
     "qubit_face": ["1t1"],

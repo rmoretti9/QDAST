@@ -129,10 +129,10 @@ class SingleDoublepads7575(QDASTChip):
         else:
             self._produce_feedline_resonator()
         self._produce_readout_resonators()
-        # if not self.alternate_drivelines:
-        #     self._produce_chargelines()
-        # else:
-        #     self._produce_chargelines_v2()
+        if not self.alternate_drivelines:
+            self._produce_chargelines()
+        else:
+            self._produce_chargelines_v2()
 
     def _produce_waveguide(
         self, path, term2=0, turn_radius=None, a=None, b=None, object=None
@@ -692,8 +692,8 @@ class SingleDoublepads7575(QDASTChip):
             self.LIBRARY_NAME,
             a=self.a,
             b=self.b,
-            a2=self.a / 3,
-            b2=self.b / 3,
+            a2=self.a * 0.33,
+            b2=self.b * 0.33,
             taper_length=80,
         )
         self.insert_cell(
@@ -729,8 +729,8 @@ class SingleDoublepads7575(QDASTChip):
                 ),
                 self._qubit_refpoints[0]["port_drive"],
             ],
-            a=self.a / 3,
-            b=self.b / 3,
+            a=self.a * 0.33,
+            b=self.b * 0.33,
             term2=self.b,
         )
         self._produce_waveguide(
@@ -741,8 +741,8 @@ class SingleDoublepads7575(QDASTChip):
                 ),
                 self._qubit_refpoints[1]["port_drive"],
             ],
-            a=self.a / 3,
-            b=self.b / 3,
+            a=self.a * 0.33,
+            b=self.b * 0.33,
             term2=self.b,
         )
 
@@ -817,8 +817,8 @@ class SingleDoublepads7575(QDASTChip):
                 ),
                 self._qubit_refpoints[2]["port_drive"],
             ],
-            a=self.a / 3,
-            b=self.b / 3,
+            a=self.a * 0.33,
+            b=self.b * 0.33,
             term2=self.b,
         )
         self._produce_waveguide(
@@ -829,8 +829,8 @@ class SingleDoublepads7575(QDASTChip):
                 ),
                 self._qubit_refpoints[3]["port_drive"],
             ],
-            a=self.a / 3,
-            b=self.b / 3,
+            a=self.a * 0.33,
+            b=self.b * 0.33,
             term2=self.b,
         )
 
@@ -892,8 +892,8 @@ class SingleDoublepads7575(QDASTChip):
                 self.LIBRARY_NAME,
                 a=self.a,
                 b=self.b,
-                a2=self.a / 3,
-                b2=self.b / 3,
+                a2=self.a * 0.33,
+                b2=self.b * 0.33,
                 taper_length=80,
             )
 
@@ -965,8 +965,8 @@ class SingleDoublepads7575(QDASTChip):
                 self.LIBRARY_NAME,
                 a=self.a,
                 b=self.b,
-                a2=self.a / 3,
-                b2=self.b / 3,
+                a2=self.a * 0.33,
+                b2=self.b * 0.33,
                 taper_length=80,
             )
 
@@ -991,8 +991,8 @@ class SingleDoublepads7575(QDASTChip):
                 ),
                 self._qubit_refpoints[1]["port_drive"],
             ],
-            a=self.a / 3,
-            b=self.b / 3,
+            a=self.a * 0.33,
+            b=self.b * 0.33,
             term2=self.b,
         )
 
@@ -1017,8 +1017,8 @@ class SingleDoublepads7575(QDASTChip):
                 ),
                 self._qubit_refpoints[2]["port_drive"],
             ],
-            a=self.a / 3,
-            b=self.b / 3,
+            a=self.a * 0.33,
+            b=self.b * 0.33,
             term2=self.b,
         )
 
